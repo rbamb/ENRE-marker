@@ -1,0 +1,7 @@
+.idea
+
+# frontend
+frontend/.idea
+frontend/enre-marker/node_modules
+
+# backend
