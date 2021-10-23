@@ -1,7 +1,7 @@
 {
   "name": "enre-marker",
 	"displayName": "ENRE-marker",
-	"description": "",
+	"description": "ENRE-marker is a tool for manually label truth entities and relations analysed by well-known tools.",
 	"version": "0.0.1",
 	"engines": {
 		"vscode": "^1.61.0"

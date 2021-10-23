@@ -1,7 +1,5 @@
-.idea
-
 # frontend
-frontend/.idea
 frontend/enre-marker/node_modules
+frontend/enre-marker/dist
 
 # backend
