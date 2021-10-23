@@ -29,7 +29,7 @@ To login users.
 
 ##### Should return
 
-###### if successed
+###### if succeeded
 
 ```ts
 {
@@ -60,7 +60,7 @@ Get project lists.
 
 ##### Should return
 
-###### if successed
+###### if succeeded
 
 ```ts
 {
@@ -92,12 +92,12 @@ Claim a project to label. A user can only claim one project in a single time, an
 
 ##### Should return
 
-###### if successed
+###### if succeeded
 
 ```ts
 {
   code: 200,
-  message: 'successed',
+  message: 'succeeded',
   dir: string,
   fileHash: Array<file>,
   hash: 256-chars
@@ -125,17 +125,17 @@ declare type file {
 
 #### `GET /project/<pid: number>/task`
 
-Claim some todo tasks in the specificed project.
+Claim some todo tasks in the specified project.
 
 [TODO]
 
 #### `GET /project/<pid: number>/entity?fid=<fid: number>`
 
-Get all entities in a specificed file from a specificed project.
+Get all entities in a specified file from a specified project.
 
 ##### Should return
 
-###### if successed
+###### if succeeded
 
 ```ts
 {
@@ -198,11 +198,11 @@ declare type manuallyEntity {
 
 #### `GET /project/<pid: number>/relation?fid=<fid: number>`
 
-Get all relations **started from** the specificed file.
+Get all relations **started from** the specified file.
 
 ##### Should return
 
-###### if successed
+###### if succeeded
 
 ```ts
 {
@@ -278,7 +278,7 @@ declare enum fixOption {
 
 ##### Should return
 
-###### if successed
+###### if succeeded
 
 ```ts
 {
@@ -297,9 +297,9 @@ declare enum fixOption {
 | fid does not exist | 4002 | no such fid |
 | manually added entity has already exist | 4003 | already exist | ```index: Array<number>``` |
 
-> Error code `4003` indicates that the manually added entity has already discorved by **comparison tools**, NOT by **other users**. This allows multiple users submit the same manually discorved entity.
+> Error code `4003` indicates that the manually added entity has already discovered by **comparison tools**, NOT by **other users**. This allows multiple users submit the same manually discovered entity.
 
-> If errors occured, server should return the index of those error-causing `entityUserResult` (starts from 0) in extra.
+> If errors occurred, server should return the index of those error-causing `entityUserResult` (starts from 0) in extra.
 
 #### `POST /project/<pid: number>/relation?fid=<fid: number>`
 
@@ -332,7 +332,7 @@ declare type relationFixPatch {
 
 ##### Should return
 
-###### if successed
+###### if succeeded
 
 ```ts
 {
@@ -351,7 +351,7 @@ declare type relationFixPatch {
 | fid does not exist | 4002 | no such fid |
 | manually added relation has already exist | 4003 | already exist | ```index: Array<number>``` |
 
-> If errors occured, server should return the index of those error-causing `relationUserResult` (starts from 0) in extra.
+> If errors occurred, server should return the index of those error-causing `relationUserResult` (starts from 0) in extra.
 
 
 ## DB Table Definitions
@@ -442,7 +442,7 @@ create table if not exists `entity`
 )
 ```
 
-Where column `entity_type` contains type index forcertain language:
+Where column `entity_type` contains type index for certain language:
 
 ```ts
 declare enum entityTypeForXX {
