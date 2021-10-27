@@ -1,6 +1,8 @@
+import { Uri } from "vscode";
+
 export const htmlAdapter = (
-  scriptUri: string,
-  styleUri: string
+  scriptUri: Uri,
+  styleUri: Uri
 ) => {
   return `<!DOCTYPE html>
   <html lang="en">
@@ -14,6 +16,7 @@ export const htmlAdapter = (
         You need to enable JavaScript to run this app.
       </noscript>
       <div id="root"></div>
+      <p>Test the HTML is injected</p>
       <script src="${scriptUri}"></script>
     </body>
   </html>`;

@@ -3,28 +3,28 @@
 'use strict';
 
 const path = require('path');
+const miniCssExtractPlugin = require("mini-css-extract-plugin");
+const { getThemeVariables } = require('antd/dist/theme');
 
 //@ts-check
 /** @typedef {import('webpack').Configuration} WebpackConfig **/
 
 /** @type WebpackConfig */
 const extensionConfig = {
-  target: 'node', // vscode extensions run in a Node.js-context 📖 -> https://webpack.js.org/configuration/node/
-	mode: 'none', // this leaves the source code as close as possible to the original (when packaging we set this to 'production')
+  target: 'node',
+	mode: 'none',
 
-  entry: './src/extension.ts', // the entry point of this extension, 📖 -> https://webpack.js.org/configuration/entry-context/
+  entry: './src/extension.ts',
   output: {
-    // the bundle is stored in the 'dist' folder (check package.json), 📖 -> https://webpack.js.org/configuration/output/
     path: path.resolve(__dirname, 'dist'),
     filename: 'extension.js',
-    libraryTarget: 'commonjs2'
+    libraryTarget: 'commonjs2',
+    clean: true
   },
   externals: {
-    vscode: 'commonjs vscode' // the vscode-module is created on-the-fly and must be excluded. Add other modules that cannot be webpack'ed, 📖 -> https://webpack.js.org/configuration/externals/
-    // modules added here also need to be added in the .vsceignore file
+    vscode: 'commonjs vscode'
   },
   resolve: {
-    // support reading TypeScript and JavaScript files, 📖 -> https://github.com/TypeStrong/ts-loader
     extensions: ['.ts', '.js']
   },
   module: {
@@ -42,4 +42,73 @@ const extensionConfig = {
   },
   devtool: 'nosources-source-map'
 };
-module.exports = [ extensionConfig ];
+
+/** @type WebpackConfig */
+const webviewConfig = {
+  target: 'web',
+  mode: 'production',
+
+  entry: './src/webview/index.tsx',
+  output: {
+    path: path.resolve(__dirname, 'dist'),
+    filename: 'webview.js'
+  },
+  resolve: {
+    extensions: ['.ts', '.tsx', '.js', '.less', '.css']
+  },
+  plugins: [
+    //@ts-ignore
+    new miniCssExtractPlugin({
+      filename: 'webview.css'
+    }),
+  ],
+  module: {
+    rules: [
+      {
+        test: /\.tsx?$/,
+        use: {
+          loader: 'ts-loader'
+        },
+        exclude: /node_modules/
+      },
+      {
+        test: /\.jsx?$/,
+        use: {
+          loader: 'babel-loader',
+          options: {
+            presets: [
+              ['@babel/preset-env']
+            ]
+          }
+        }
+      },
+      {
+        test: /\.(le|c)ss$/,
+        use: [
+          miniCssExtractPlugin.loader,
+          'css-loader',
+          {
+            loader: "less-loader",
+            options: {
+              lessOptions: {
+                // Should be replaced since inline js will cause security issues. See https://lesscss.org/usage/#less-options
+                javascriptEnabled: true,
+                modifyVars: getThemeVariables({
+                  dark: false,
+                  compact: true
+                })
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  optimization: {
+    usedExports: true,
+  },
+  devtool: 'inline-source-map'
+};
+
+// TODO: reduce bundle size
+module.exports = [ extensionConfig, webviewConfig ];
