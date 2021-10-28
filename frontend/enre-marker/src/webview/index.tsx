@@ -1,9 +1,9 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
-import { Button } from 'antd';
-import 'antd/es/button/style';
+import 'antd/dist/antd.less';
+import { UserManagement } from './pages/login';
 
 ReactDOM.render(
-  <Button onClick={() => console.log('hello')}>Hello</Button>,
+  <UserManagement />,
   document.getElementById('root') as HTMLElement
 );

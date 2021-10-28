@@ -3,7 +3,7 @@
 'use strict';
 
 const path = require('path');
-const miniCssExtractPlugin = require("mini-css-extract-plugin");
+const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const { getThemeVariables } = require('antd/dist/theme');
 
 //@ts-check
@@ -58,7 +58,7 @@ const webviewConfig = {
   },
   plugins: [
     //@ts-ignore
-    new miniCssExtractPlugin({
+    new MiniCssExtractPlugin({
       filename: 'webview.css'
     }),
   ],
@@ -85,7 +85,7 @@ const webviewConfig = {
       {
         test: /\.(le|c)ss$/,
         use: [
-          miniCssExtractPlugin.loader,
+          MiniCssExtractPlugin.loader,
           'css-loader',
           {
             loader: "less-loader",

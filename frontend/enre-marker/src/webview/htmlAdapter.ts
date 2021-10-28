@@ -16,7 +16,6 @@ export const htmlAdapter = (
         You need to enable JavaScript to run this app.
       </noscript>
       <div id="root"></div>
-      <p>Test the HTML is injected</p>
       <script src="${scriptUri}"></script>
     </body>
   </html>`;
