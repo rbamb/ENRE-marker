@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import path from 'path';
-import { htmlAdapter } from './webview/htmlAdapter';
+import { htmlAdapter } from '../webview/htmlAdapter';
 
 export const activate = (context: vscode.ExtensionContext) => {
   let panel: vscode.WebviewPanel | undefined = undefined;
@@ -24,6 +24,11 @@ export const activate = (context: vscode.ExtensionContext) => {
         vscode.Uri.file(path.join(context.extensionPath, 'dist', 'webview.css')).with({ scheme: 'vscode-resource' })
       );
 
+      panel.webview.postMessage({
+        type: 'switchPage',
+        payload: 'login'
+      });
+
       // Handle any post-close logic in here
       panel.onDidDispose(() => {
         panel = undefined;
@@ -31,7 +36,7 @@ export const activate = (context: vscode.ExtensionContext) => {
         null,
         context.subscriptions
       );
-
+      
       panel.webview.onDidReceiveMessage(
         message => {
           switch (message.type) {
@@ -45,5 +50,18 @@ export const activate = (context: vscode.ExtensionContext) => {
     }
   });
 
+  let test = vscode.commands.registerTextEditorCommand('enre-marker.test', (editor, edit) => {
+    let decorators = vscode.window.createTextEditorDecorationType({
+      isWholeLine: true,
+      dark: {
+        backgroundColor: 'white',
+        color: 'black'
+      }
+    });
+
+    editor.setDecorations(decorators, [new vscode.Range(new vscode.Position(0,0), new vscode.Position(0,5))]);
+  });
+
   context.subscriptions.push(disposable);
+  context.subscriptions.push(test);
 };

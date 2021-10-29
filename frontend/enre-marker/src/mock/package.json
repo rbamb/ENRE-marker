@@ -1,0 +1,14 @@
+{
+  "name": "mock",
+  "version": "0.0.1",
+  "description": "Mock server to accelerate development",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon ."
+  },
+  "devDependencies": {
+    "express": "^4.17.1",
+    "mockjs": "^1.1.0",
+    "nodemon": "^2.0.14"
+  }
+}

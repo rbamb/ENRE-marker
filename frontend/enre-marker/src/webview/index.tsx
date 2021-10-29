@@ -1,9 +1,9 @@
-import * as React from 'react';
-import * as ReactDOM from 'react-dom';
+import React from 'react';
+import ReactDOM from 'react-dom';
 import 'antd/dist/antd.less';
-import { UserManagement } from './pages/login';
+import { LaunchPad } from './pages/launchPad';
 
 ReactDOM.render(
-  <UserManagement />,
+  <LaunchPad />,
   document.getElementById('root') as HTMLElement
 );

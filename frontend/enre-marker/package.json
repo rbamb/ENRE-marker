@@ -20,6 +20,11 @@
         "command": "enre-marker.management",
         "title": "Management Center",
         "category": "ENRE-marker"
+      },
+      {
+        "command": "enre-marker.test",
+        "title": "Show color in editor view",
+        "category": "ENRE-marker"
       }
     ]
   },

@@ -7,6 +7,6 @@ export const UserManagement: React.FC = () => {
   return (<>
   <Input />
   <Input.Password />
-  <Button onClick={vscode.postMessage({type: 'btn-clicked'})}>Log in</Button>
+  <Button onClick={() => vscode.postMessage({type: 'btn-clicked'})}>Log in</Button>
   </>);
 };
