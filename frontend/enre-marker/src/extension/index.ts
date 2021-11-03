@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import path from 'path';
-import { htmlAdapter } from '../webview/htmlAdapter';
+import { htmlAdapter } from './webPanel/htmlAdapter';
 
 export const activate = (context: vscode.ExtensionContext) => {
   let panel: vscode.WebviewPanel | undefined = undefined;
@@ -26,7 +26,7 @@ export const activate = (context: vscode.ExtensionContext) => {
 
       panel.webview.postMessage({
         type: 'switchPage',
-        payload: 'login'
+        payload: 'project'
       });
 
       // Handle any post-close logic in here

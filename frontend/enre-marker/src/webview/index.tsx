@@ -1,9 +1,11 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import 'antd/dist/antd.less';
-import { LaunchPad } from './pages/launchPad';
+import { App } from './pages';
+
+if (module.hot) {module.hot.accept();};
 
 ReactDOM.render(
-  <LaunchPad />,
+  <App />,
   document.getElementById('root') as HTMLElement
 );
