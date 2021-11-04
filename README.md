@@ -35,7 +35,9 @@ To login users.
 {
   code: 200,
   message: 'success',
-  token: 256-chars
+  data: {
+    token: 256-chars
+  }
 }
 ```
 
@@ -66,7 +68,9 @@ Get project lists.
 {
   code: 200,
   message: 'success',
-  project: Array<project>
+  data: {
+    project: Array<project>
+  }
 }
 
 declare type project {
@@ -101,9 +105,11 @@ Claim a project to label. A user can only claim one project in a single time, an
 {
   code: 200,
   message: 'succeeded',
-  dir: string,
-  fileHash: Array<file>,
-  hash: 256-chars
+  data: {
+    dir: string,
+    fileHash: Array<file>,
+    hash: 256-chars
+  }
 }
 
 declare type file {
@@ -144,7 +150,9 @@ Get all entities in a specified file from a specified project.
 {
   code: 200,
   message: 'success',
-  entity: Array<entity>
+  data: {
+    entity: Array<entity>
+  }
 }
 
 declare type entity {
@@ -211,7 +219,9 @@ Get all relations **started from** the specified file.
 {
   code: 200,
   message: 'success',
-  reltion: Array<relation>
+  data: {
+    reltion: Array<relation>
+  }
 }
 
 declare type relation {
