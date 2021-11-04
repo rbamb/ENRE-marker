@@ -89,7 +89,7 @@ declare type project {
 | --- | --- | --- | --- |
 | any | 500 | error |
 
-#### `POST /project/claim?pid=<pid: number>`
+#### `POST /project/<pid: number>/claim`
 
 Claim a project to label. A user can only claim one project in a single time, and a project can be claimed by multiple users. If this API is called when the user already claimed a project before, then just override with the newest one.
 
@@ -132,7 +132,7 @@ Claim some todo tasks in the specified project.
 
 [TODO]
 
-#### `GET /project/<pid: number>/entity?fid=<fid: number>`
+#### `GET /project/<pid: number>/file/<fid: number>/entity`
 
 Get all entities in a specified file from a specified project.
 
@@ -199,7 +199,7 @@ declare type manuallyEntity {
 | pid does not exist | 4001 | no such pid |
 | fid does not exist | 4002 | no such fid |
 
-#### `GET /project/<pid: number>/relation?fid=<fid: number>`
+#### `GET /project/<pid: number>/file/<fid: number>/relation`
 
 Get all relations **started from** the specified file.
 
@@ -245,7 +245,7 @@ declare type manuallyRelation {
 | pid does not exist | 4001 | no such pid |
 | rid does not exist | 4002 | no such rid |
 
-#### `POST /project/<pid: number>/entity?fid=<fid: number>`
+#### `POST /project/<pid: number>/file/<fid: number>/entity`
 
 Post user label result(s) of entity to the server.
 
@@ -304,7 +304,7 @@ declare enum fixOption {
 
 > If errors occurred, server should return the index of those error-causing `entityUserResult` (starts from 0) in extra.
 
-#### `POST /project/<pid: number>/relation?fid=<fid: number>`
+#### `POST /project/<pid: number>/file/<fid: number>/relation`
 
 Post user label result(s) of relation to the server.
 
