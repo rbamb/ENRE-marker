@@ -23,18 +23,15 @@ export const App: React.FC = () => {
 
   return (
     <Router>
-      <ul>
-        <li>
-          <Link to='/'>User Management</Link>
-        </li>
-      </ul>
+      <Link to='/project'>To Project</Link>
+      <Link to='/'>To Account</Link>
 
       <Switch>
-        <Route path='/project'>
-          <ProjectViewer />
-        </Route>
-        <Route path='/'>
+        <Route path='/' exact>
           <UserManagement />
+        </Route>
+        <Route path='/project' exact>
+          <ProjectViewer />
         </Route>
       </Switch>
     </Router>

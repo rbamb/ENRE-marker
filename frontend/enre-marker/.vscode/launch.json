@@ -16,7 +16,7 @@
 				"${workspaceFolder}/dist/**/*.js",
 				"${workspaceFolder}/dist/**/*.css"
 			],
-			"preLaunchTask": "debug"
+			"preLaunchTask": "compile-all"
 		}
 	]
 }

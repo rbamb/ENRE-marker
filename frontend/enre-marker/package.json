@@ -29,11 +29,14 @@
     ]
   },
   "scripts": {
-    "compile:dev": "(cd src/extension && npm run compile:dev-w)&& (cd src/webview && npm run compile:prod)&& npm run start:mock",
-    "compile:dev-no-mock": "(cd src/extension && npm run compile:dev-w)&& (cd src/webview && npm run compile:prod)",
-    "compile:ext-only": "(cd src/extension && npm run compile:dev-w)",
-    "compile:prod": "(cd src/extension && npm run compile:prod)&& (cd src/webview && npm run compile:prod)",
+    "compile:dev": "concurrently \"cd src/extension && npm run compile:dev-w\" \"cd src/webview && npm run compile:prod\" \"npm run start:mock\"",
+    "compile:dev-no-mock": "concurrently \"cd src/extension && npm run compile:dev-w\" \"cd src/webview && npm run compile:prod\"",
+    "compile:ext-only": "cd src/extension && npm run compile:dev-w",
+    "compile:prod": "concurrently \"cd src/extension && npm run compile:prod\" \"cd src/webview && npm run compile:prod\"",
     "start:mock": "cd src/mock && npm start",
     "vscode:prepublish": "npm run package"
+  },
+  "devDependencies": {
+    "concurrently": "^6.3.0"
   }
 }

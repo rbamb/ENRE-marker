@@ -54,7 +54,7 @@ export const activate = (context: vscode.ExtensionContext) => {
     let decorators = vscode.window.createTextEditorDecorationType({
       isWholeLine: true,
       dark: {
-        backgroundColor: 'white',
+        backgroundColor: 'green',
         color: 'black'
       }
     });

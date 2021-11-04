@@ -1,30 +1,33 @@
 const express = require('express');
 const server = express();
 const port = 3000;
+const cors = require('cors');
 
 const Mock = require('mockjs');
 
+server.use(cors({ origin: '*' }));
+
 server.post('/api/v1/user/login', (req, res) => {
-  const data = Mock.mock({
+  res.json(Mock.mock({
     code: 200,
     message: 'success',
     token: /([a-z]|[A-Z]|[0-9]){256}/
-  });
-  
-  res.send(JSON.stringify(data));
+  }));
 });
 
 server.get('/api/v1/project', (req, res) => {
-  const data = Mock.mock({
+  res.json(Mock.mock({
     code: 200,
     message: 'success',
     "project|1-10": [{
-      "pid|100-150": 100,
+      "pid|+1": 100,
       name: '@word',
+      version: /([a-z]|[0-9]){7}/,
+      "lang|+1": ['js', 'java', 'cpp', 'golang', 'python'],
+      'progress|0-100': 0,
+      'claimed|1': true
     }]
-  });
-
-  res.send(JSON.stringify(data));
+  }));
 });
 
 server.listen(port, () => {

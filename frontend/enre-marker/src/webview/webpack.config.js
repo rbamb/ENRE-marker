@@ -3,6 +3,7 @@
 'use strict';
 
 const path = require('path');
+const { DefinePlugin } = require('webpack');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const { getThemeVariables } = require('antd/dist/theme');
 
@@ -26,18 +27,20 @@ const webviewConfig = env => {
       static: {
         directory: path.resolve(__dirname, '.static')
       },
+      historyApiFallback: true,
       hot: true,
-      open: true,
       port: 9000
     },
-    plugins: {
-      development: undefined,
+    plugins: [...{
+      development: [],
       production: [
         new MiniCssExtractPlugin({
           filename: 'webview.css'
         })
       ]
-    }[NODE_ENV],
+    }[NODE_ENV], new DefinePlugin({
+      REMOTE: NODE_ENV === 'production' ? '"http://localhost:3000/api/v1/"' : '"http://localhost:3000/api/v1/"'
+    })],
     resolve: {
       extensions: ['.ts', '.tsx', '.js', '.less', '.css']
     },

@@ -5,10 +5,51 @@
 	"tasks": [
 		{
 			"type": "npm",
-			"script": "compile:ext-only",
+			"script": "compile:dev-no-mock",
+			"isBackground": true,
 			"group": "build",
-			"problemMatcher": [],
-			"label": "debug"
+			"problemMatcher": [
+        {
+          "pattern": [
+            {
+              "regexp": ".",
+              "file": 1,
+              "location": 2,
+              "message": 3
+            }
+          ],
+          "background": {
+            "activeOnStart": true,
+            "beginsPattern": "> enre-marker@\\d*\\.\\d*\\.\\d* compile:dev-no-mock",
+            "endsPattern": "\\s* exited with code 0"
+          }
+        }
+      ],
+			"label": "compile-all"
+		},
+    {
+			"type": "npm",
+			"script": "compile:ext-only",
+			"isBackground": true,
+			"group": "build",
+			"problemMatcher": [
+        {
+          "pattern": [
+            {
+              "regexp": ".",
+              "file": 1,
+              "location": 2,
+              "message": 3
+            }
+          ],
+          "background": {
+            "activeOnStart": true,
+            "beginsPattern": "> enre-marker@\\d*\\.\\d*\\.\\d* compile:ext-only",
+            "endsPattern": "webpack \\d*\\.\\d*\\.\\d* compiled successfully in \\d* ms"
+          }
+        }
+      ],
+			"label": "compile-ext-only"
 		}
 	]
 }
