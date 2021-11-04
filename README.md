@@ -74,11 +74,14 @@ declare type project {
   name: string,
   version: 7-chars-git-commit-code,
   lang: language-code,
-  progress: number(0...100)
+  progress: number(0...100),
+  claimed: bool
 }
 ```
 
-* `progress` is the label progress where `100` means that all entities and relations are labeled.
+* `progress` is the label progress where `100` means that all entities and relations are labeled;
+
+* `claimed` indicates that whether the current user has claimed this project.
 
 ###### if failed
 
