@@ -395,6 +395,7 @@ create table if not exists `login`
 create table if not exists `project`
 (
   pid integer(3) not null auto_increment = 100,
+  p_name varchar(15) not null, 
   github_url varchar(256) not null,
   git_branch varchar(16) not null default 'main',
   git_commit_hash char(7) not null,
