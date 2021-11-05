@@ -4,11 +4,11 @@ import 'antd/dist/antd.less';
 import { ConfigProvider } from 'antd';
 import { App } from './pages';
 
-if (module.hot) {module.hot.accept();};
+if (module.hot) { module.hot.accept(); }
 
 ReactDOM.render(
   <ConfigProvider componentSize="middle">
     <App />
   </ConfigProvider>,
-  document.getElementById('root') as HTMLElement
+  document.getElementById('root') as HTMLElement,
 );

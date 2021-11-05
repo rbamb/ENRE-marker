@@ -2,53 +2,59 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useRequest } from 'ahooks';
 import { Table, Progress, Button } from 'antd';
-import { request, url } from '../../compatible/httpAdapter';
 import { SortOrder } from 'antd/lib/table/interface';
+import { request } from '../../compatible/httpAdapter';
 
 const renderAction = (claimed: boolean, data: remote.project) => {
+  // TODO: Refactor with useRequest
   const handleClaimClicked = async () => {
-    await request(`POST /project/claim?pid=${data.pid}`)
-  }
+    const res = await request(`POST project/${data.pid}/claim`);
+    console.log(res);
+  };
 
   if (data.progress === 100) {
-    return <Link to={`/project/${data.pid}`}>
-      <Button type="dashed">View</Button>
-    </Link>
-  } else {
-    if (claimed) {
-      return <Link to={`/project/${data.pid}`}>
+    return (
+      <Link to={`/project/${data.pid}`}>
+        <Button type="dashed">View</Button>
+      </Link>
+    );
+  }
+  if (claimed) {
+    return (
+      <Link to={`/project/${data.pid}`}>
         <Button disabled>Claimed</Button>
       </Link>
-    } else {
-      return <Link to={`/project/${data.pid}`}>
-        <Button onClick={handleClaimClicked}>Claim</Button>
-      </Link>
-    }
+    );
   }
-}
+  return (
+    <Link to={`/project/${data.pid}`}>
+      <Button onClick={handleClaimClicked}>Claim</Button>
+    </Link>
+  );
+};
 
 const columns = [
   {
     title: 'Project Name',
     dataIndex: 'name',
     key: 'pname',
-    render: (name: string, data: remote.project) => <Link to={`/project/${data.pid}`}>{name}</Link>
+    render: (name: string, data: remote.project) => <Link to={`/project/${data.pid}`}>{name}</Link>,
   },
   {
     title: 'Version',
     dataIndex: 'version',
-    key: 'version'
+    key: 'version',
   },
   {
     title: 'Language',
     dataIndex: 'lang',
-    key: 'lang'
+    key: 'lang',
   },
   {
     title: 'Mark Progress',
     dataIndex: 'progress',
     key: 'progress',
-    render: (value: number) => <Progress percent={value} size="small" />
+    render: (value: number) => <Progress percent={value} size="small" />,
   },
   {
     title: 'Action',
@@ -57,9 +63,9 @@ const columns = [
     render: renderAction,
     // Defaultly let currently claimed project be shown at top of the table
     // TODO: refactor by sort before display
-    sorter: (p1: remote.project, p2: remote.project) => (p1.claimed > p2.claimed) ? 1 : -1,
-    sortOrder: 'descend' as SortOrder
-  }
+    sorter: (p1: remote.project, p2: remote.project) => ((p1.claimed > p2.claimed) ? 1 : -1),
+    sortOrder: 'descend' as SortOrder,
+  },
 ];
 
 export const ProjectViewer: React.FC = () => {
@@ -68,7 +74,7 @@ export const ProjectViewer: React.FC = () => {
   return (
     <Table
       dataSource={error ? undefined : data as any}
-      rowKey={record => record.pid}
+      rowKey={(record) => record.pid}
       columns={columns}
       pagination={false}
       loading={loading}

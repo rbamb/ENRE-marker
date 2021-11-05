@@ -11,7 +11,7 @@ export const htmlAdapter = (
       <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
       <link rel="stylesheet" type="text/css" href="${styleUri}">
     </head>
-    <body>
+    <body style="padding: 0">
       <noscript>
         You need to enable JavaScript to run this app.
       </noscript>

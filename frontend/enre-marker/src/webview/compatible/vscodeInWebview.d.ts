@@ -11,4 +11,3 @@ declare global {
 
   const REMOTE: string;
 }
-

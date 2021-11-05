@@ -1,0 +1,53 @@
+{
+    "env": {
+        "browser": true,
+        "es2021": true
+    },
+    "extends": [
+        "airbnb",
+        "plugin:react/recommended",
+        "plugin:import/typescript"
+    ],
+    "parser": "@typescript-eslint/parser",
+    "parserOptions": {
+        "ecmaFeatures": {
+            "jsx": true
+        },
+        "ecmaVersion": "latest",
+        "sourceType": "module"
+    },
+    "plugins": [
+        "@typescript-eslint",
+        "react",
+        "react-hooks"
+    ],
+    "overrides": [
+        {
+            "files": [
+                "*.d.ts"
+            ],
+            "rules": {
+                "no-unused-vars": 0
+            }
+        }
+    ],
+    "rules": {
+        "react-hooks/rules-of-hooks": 2,
+        "react-hooks/exhaustive-deps": 1,
+        "react/jsx-filename-extension": [
+            2,
+            {
+                "extensions": [
+                    ".jsx",
+                    ".tsx"
+                ]
+            }
+        ],
+        "react/jsx-props-no-spreading": 0,
+        "import/prefer-default-export": 0,
+        "no-undef": 0,
+        "import/extensions": 0,
+        "no-use-before-define": 0,
+        "no-unused-vars": 1
+    }
+}
