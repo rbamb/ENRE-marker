@@ -11,7 +11,7 @@ declare namespace remote {
     token: string
   }
 
-  interface resProject extends resCommon {
+  interface resProjects extends resCommon {
     project: Array<project>
   }
 
@@ -22,5 +22,67 @@ declare namespace remote {
     lang: string,
     progress: number,
     claimed: boolean
+  }
+
+  interface resFiles extends resCommon {
+    dir: string,
+    fileHash: Array<file>,
+    hash: string
+  }
+
+  interface file {
+    fid: number,
+    path: string,
+    entity: {
+      count: number,
+      progress: number
+    },
+    relation: {
+      count: number,
+      progress: number
+    }
+    hash: string
+  }
+
+  interface location {
+    start: {
+      line: number,
+      column: number
+    },
+    end: {
+      line: number,
+      column: number
+    }
+  }
+
+  enum operation {
+    reviewPassed = 0,
+    remove = 1,
+    modify = 2
+  }
+
+  interface status {
+    hasBeenReviewed: boolean,
+    operation?: operation,
+    newEntity?: manuallyEntity,
+  }
+
+  interface resEntity extends resCommon {
+    entity: Array<entity>
+  }
+
+  interface entity {
+    eid: number,
+    name: string,
+    loc: location,
+    type: string,
+    isManually: boolean,
+    status: status
+  }
+
+  interface manuallyEntity {
+    name: string,
+    loc: location,
+    type: string
   }
 }

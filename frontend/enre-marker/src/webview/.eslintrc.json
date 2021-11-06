@@ -21,16 +21,7 @@
         "react",
         "react-hooks"
     ],
-    "overrides": [
-        {
-            "files": [
-                "*.d.ts"
-            ],
-            "rules": {
-                "no-unused-vars": 0
-            }
-        }
-    ],
+    "ignorePatterns": "**/*.d.ts",
     "rules": {
         "react-hooks/rules-of-hooks": 2,
         "react-hooks/exhaustive-deps": 1,
@@ -44,6 +35,7 @@
             }
         ],
         "react/jsx-props-no-spreading": 0,
+        "react/require-default-props": 0,
         "import/prefer-default-export": 0,
         "no-undef": 0,
         "import/extensions": 0,

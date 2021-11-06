@@ -42,3 +42,7 @@ export const workingReducer = (state: any, action: any) => {
   getApi.setState({ working: newState });
   return newState;
 };
+
+export const NavContext = createContext(null);
+
+export const navReducer = (state: any, { payload }: any) => payload;

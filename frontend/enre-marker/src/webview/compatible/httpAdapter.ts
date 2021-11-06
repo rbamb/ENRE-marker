@@ -14,9 +14,9 @@ export const request = (methodUrl: string, body?: any): Promise<any> => {
   return new Promise((resolve, reject) => {
     fetch(url(seg[1]), {
       method: seg[0],
-      headers: {
+      headers: getApi.getState()?.token ? {
         Token: getApi.getState().token,
-      },
+      } : undefined,
       body: JSON.stringify(body),
     })
       .then((res) => res.json())

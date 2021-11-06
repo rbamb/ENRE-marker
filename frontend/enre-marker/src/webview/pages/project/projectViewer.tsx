@@ -1,33 +1,41 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useContext } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useRequest } from 'ahooks';
 import { Table, Progress, Button } from 'antd';
 import { SortOrder } from 'antd/lib/table/interface';
 import { request } from '../../compatible/httpAdapter';
+import { NavContext, WorkingContext } from '../../context';
 
-const renderAction = (claimed: boolean, data: remote.project) => {
-  // TODO: Refactor with useRequest
+const RenderAction = (claimed: boolean, { pid, name, progress }: remote.project) => {
+  // @ts-ignore
+  const { dispatcher: workingDispatcher } = useContext(WorkingContext);
+  // @ts-ignore
+  const { dispatcher: navDispatcher } = useContext(NavContext);
+  const navigate = useNavigate();
+
   const handleClaimClicked = async () => {
-    const res = await request(`POST project/${data.pid}/claim`);
-    console.log(res);
+    const res: remote.resFiles = await request(`POST project/${pid}/claim`);
+    workingDispatcher({ payload: { project: { pid, name } } });
+    navDispatcher({ payload: 'file' });
+    navigate(`/project/${pid}/file`, { state: res.fileHash });
   };
 
-  if (data.progress === 100) {
+  if (progress === 100) {
     return (
-      <Link to={`/project/${data.pid}`}>
+      <Link to={`/project/${pid}`}>
         <Button type="dashed">View</Button>
       </Link>
     );
   }
   if (claimed) {
     return (
-      <Link to={`/project/${data.pid}`}>
+      <Link to={`/project/${pid}`}>
         <Button disabled>Claimed</Button>
       </Link>
     );
   }
   return (
-    <Link to={`/project/${data.pid}`}>
+    <Link to={`/project/${pid}`}>
       <Button onClick={handleClaimClicked}>Claim</Button>
     </Link>
   );
@@ -60,7 +68,7 @@ const columns = [
     title: 'Action',
     dataIndex: 'claimed',
     key: 'action',
-    render: renderAction,
+    render: RenderAction,
     // Defaultly let currently claimed project be shown at top of the table
     // TODO: refactor by sort before display
     sorter: (p1: remote.project, p2: remote.project) => ((p1.claimed > p2.claimed) ? 1 : -1),
@@ -69,7 +77,7 @@ const columns = [
 ];
 
 export const ProjectViewer: React.FC = () => {
-  const { data, error, loading } = useRequest(() => request('GET project').then(({ project }: remote.resProject) => project));
+  const { data, error, loading } = useRequest(() => request('GET project').then(({ project }: remote.resProjects) => project));
 
   return (
     <Table

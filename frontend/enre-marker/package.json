@@ -29,6 +29,7 @@
     ]
   },
   "scripts": {
+    "compile:dev-webview": "cd src/webview && npm run compile:dev",
     "compile:dev": "concurrently \"cd src/extension && npm run compile:dev-w\" \"cd src/webview && npm run compile:prod\" \"npm run start:mock\"",
     "compile:dev-no-mock": "concurrently \"cd src/extension && npm run compile:dev-w\" \"cd src/webview && npm run compile:prod\"",
     "compile:ext-only": "cd src/extension && npm run compile:dev-w",

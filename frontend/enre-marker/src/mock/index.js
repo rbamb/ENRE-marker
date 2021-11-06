@@ -7,46 +7,20 @@ const Mock = require('mockjs');
 
 server.use(cors({ origin: '*' }));
 
-const sha256 = /([a-z]|[A-Z]|[0-9]){256}/;
+const api_0 = require('./lib/user.js');
+const api_1 = require('./lib/project.js');
 
-server.post('/api/v1/user/login', (req, res) => {
-  res.json(Mock.mock({
-    code: 200,
-    message: 'success',
-    token: sha256
-  }));
-});
+const apis = { ...api_0, ...api_1 };
 
-server.get('/api/v1/project', (req, res) => {
-  res.json(Mock.mock({
-    code: 200,
-    message: 'success',
-    "project|1-10": [{
-      "pid|+1": 100,
-      name: '@word',
-      version: /([a-z]|[0-9]){7}/,
-      "lang|+1": ['js', 'java', 'cpp', 'golang', 'python'],
-      'progress|0-100': 0,
-      'claimed|1': true
-    }]
-  }));
-});
+Object.keys(apis).forEach(key => {
+  const seg = key.split(' ');
 
-server.post('/api/v1/project/:pid/claim', (req, res) => {
-  console.log(`Getting url param pid = ${req.params.pid}`)
-
-  res.json(Mock.mock({
-    code: 200,
-    message: 'success',
-    dir: '/',
-    'fileHash|1-10': [{
-      'fid|+1': 0,
-      path: '/some/path/to/a.js',
-      hash: sha256
-    }],
-    hash: sha256
-  }))
-});
+  server[seg[0].toLowerCase()](`/api/v1/${seg[1]}`, (req, res) => {
+    setTimeout(() => {
+      apis[key](req, res);
+    }, seg.length !== 3 ? 0 : seg[2]);
+  })
+})
 
 server.listen(port, () => {
   console.log(`Mock server started at http://localhost:${port}`);

@@ -31,13 +31,13 @@ export const Login: React.FC<{ uid?: string }> = ({ uid }) => {
         name="uid"
         rules={[{ required: true }]}
       >
-        <Input prefix={<UserOutlined style={{ color: 'rgba(0,0,0,0.25)' }} />} placeholder="User ID" />
+        <Input prefix={<UserOutlined style={{ color: 'rgba(0,0,0,0.25)' }} />} placeholder="User ID" disabled={loading} />
       </Form.Item>
       <Form.Item
         name="password"
         rules={[{ required: true }]}
       >
-        <Input.Password prefix={<LockOutlined style={{ color: 'rgba(0,0,0,0.25)' }} />} placeholder="Password" />
+        <Input.Password prefix={<LockOutlined style={{ color: 'rgba(0,0,0,0.25)' }} />} placeholder="Password" disabled={loading} />
       </Form.Item>
       <Form.Item>
         <Button
@@ -51,8 +51,4 @@ export const Login: React.FC<{ uid?: string }> = ({ uid }) => {
       </Form.Item>
     </Form>
   );
-};
-
-Login.defaultProps = {
-  uid: undefined,
 };
