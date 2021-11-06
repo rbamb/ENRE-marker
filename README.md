@@ -109,7 +109,14 @@ Claim a project to label. A user can only claim one project in a single time, an
 declare type file {
   fid: number,
   path: relative-path-string,
-  progress: number(0...100),
+  entity: {
+    count: number,
+    progress: number(0...100)
+  },
+  relation: {
+    count: number,
+    progress: number(0...100)
+  },
   hash: 256-chars
 }
 ```
