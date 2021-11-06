@@ -109,6 +109,7 @@ Claim a project to label. A user can only claim one project in a single time, an
 declare type file {
   fid: number,
   path: relative-path-string,
+  progress: number(0...100),
   hash: 256-chars
 }
 ```
@@ -126,11 +127,26 @@ declare type file {
 | any | 500 | error |
 | pid does not exist | 4001 | no such pid |
 
-#### `GET /project/<pid: number>/task`
+#### `GET /project/<pid: number>`
 
-Claim some todo tasks in the specified project.
+View infos of the specificed project without claim, just viewing data.
 
-[TODO]
+##### Should return
+
+###### if succeeded
+
+```ts
+{
+  code: 200,
+  message: 'succeeded',
+  dir: string,
+  fileHash: Array<file>,
+  hash: 256-chars
+}
+```
+
+> Completely identical to `POST /project/<pid: number>/claim`, only do not claim this project in backend
+
 
 #### `GET /project/<pid: number>/file/<fid: number>/entity`
 
