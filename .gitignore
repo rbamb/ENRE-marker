@@ -1,6 +1,5 @@
 # frontend
 frontend/enre-marker/**/node_modules
 frontend/enre-marker/**/dist
-frontend/enre-marker/**/package-lock.json
 
 # backend
