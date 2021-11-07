@@ -20,9 +20,16 @@ import { getApi } from '../compatible/apiAdapter';
 import { ProjectDashboard } from './project/projectDashboard';
 import { Entity } from './er/entity';
 
+// FIXME: for quick debug only, remove in production
+const enabled = false;
+
 const RequireAuth = ({ children }: React.PropsWithChildren<any>) => {
   // @ts-ignore
   const { state } = useContext(LoginContext);
+
+  if (!enabled) {
+    return children;
+  }
 
   if (!state?.token) {
     notification.error({
@@ -128,7 +135,7 @@ export const App: React.FC = () => {
                     path="/project/:pid"
                     element={(
                       <RequireAuth>
-                        <ProjectDashboard />
+                        <ProjectDashboard init />
                       </RequireAuth>
                     )}
                   />

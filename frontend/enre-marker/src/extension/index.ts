@@ -36,7 +36,7 @@ export const activate = (context: vscode.ExtensionContext) => {
         null,
         context.subscriptions
       );
-      
+
       panel.webview.onDidReceiveMessage(
         message => {
           switch (message.type) {
@@ -59,7 +59,7 @@ export const activate = (context: vscode.ExtensionContext) => {
       }
     });
 
-    editor.setDecorations(decorators, [new vscode.Range(new vscode.Position(0,0), new vscode.Position(0,5))]);
+    editor.setDecorations(decorators, [new vscode.Range(new vscode.Position(0, 0), new vscode.Position(0, 5))]);
   });
 
   context.subscriptions.push(disposable);
