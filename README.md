@@ -72,6 +72,7 @@ Get project lists.
 declare type project {
   pid: number,
   name: string,
+  githubUrl: string
   version: 7-chars-git-commit-code,
   lang: language-code,
   progress: number(0...100),
