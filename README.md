@@ -175,7 +175,7 @@ declare type entity {
   eid: number,
   name: string,
   loc: location,
-  type: entity-type-string,
+  type: number,
   isManually: boolean,
   status: status
 }
@@ -207,7 +207,7 @@ declare enum operation {
 declare type manuallyEntity {
   name: string,
   loc: location,
-  type: entity-type-string
+  type: number
 }
 ```
 
@@ -243,7 +243,7 @@ declare type relation {
   from: entity,
   to: entity,
   toFid: number,
-  type: relation-type-string,
+  type: number,
   isManually: boolean,
   status: status
 }
@@ -258,7 +258,7 @@ declare type status {
 declare type manuallyRelation {
   from: entity,
   to: entity,
-  type: relation-type-string
+  type: number
 }
 ```
 
