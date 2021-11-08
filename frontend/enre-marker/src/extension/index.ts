@@ -47,6 +47,27 @@ export const activate = (context: vscode.ExtensionContext) => {
         undefined,
         context.subscriptions
       );
+
+      vscode.window.onDidChangeTextEditorSelection(e => {
+        const sel = e.selections[0];
+        if (e.kind === 2) {
+          panel?.webview.postMessage({
+            command: 'selection-change', payload: {
+              name: e.textEditor.document.getText(sel),
+              loc: {
+                start: {
+                  line: sel.start.line,
+                  column: sel.start.character
+                },
+                end: {
+                  line: sel.end.line,
+                  column: sel.end.character
+                }
+              }
+            }
+          });
+        }
+      });
     }
   });
 

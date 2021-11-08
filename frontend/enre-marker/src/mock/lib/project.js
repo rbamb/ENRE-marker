@@ -8,6 +8,7 @@ module.exports = {
       message: 'success',
       "project|1-10": [{
         "pid|+1": 100,
+        githubUrl: 'https://github.com/xxx/yyy',
         name: '@word',
         version: /([a-z]|[0-9]){7}/,
         "lang|+1": ['js', 'java', 'cpp', 'golang', 'python'],

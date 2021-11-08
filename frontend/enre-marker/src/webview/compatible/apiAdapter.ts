@@ -5,24 +5,57 @@
 
 const onlySingleCopy = typeof acquireVsCodeApi === 'undefined' ? undefined : acquireVsCodeApi();
 
+// FIXME: only for debug purpose
+const mockState = {
+  login: {
+    uid: 100,
+    token: 'sometoken',
+  },
+  working: {
+    project: {
+      pid: 100,
+      name: 'ENRE.js',
+    },
+    file: {
+      fid: 0,
+      path: '/some/to/path/a.js',
+      workingOn: 'entity',
+    },
+  },
+};
+
 export const getApi = onlySingleCopy || {
   postMess: (message: any, transfer: any) => console.log(message),
-  getState: () => JSON.parse(JSON.stringify(window.localStorage)),
+  getState: () => mockState,
   setState: (newState: any) => {
-    window.localStorage.setItem(Object.keys(newState)[0], newState[Object.keys(newState)[0]]);
+    mockState[Object.keys(newState)[0]] = newState[Object.keys(newState)[0]];
     console.log(`set new state ${JSON.stringify(newState)}`);
   },
 };
 
 export interface stateModule {
-  login?: {
-    uid?: number,
-    token?: string
-  },
-  working?: {
-    project?: {
-      pid: number,
-      name: string
-    }
-  }
+  login?: loginState,
+  working?: workingState
+}
+
+export interface loginState {
+  uid?: number,
+  token?: string
+}
+
+export interface workingState {
+  project?: projectState,
+  file?: fileState
+}
+
+export interface projectState {
+  pid: number,
+  name: string
+}
+
+export interface fileState {
+  fid: number,
+  path: string,
+  workingOn: 'entity' | 'relation',
+  mode: 'mark' | 'view'
 }

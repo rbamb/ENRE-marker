@@ -8,7 +8,12 @@ import {
 } from 'react-router-dom';
 import { Menu, notification, Button } from 'antd';
 import {
-  UserOutlined, ProjectOutlined, FileTextOutlined, RightOutlined,
+  UserOutlined,
+  ProjectOutlined,
+  FileTextOutlined,
+  RightOutlined,
+  NodeIndexOutlined,
+  Loading3QuartersOutlined,
 } from '@ant-design/icons';
 import { Login } from './user/login';
 import { FileViewer } from './project/fileViewer';
@@ -18,7 +23,7 @@ import {
 } from '../context';
 import { getApi } from '../compatible/apiAdapter';
 import { ProjectDashboard } from './project/projectDashboard';
-import { Entity } from './er/entity';
+import { EntityViewer } from './er/entityViewer';
 
 // FIXME: for quick debug only, remove in production
 const enabled = false;
@@ -104,6 +109,20 @@ export const App: React.FC = () => {
                     Files
                   </NavLink>
                 </Menu.Item>
+                {loginState?.token && workingState?.file ? (
+                  <Menu.Item key={workingState.file.workingOn} icon={<RightOutlined />}>
+                    <NavLink to={`/project/${workingState.project.pid}/file/${workingState.file.fid}/${workingState.file.workingOn}`}>
+                      {`${workingState.file.path.split('/').pop()}: ${workingState.file.workingOn === 'entity' ? 'Entity' : 'Relation'}`}
+                    </NavLink>
+                  </Menu.Item>
+                ) : undefined}
+                {loginState?.token && workingState?.file ? (
+                  <Menu.Item key={workingState.file.workingOn === 'entity' ? 'relation' : 'entity'} icon={workingState.file.workingOn === 'entity' ? <NodeIndexOutlined /> : <Loading3QuartersOutlined />}>
+                    <NavLink to={`/project/${workingState.project.pid}/file/${workingState.file.fid}/${workingState.file.workingOn === 'entity' ? 'relation' : 'entity'}`}>
+                      {workingState.file.workingOn === 'entity' ? 'Relation' : 'Entity'}
+                    </NavLink>
+                  </Menu.Item>
+                ) : undefined}
               </Menu>
 
               <div style={{ padding: '1em 1em 0 1em' }}>
@@ -151,7 +170,7 @@ export const App: React.FC = () => {
                     path="/project/:pid/file/:fid/entity"
                     element={(
                       <RequireAuth>
-                        <Entity />
+                        <EntityViewer />
                       </RequireAuth>
                     )}
                   />

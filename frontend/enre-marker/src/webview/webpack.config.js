@@ -24,7 +24,11 @@ const webviewConfig = (env) => ({
     static: {
       directory: path.resolve(__dirname, '.static'),
     },
-    historyApiFallback: true,
+    historyApiFallback: {
+      rewrites: [
+        { from: /webview\.js/, to: '/webview.js' },
+      ],
+    },
     hot: true,
     port: 9000,
   },

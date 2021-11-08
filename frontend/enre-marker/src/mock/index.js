@@ -9,8 +9,9 @@ server.use(cors({ origin: '*' }));
 
 const api_0 = require('./lib/user.js');
 const api_1 = require('./lib/project.js');
+const api_2 = require('./lib/er.js');
 
-const apis = { ...api_0, ...api_1 };
+const apis = { ...api_0, ...api_1, ...api_2 };
 
 Object.keys(apis).forEach(key => {
   const seg = key.split(' ');

@@ -67,7 +67,7 @@ declare namespace remote {
     newEntity?: manuallyEntity,
   }
 
-  interface resEntity extends resCommon {
+  interface resEntities extends resCommon {
     entity: Array<entity>
   }
 
