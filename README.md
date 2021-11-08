@@ -242,6 +242,7 @@ declare type relation {
   rid: number,
   from: entity,
   to: entity,
+  toFid: number,
   type: relation-type-string,
   isManually: boolean,
   status: status
@@ -260,6 +261,10 @@ declare type manuallyRelation {
   type: relation-type-string
 }
 ```
+
+* `toFid` indicates the file which the `to` entity in this relation belongs to.
+
+> Since this API is called based on the `fid` of the `from` entity, so `fromFid` like thing can be omit, and be infered during runtime.
 
 ###### is failed
 
