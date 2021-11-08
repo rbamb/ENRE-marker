@@ -213,7 +213,7 @@ declare type manuallyEntity {
 
 * `isManually` shows that whether this entity was manually discovered by users.
 
-* **`line` and `column` in `location` are started from 1.**
+* **`line` and `column` in `location` are started from 0.**
 
 ###### if failed
 
