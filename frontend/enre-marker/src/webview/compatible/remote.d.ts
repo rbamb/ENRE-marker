@@ -65,6 +65,7 @@ declare namespace remote {
     hasBeenReviewed: boolean,
     operation?: operation,
     newEntity?: manuallyEntity,
+    newRelation?: manuallyRelation
   }
 
   interface resEntities extends resCommon {
@@ -84,5 +85,25 @@ declare namespace remote {
     name: string,
     loc: location,
     type: string
+  }
+
+  interface resRelations extends resCommon {
+    relation: Array<relation>
+  }
+
+  interface relation {
+    rid: number,
+    from: entity,
+    to: entity,
+    toFid: number,
+    type: number,
+    isManually: boolean,
+    status: status
+  }
+
+  interface manuallyRelation {
+    from: entity,
+    to: entity,
+    type: number
   }
 }

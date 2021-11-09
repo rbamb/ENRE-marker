@@ -25,7 +25,7 @@ const mockState = {
 };
 
 export const getApi = onlySingleCopy || {
-  postMess: (message: any, transfer: any) => console.log(message),
+  postMessage: (message: any, transfer: any) => console.log(message),
   getState: () => mockState,
   setState: (newState: any) => {
     mockState[Object.keys(newState)[0]] = newState[Object.keys(newState)[0]];

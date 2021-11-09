@@ -64,7 +64,7 @@ const RenderExpandedRow = ({ name, loc, type }: remote.entity) => {
   return (
     <Card title={(
       <>
-        <span>Operation to </span>
+        <span>Operation to entity </span>
         <Typography.Text code>{name}</Typography.Text>
       </>
     )}

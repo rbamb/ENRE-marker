@@ -24,6 +24,7 @@ import {
 import { getApi } from '../compatible/apiAdapter';
 import { ProjectDashboard } from './project/projectDashboard';
 import { EntityViewer } from './er/entityViewer';
+import { RelationViewer } from './er/relationViewer';
 
 // FIXME: for quick debug only, remove in production
 const enabled = false;
@@ -178,7 +179,7 @@ export const App: React.FC = () => {
                     path="/project/:pid/file/:fid/relation"
                     element={(
                       <RequireAuth>
-                        TODO relation marker
+                        <RelationViewer />
                       </RequireAuth>
                     )}
                   />

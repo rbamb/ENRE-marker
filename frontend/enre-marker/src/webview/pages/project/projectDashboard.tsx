@@ -1,12 +1,16 @@
 import React from 'react';
 import {
-  Typography, Button, Space, Card, Alert, Upload,
+  Typography, Button, Space, Card, Alert, Upload, Input, Form,
 } from 'antd';
-import { GithubOutlined, DesktopOutlined } from '@ant-design/icons';
+import { useEventListener } from 'ahooks';
+import { GithubOutlined, DesktopOutlined, FolderOutlined } from '@ant-design/icons';
+import { getApi } from '../../compatible/apiAdapter';
 
 const { Title, Paragraph, Text } = Typography;
 
 export const ProjectDashboard: React.FC<{ init?: boolean }> = ({ init }) => {
+  const [form] = Form.useForm();
+
   if (init) {
     return (
       <Space direction="vertical">
@@ -22,16 +26,74 @@ export const ProjectDashboard: React.FC<{ init?: boolean }> = ({ init }) => {
           )}
         >
           <Space direction="vertical">
-            <Button type="primary">Git clone</Button>
+            <Form layout="inline" form={form}>
+              <Form.Item
+                name="folderPath"
+                validateFirst
+                rules={[
+                  {
+                    required: true,
+                    whitespace: true,
+                    message: 'Base folder is required',
+                  },
+                  () => ({
+                    validator(_, value) {
+                      return new Promise((resolve, reject) => {
+                        getApi.postMessage({ command: 'validate-path', payload: value });
+
+                        const listener = (
+                          { data: { command, payload: { result, message } } }: any,
+                        ) => {
+                          if (command === 'return-validate-message') {
+                            if (result === 'success') {
+                              return resolve('success');
+                            } if (result === 'warning') {
+                              return reject(new Error(message));
+                            }
+                            return reject(new Error(message));
+                          }
+                        };
+
+                        window.addEventListener('message', listener);
+                      });
+                    },
+                  }),
+                ]}
+                hasFeedback
+              >
+                <Input
+                  style={{ width: '300px' }}
+                  placeholder="Base folder"
+                  prefix={<FolderOutlined style={{ color: 'rgba(0,0,0,0.25)' }} />}
+                  allowClear
+                />
+              </Form.Item>
+              <Form.Item>
+                <Button type="primary" htmlType="submit">Git clone</Button>
+              </Form.Item>
+            </Form>
             <Paragraph>
-              By clicking the button above,
-              ENRE-marker will automatically run
-              git command
-              <Text code>
-                git clone xxx
-              </Text>
-              in background, and open it after done.
+              To automatically clone the project:
+              <ul>
+                <li>
+                  Type an
+                  <b> absolute path </b>
+                  to a folder where you want the cloned project to be saved;
+                </li>
+                <li>
+                  Click the &quot;Git clone&quot; button, and ENRE-marker will run&nbsp;
+                  <Text code>git clone xxx</Text>
+                  &nbsp;in background.
+                </li>
+              </ul>
+              When all is done, you will be redirected to project&apos;s files page.
             </Paragraph>
+            <Alert
+              message="Please do not edit project files"
+              description="Cloned files should be used by ENRE-marker exclusively in case any data mismatching. Files will always be scanned and reset after ENRE-marker is activated. If you intend to use the same project, please set up a different working folder."
+              type="warning"
+              showIcon
+            />
           </Space>
         </Card>
         <Card
@@ -53,7 +115,7 @@ export const ProjectDashboard: React.FC<{ init?: boolean }> = ({ init }) => {
             </Paragraph>
             <Alert
               message="Scan needed, and it may take a while"
-              description="ENRE-marker will scan all files in that folder to make sure them are not been modified and match the version specified in our server."
+              description="ENRE-marker will scan all files in that folder to make sure them have not been modified and match the version specified in our server."
               type="warning"
               showIcon
             />
