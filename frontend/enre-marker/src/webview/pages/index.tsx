@@ -126,7 +126,7 @@ export const App: React.FC = () => {
                 ) : undefined}
               </Menu>
 
-              <div style={{ padding: '1em 1em 0 1em' }}>
+              <div style={{ padding: '1em 1em 0 1em', height: '100%', overflowY: 'auto' }}>
                 <Routes>
                   <Route
                     path="/"

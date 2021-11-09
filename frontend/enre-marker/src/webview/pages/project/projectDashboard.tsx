@@ -43,6 +43,7 @@ export const ProjectDashboard: React.FC<{ init?: boolean }> = ({ init }) => {
 
                         const listener = (
                           { data: { command, payload: { result, message } } }: any,
+                          // eslint-disable-next-line consistent-return
                         ) => {
                           if (command === 'return-validate-message') {
                             if (result === 'success') {
