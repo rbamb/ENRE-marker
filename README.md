@@ -509,8 +509,7 @@ create table if not exists `relation`
   disabled boolean not null default false,
 
   primary key (rid),
-  foreign key (from_entity) references entity (eid),
-  foreign key (to_entity) references entity (eid)
+  foreign key (from_entity) references entity (eid)
 )
 ```
 
