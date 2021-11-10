@@ -1,14 +1,18 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import {
   Typography, Button, Space, Card, Alert, Upload, Input, Form,
 } from 'antd';
 import { useEventListener } from 'ahooks';
 import { GithubOutlined, DesktopOutlined, FolderOutlined } from '@ant-design/icons';
 import { getApi } from '../../compatible/apiAdapter';
+import { WorkingContext } from '../../context';
 
 const { Title, Paragraph, Text } = Typography;
 
 export const ProjectDashboard: React.FC<{ init?: boolean }> = ({ init }) => {
+  // @ts-ignore
+  const { state: { project: { githubUrl } } } = useContext(WorkingContext);
+
   const [form] = Form.useForm();
 
   if (init) {
@@ -46,6 +50,7 @@ export const ProjectDashboard: React.FC<{ init?: boolean }> = ({ init }) => {
                           // eslint-disable-next-line consistent-return
                         ) => {
                           if (command === 'return-validate-message') {
+                            window.removeEventListener('message', listener);
                             if (result === 'success') {
                               return resolve('success');
                             } if (result === 'warning') {
@@ -77,13 +82,16 @@ export const ProjectDashboard: React.FC<{ init?: boolean }> = ({ init }) => {
               To automatically clone the project:
               <ul>
                 <li>
-                  Type an
-                  <b> absolute path </b>
-                  to a folder where you want the cloned project to be saved;
+                  Type an&nbsp;
+                  <b>absolute path</b>
+                  &nbsp;to a folder where you want the cloned project to be saved;
                 </li>
                 <li>
                   Click the &quot;Git clone&quot; button, and ENRE-marker will run&nbsp;
-                  <Text code>git clone xxx</Text>
+                  <Text code>
+                    git clone&nbsp;
+                    {githubUrl}
+                  </Text>
                   &nbsp;in background.
                 </li>
               </ul>

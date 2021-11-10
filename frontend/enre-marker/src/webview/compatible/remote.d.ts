@@ -17,6 +17,7 @@ declare namespace remote {
 
   interface project {
     pid: number,
+    githubUrl: string,
     name: string,
     version: string,
     lang: string,

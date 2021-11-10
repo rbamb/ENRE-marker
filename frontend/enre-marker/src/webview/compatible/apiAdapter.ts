@@ -50,7 +50,10 @@ export interface workingState {
 
 export interface projectState {
   pid: number,
-  name: string
+  name: string,
+  githubUrl: string,
+  version: string,
+  lang: string
 }
 
 export interface fileState {

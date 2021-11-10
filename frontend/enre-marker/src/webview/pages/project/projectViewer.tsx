@@ -6,7 +6,9 @@ import { SortOrder } from 'antd/lib/table/interface';
 import { request } from '../../compatible/httpAdapter';
 import { NavContext, WorkingContext } from '../../context';
 
-const RenderAction = (claimed: boolean, { pid, name, progress }: remote.project) => {
+const RenderAction = (claimed: boolean, {
+  pid, name, githubUrl, progress,
+}: remote.project) => {
   // @ts-ignore
   const { dispatcher: workingDispatcher } = useContext(WorkingContext);
   // @ts-ignore
@@ -15,7 +17,7 @@ const RenderAction = (claimed: boolean, { pid, name, progress }: remote.project)
 
   const handleClaimClicked = async () => {
     const res: remote.resFiles = await request(`POST project/${pid}/claim`);
-    workingDispatcher({ payload: { project: { pid, name } } });
+    workingDispatcher({ payload: { project: { pid, name, githubUrl } } });
     navDispatcher({ payload: 'file' });
     navigate(`/project/${pid}/file`, { state: res.fileHash });
   };
