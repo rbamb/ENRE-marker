@@ -1,12 +1,12 @@
 import * as vscode from 'vscode';
 import path from 'path';
 import { htmlAdapter } from './webPanel/htmlAdapter';
-import open from 'open';
+import { localMsgType, msgHandler } from './core/msgHandler';
 
 export const activate = (context: vscode.ExtensionContext) => {
   let panel: vscode.WebviewPanel | undefined = undefined;
 
-  let disposable = vscode.commands.registerCommand('enre-marker.management', () => {
+  let registerWebview = vscode.commands.registerCommand('enre-marker.management', () => {
     if (panel) {
       panel.reveal();
     } else {
@@ -39,12 +39,18 @@ export const activate = (context: vscode.ExtensionContext) => {
       );
 
       panel.webview.onDidReceiveMessage(
-        ({ command, payload }) => {
-          switch (command) {
-            case 'btn-clicked':
-              vscode.window.showErrorMessage('A button is clicked!');
-            case 'open-url-in-browser':
-              open(payload);
+        ({ command, payload }: localMsgType) => {
+          if (msgHandler[command] === undefined) {
+            vscode.window.showErrorMessage(`Unknown message command ${command} from webview`);
+            return;
+          }
+
+          const anything = msgHandler[command](payload, (panel as vscode.WebviewPanel).webview.postMessage);
+
+          if (typeof anything === 'function') {
+            // TODO: handle return type is a function
+          } else {
+            panel?.webview.postMessage({ command: `return-${command}`, payload: anything });
           }
         },
         undefined,
@@ -86,6 +92,6 @@ export const activate = (context: vscode.ExtensionContext) => {
     editor.setDecorations(decorators, [new vscode.Range(new vscode.Position(0, 0), new vscode.Position(0, 5))]);
   });
 
-  context.subscriptions.push(disposable);
+  context.subscriptions.push(registerWebview);
   context.subscriptions.push(test);
 };

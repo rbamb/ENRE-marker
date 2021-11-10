@@ -2,9 +2,9 @@ import React, { useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useRequest } from 'ahooks';
 import {
-  Table, Progress, Button, Tag, Tooltip, Divider, Space,
+  Table, Progress, Button, Tag, Tooltip, Divider, Space, Typography, message,
 } from 'antd';
-import { LinkOutlined, LockOutlined } from '@ant-design/icons';
+import { LockOutlined } from '@ant-design/icons';
 import { request } from '../../compatible/httpAdapter';
 import { NavContext, WorkingContext } from '../../context';
 import { langTable, langTableIndex } from '../../.static/config';
@@ -20,28 +20,43 @@ const RenderAction = (claimed: boolean, {
   const navigate = useNavigate();
 
   const handleClaimClicked = async () => {
-    const res: remote.resClaim = await request(`POST project/${pid}/claim`);
-    workingDispatcher({ payload: { project: { pid, name, githubUrl } } });
-    navDispatcher({ payload: 'pid' });
-    navigate(`/project/${pid}`, {
-      state: {
-        init: true,
-      },
+    message.loading({
+      content: 'Claiming...',
+      key: 'claim',
+      duration: 0,
     });
+
+    try {
+      const { collaborator }: remote.resClaim = await request(`POST project/${pid}/claim`);
+
+      workingDispatcher({ payload: { project: { pid, name, githubUrl } } });
+      navDispatcher({ payload: 'pid' });
+      navigate(`/project/${pid}`, {
+        state: {
+          init: true,
+          collaborator,
+        },
+      });
+
+      message.success({
+        content: `Claimed to ${name}`,
+        key: 'claim',
+      });
+    } catch (e) {
+      message.destroy('claim');
+    }
   };
 
   if (claimed) {
     return (
       <Space split={<Divider type="vertical" />}>
-        <Link to={`/project/${pid}`}>
-          <Button
-            style={{ paddingRight: 0 }}
-            type="link"
-            disabled
-          >
-            Claimed
-          </Button>
-        </Link>
+        <Button
+          style={{ paddingRight: 0 }}
+          type="link"
+          disabled
+        >
+          Claimed
+        </Button>
         <Link to={`/project/${pid}/file`}>
           <Button
             style={{ paddingLeft: 0 }}
@@ -55,16 +70,14 @@ const RenderAction = (claimed: boolean, {
   }
   return (
     <Space split={<Divider type="vertical" />}>
-      <Link to={`/project/${pid}`}>
-        <Button
-          style={{ paddingRight: 0 }}
-          type="link"
-          onClick={handleClaimClicked}
-          disabled={state === 1}
-        >
-          Claim
-        </Button>
-      </Link>
+      <Button
+        style={{ paddingRight: 0 }}
+        type="link"
+        onClick={handleClaimClicked}
+        disabled={state === 1}
+      >
+        Claim
+      </Button>
       <Link to={`/project/${pid}/file`}>
         <Button
           style={{ paddingLeft: 0 }}
@@ -117,26 +130,21 @@ const columns = [
     dataIndex: 'version',
     key: 'version',
     render: (value: string, record: remote.project) => (
-      <>
-        <span style={{ verticalAlign: 'middle' }}>{value}</span>
-        <Tooltip
-          title="View in GitHub"
-          placement="left"
+      <Tooltip
+        title="View in GitHub"
+        placement="left"
+      >
+        <Typography.Link
+          onClick={() => {
+            getApi.postMessage({
+              command: 'open-url-in-browser',
+              payload: `https://github.com/${record.githubUrl}/tree/${record.version}`,
+            });
+          }}
         >
-          <Button
-            style={{ float: 'right' }}
-            type="link"
-            onClick={() => {
-              getApi.postMessage({
-                command: 'open-url-in-browser',
-                payload: `https://github.com/${record.githubUrl}/tree/${record.version}`,
-              });
-            }}
-          >
-            <LinkOutlined />
-          </Button>
-        </Tooltip>
-      </>
+          {value}
+        </Typography.Link>
+      </Tooltip>
     ),
   },
   {

@@ -2,14 +2,19 @@ import React, { useContext } from 'react';
 import {
   Typography, Button, Space, Card, Alert, Upload, Input, Form,
 } from 'antd';
-import { useEventListener } from 'ahooks';
+import { useDebounce, useEventListener } from 'ahooks';
 import { GithubOutlined, DesktopOutlined, FolderOutlined } from '@ant-design/icons';
 import { getApi } from '../../compatible/apiAdapter';
 import { WorkingContext } from '../../context';
 
 const { Title, Paragraph, Text } = Typography;
 
-export const ProjectDashboard: React.FC<{ init?: boolean }> = ({ init }) => {
+export const ProjectDashboard: React.FC<{
+  init?: boolean,
+  collaborator?: Array<remote.user>
+}> = ({ init, collaborator }) => {
+  // TODO: consume collaborator
+
   // @ts-ignore
   const { state: { project: { githubUrl } } } = useContext(WorkingContext);
 
@@ -33,6 +38,7 @@ export const ProjectDashboard: React.FC<{ init?: boolean }> = ({ init }) => {
             <Form layout="inline" form={form}>
               <Form.Item
                 name="folderPath"
+                trigger="onChange"
                 validateFirst
                 rules={[
                   {
@@ -49,7 +55,7 @@ export const ProjectDashboard: React.FC<{ init?: boolean }> = ({ init }) => {
                           { data: { command, payload: { result, message } } }: any,
                           // eslint-disable-next-line consistent-return
                         ) => {
-                          if (command === 'return-validate-message') {
+                          if (command === 'return-validate-path') {
                             window.removeEventListener('message', listener);
                             if (result === 'success') {
                               return resolve('success');
@@ -75,6 +81,7 @@ export const ProjectDashboard: React.FC<{ init?: boolean }> = ({ init }) => {
                 />
               </Form.Item>
               <Form.Item>
+                {/* TODO: handle button clicked to redirect to files page */}
                 <Button type="primary" htmlType="submit">Git clone</Button>
               </Form.Item>
             </Form>
