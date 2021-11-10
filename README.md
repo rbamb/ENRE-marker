@@ -16,7 +16,7 @@ All http RESTful interfaces should add the prefix ```/api/v1``` , which is omitt
 
 #### `POST /user/login`
 
-To login users.
+To login a user.
 
 ##### Payload body
 
@@ -35,7 +35,8 @@ To login users.
 {
   code: 200,
   message: 'success',
-  token: 256-chars
+  token: 256-chars,
+  name: string
 }
 ```
 
@@ -76,13 +77,29 @@ declare type project {
   version: 7-chars-git-commit-code,
   lang: language-code,
   progress: number(0...100),
-  claimed: bool
+  claimed: bool,
+  state: projectState
+}
+
+declare type language-code = 'js' | 'java' | 'cpp' | 'go' | 'python'
+
+declare enum projectState {
+  active = 0,
+  locked = 1
 }
 ```
+* `githubUrl` should be in this pattern `user/repository`, which means the prefix `https://github.com/` is not needed;
+
+* `lang` is strictly limited to 5 option lowercase strings listed above, which means only accept `js` rather than `JS`/`javascript`/`JavaScript`;
 
 * `progress` is the label progress where `100` means that all entities and relations are labeled;
 
-* `claimed` indicates that whether the current user has claimed this project.
+* `claimed` indicates that whether the current user has claimed this project;
+
+* `state` is a number indicating the state of this project,
+where `0` means active (user can claim this project and do mark things); `1` means locked (user can no longer do any modification toward this project but only viewing)
+
+> A project may also be `deleted` or at other states, but those are not cared by the frontend, so the server should keep frontend transparent about that (not returning these kind of projects).
 
 ###### if failed
 
@@ -102,9 +119,35 @@ Claim a project to label. A user can only claim one project in a single time, an
 {
   code: 200,
   message: 'succeeded',
-  dir: string,
-  fileHash: Array<file>,
-  hash: 256-chars
+  collaborator: Array<user>
+}
+
+declare type user {
+  uid: number,
+  name: string
+}
+```
+
+###### is failed
+
+| case | code | message | other |
+| --- | --- | --- | --- |
+| any | 500 | error |
+| pid does not exist | 4001 | no such pid |
+
+#### `GET /project/<pid: number>`
+
+View infos of the specificed project.
+
+##### Should return
+
+###### if succeeded
+
+```ts
+{
+  code: 200,
+  message: 'succeeded',
+  file: Array<file>,
 }
 
 declare type file {
@@ -117,44 +160,13 @@ declare type file {
   relation: {
     count: number,
     progress: number(0...100)
-  },
-  hash: 256-chars
+  }
 }
 ```
 
 * `dir` is the src path from the `.git` top-level dir-path;
 
-* `fileHash` is an array of `file` objects, each one represents a file that needs to be labeled, a `path` in it is also the relative path from the top-level dir-path, and a `hash` is the digest for the current file calculated by `SHA256(file content)`;
-
-* `hash` is the digest for the upper `fileHash` object calculated by `SHA256(fileHash object)`.
-
-###### is failed
-
-| case | code | message | other |
-| --- | --- | --- | --- |
-| any | 500 | error |
-| pid does not exist | 4001 | no such pid |
-
-#### `GET /project/<pid: number>`
-
-View infos of the specificed project without claim, just viewing data.
-
-##### Should return
-
-###### if succeeded
-
-```ts
-{
-  code: 200,
-  message: 'succeeded',
-  dir: string,
-  fileHash: Array<file>,
-  hash: 256-chars
-}
-```
-
-> Completely identical to `POST /project/<pid: number>/claim`, only do not claim this project in backend
-
+* `file`'s `path` is a relative path from project's root;
 
 #### `GET /project/<pid: number>/file/<fid: number>/entity`
 
@@ -176,7 +188,6 @@ declare type entity {
   name: string,
   loc: location,
   type: number,
-  isManually: boolean,
   status: status
 }
 
@@ -195,13 +206,15 @@ declare type status {
   hasBeenReviewed: boolean,
   // Below properties only appear if hasBeenReviewed is true
   operation: operation,
+  // Below properties only appear if operation is 2
   newEntity: manuallyEntity
 }
 
 declare enum operation {
   reviewPassed = 0,
   remove = 1,
-  modify = 2
+  modify = 2,
+  insert = 3
 }
 
 declare type manuallyEntity {
@@ -211,9 +224,9 @@ declare type manuallyEntity {
 }
 ```
 
-* `isManually` shows that whether this entity was manually discovered by users.
-
 * **`line` and `column` in `location` are started from 0.**
+
+> Server should always return the **original** entity in `Array<entity>`, any modification should be held in `manuallyEntity`
 
 ###### if failed
 
@@ -244,7 +257,6 @@ declare type relation {
   to: entity,
   toFid: number,
   type: number,
-  isManually: boolean,
   status: status
 }
 
@@ -252,6 +264,7 @@ declare type status {
   hasBeenReviewed: boolean,
   // Below properties only appear if hasBeenReviewed is true
   operation: operation,
+  // Below properties only appear if operation is 2
   newRelation: manuallyRelation
 }
 
@@ -298,7 +311,7 @@ declare type entityUserResult {
 
 declare type entityFixPatch {
   shouldBe: fixOption,
-  // Below properties only appear if shouldBe is modified
+  // Below properties only appear if shouldBe is 2 (modified)
   new: manuallyEntity
 }
 
@@ -357,8 +370,14 @@ declare type relationUserResult {
 
 declare type relationFixPatch {
   shouldBe: fixOption,
-  // Below properties only appear if shouldBe is modified
-  new: manuallyRelation
+  // Below properties only appear if shouldBe is 2 (modified)
+  new: onlyEid
+}
+
+declare type onlyEid {
+  from: number,
+  to: number,
+  type: number
 }
 ```
 
@@ -394,6 +413,7 @@ declare type relationFixPatch {
 create table if not exists `user`
 (
   uid integer(6) not null auto_increment = 1000,
+  name char(32) not null,
   pswd char(256) not null,
   claim integer(3) not null,
 
@@ -430,7 +450,7 @@ create table if not exists `project`
   git_commit_hash char(7) not null,
   lang varchar(16) not null,
 
-  meta_hash char(256) not null,
+  state tinyint not null default 0,
 
   primary key (pid)
 )
@@ -444,8 +464,6 @@ create table if not exists `file`
   fid integer not null auto_increment,
   pid integer(3) not null,
   file_path varchar(256) not null,
-
-  meta_hash char(256) not null,
 
   primary key (fid),
   foreign key (pid) references project(pid)
@@ -464,9 +482,10 @@ create table if not exists `entity`
   loc_start_column integer not null,
   entity_type tinyint not null,
 
-  source tinyint not null default 1,
-  reviewed boolean not null default false,
-  disabled boolean not null default false,
+  shallow boolean not null default false,
+  inserted boolean not null default false,
+
+  reviewed tinyint not null default -1,
 
   primary key (eid),
   foreign key (fid) reference file(fid)
@@ -483,14 +502,23 @@ declare enum entityTypeForXX {
 }
 ```
 
-`source` indicates that whether this row is added by user rather than tools:
+`shallow` indicates whether this row is **modified** from another row, or in entity's prospective, an entity is modified, and both the original entity and the modified entity are saved.
+
+`inserted` indicates whether this entity is discovered by user ranther than tools.
+
+`reviewed` indicates thether this entity has been reviewed, possible options are:
 
 ```ts
-declare enum source {
-  user = 0,
-  understand = 1
+declare enum reviewed {
+  inapplicable = -2,
+  notYet = -1,
+  reviewPassed = 0,
+  remove = 1,
+  modify = 2
 }
 ```
+
+> `reviewed` only works on the **original** entities, that is, `shallow` == false && `inserted` == false. In contrasted condition, this field should be set to `-2`.
 
 ### Table `relation`
 
@@ -502,9 +530,10 @@ create table if not exists `relation`
   to_entity integer not null,
   relation_type tinyint not null,
 
-  source tinyint not null default 1,
-  reviewed boolean not null default false,
-  disabled boolean not null default false,
+  shallow boolean not null default false,
+  inserted boolean not null default false,
+
+  reviewed tinyint not null default -1,
 
   primary key (rid),
   foreign key (from_entity) references entity (eid)
@@ -518,10 +547,10 @@ create table if not exists `log`
 (
   lid integer not null auto_increment,
   uid integer(6) not null,
+  time timestamp not null default now, 
   op_to tinyint not null,
   operation tinyint not null,
   element_id int not null,
-  from_id int,
   to_id int,
 
   primary key (lid),
@@ -542,6 +571,17 @@ declare enum op_to {
 declare enum operation {
   reviewPassed = 0,
   remove = 1,
-  modify = 2
+  modify = 2,
+  insert = 3
 }
 ```
+
+`element_id` (as well as `to_id`) indicates elements (entity or leration) affected by this operation:
+
+* A `reviewPassed` operation should set `element_id` to id of the element which passed the review;
+
+* A `remove` operation should set `element_id` to id of the element being removed;
+
+* A `modify` operation should set `element_id` to id of the element being modified, and also set `to_id` to id of the element which records this modification;
+
+* A `insert` operation should set `element+id` to id of the element being inserted.
