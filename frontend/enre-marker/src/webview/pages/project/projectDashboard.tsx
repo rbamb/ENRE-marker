@@ -90,7 +90,7 @@ export const ProjectDashboard: React.FC<{ init?: boolean }> = ({ init }) => {
                   Click the &quot;Git clone&quot; button, and ENRE-marker will run&nbsp;
                   <Text code>
                     git clone&nbsp;
-                    {githubUrl}
+                    {`https://github.com/${githubUrl}`}
                   </Text>
                   &nbsp;in background.
                 </li>

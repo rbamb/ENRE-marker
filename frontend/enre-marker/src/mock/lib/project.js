@@ -8,12 +8,13 @@ module.exports = {
       message: 'success',
       "project|1-10": [{
         "pid|+1": 100,
-        githubUrl: 'https://github.com/xxx/yyy',
+        githubUrl: 'xxx/yyy',
         name: '@word',
         version: /([a-z]|[0-9]){7}/,
-        "lang|+1": ['js', 'java', 'cpp', 'golang', 'python'],
+        "lang|+1": ['js', 'java', 'cpp', 'go', 'python'],
         'progress|0-100': 0,
-        'claimed|1': true
+        'claimed|1': true,
+        'state|0-1': 0,
       }]
     }));
   },
@@ -24,21 +25,10 @@ module.exports = {
     res.json(Mock.mock({
       code: 200,
       message: 'success',
-      dir: '/',
-      'fileHash|1-10': [{
-        'fid|+1': 0,
-        path: '/some/path/to/a.js',
-        entity: {
-          'count|0-200': 0,
-          'progress|0-100': 0
-        },
-        relation: {
-          'count|0-200': 0,
-          'progress|0-100': 0
-        },
-        hash: sha256
-      }],
-      hash: sha256
+      'collaborator|1-10': [{
+        'uid|1-100': 1,
+        name: '@name',
+      }]
     }))
   },
 
@@ -48,8 +38,7 @@ module.exports = {
     res.json(Mock.mock({
       code: 200,
       message: 'success',
-      dir: '/',
-      'fileHash|1-10': [{
+      'file|1-10': [{
         'fid|+1': 0,
         path: '/some/path/to/a.js',
         entity: {
@@ -60,9 +49,7 @@ module.exports = {
           'count|0-200': 0,
           'progress|0-100': 0
         },
-        hash: sha256
       }],
-      hash: sha256
     }))
   }
 }

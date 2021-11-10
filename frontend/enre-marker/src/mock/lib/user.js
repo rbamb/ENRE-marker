@@ -6,7 +6,8 @@ module.exports = {
     res.json(Mock.mock({
       code: 200,
       message: 'success',
-      token: sha256
+      token: sha256,
+      name: 'ThisRabbit'
     }));
   }
 }

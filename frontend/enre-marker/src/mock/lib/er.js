@@ -20,7 +20,6 @@ module.exports = {
           }
         },
         type: 'variable',
-        'isManually|1': true,
         status: {
           'hasBeenReviewed|1': true,
           'operation|0-2': 0,

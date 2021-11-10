@@ -1,18 +1,32 @@
 declare namespace remote {
   type statusCode = 200 | 500;
-  type statusMessage = { 200: 'success', 500: 'error' }
+  type statusMessage = { 200: 'success', 500: 'error' };
 
   interface resCommon {
     code: statusCode,
-    message: statusMessage[statusCode]
+    message: statusMessage[statusCode],
   }
 
   interface resLogin extends resCommon {
-    token: string
+    token: string,
+    name: string,
+  }
+
+  interface user {
+    uid: number,
+    name: string,
+  }
+  interface resClaim extends resCommon {
+    collaborator: Array<user>,
   }
 
   interface resProjects extends resCommon {
-    project: Array<project>
+    project: Array<project>,
+  }
+
+  enum projectState {
+    active = 0,
+    locked = 1,
   }
 
   interface project {
@@ -22,13 +36,14 @@ declare namespace remote {
     version: string,
     lang: string,
     progress: number,
-    claimed: boolean
+    claimed: boolean,
+    state: projectState,
   }
 
   interface resFiles extends resCommon {
     dir: string,
     fileHash: Array<file>,
-    hash: string
+    hash: string,
   }
 
   interface file {
@@ -36,41 +51,42 @@ declare namespace remote {
     path: string,
     entity: {
       count: number,
-      progress: number
+      progress: number,
     },
     relation: {
       count: number,
-      progress: number
+      progress: number,
     }
-    hash: string
+    hash: string,
   }
 
   interface location {
     start: {
       line: number,
-      column: number
+      column: number,
     },
     end: {
       line: number,
-      column: number
+      column: number,
     }
   }
 
   enum operation {
     reviewPassed = 0,
     remove = 1,
-    modify = 2
+    modify = 2,
+    insert = 3,
   }
 
   interface status {
     hasBeenReviewed: boolean,
     operation?: operation,
     newEntity?: manuallyEntity,
-    newRelation?: manuallyRelation
+    newRelation?: manuallyRelation,
   }
 
   interface resEntities extends resCommon {
-    entity: Array<entity>
+    entity: Array<entity>,
   }
 
   interface entity {
@@ -78,18 +94,17 @@ declare namespace remote {
     name: string,
     loc: location,
     type: string,
-    isManually: boolean,
-    status: status
+    status: status,
   }
 
   interface manuallyEntity {
     name: string,
     loc: location,
-    type: string
+    type: string,
   }
 
   interface resRelations extends resCommon {
-    relation: Array<relation>
+    relation: Array<relation>,
   }
 
   interface relation {
@@ -98,13 +113,12 @@ declare namespace remote {
     to: entity,
     toFid: number,
     type: number,
-    isManually: boolean,
-    status: status
+    status: status,
   }
 
   interface manuallyRelation {
     from: entity,
     to: entity,
-    type: number
+    type: number,
   }
 }

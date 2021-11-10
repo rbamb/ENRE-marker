@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import path from 'path';
 import { htmlAdapter } from './webPanel/htmlAdapter';
+import open from 'open';
 
 export const activate = (context: vscode.ExtensionContext) => {
   let panel: vscode.WebviewPanel | undefined = undefined;
@@ -38,10 +39,12 @@ export const activate = (context: vscode.ExtensionContext) => {
       );
 
       panel.webview.onDidReceiveMessage(
-        message => {
-          switch (message.type) {
+        ({ command, payload }) => {
+          switch (command) {
             case 'btn-clicked':
               vscode.window.showErrorMessage('A button is clicked!');
+            case 'open-url-in-browser':
+              open(payload);
           }
         },
         undefined,

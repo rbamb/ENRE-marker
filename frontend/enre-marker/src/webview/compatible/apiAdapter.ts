@@ -35,17 +35,17 @@ export const getApi = onlySingleCopy || {
 
 export interface stateModule {
   login?: loginState,
-  working?: workingState
+  working?: workingState,
 }
 
 export interface loginState {
   uid?: number,
-  token?: string
+  token?: string,
 }
 
 export interface workingState {
   project?: projectState,
-  file?: fileState
+  file?: fileState,
 }
 
 export interface projectState {
@@ -53,12 +53,13 @@ export interface projectState {
   name: string,
   githubUrl: string,
   version: string,
-  lang: string
+  lang: string,
+  locked: boolean,
 }
 
 export interface fileState {
   fid: number,
   path: string,
   workingOn: 'entity' | 'relation',
-  mode: 'mark' | 'view'
+  mode: 'mark' | 'view',
 }
