@@ -55,6 +55,7 @@ export interface projectState {
   version: string,
   lang: string,
   locked: boolean,
+  fsPath: string,
 }
 
 export interface fileState {

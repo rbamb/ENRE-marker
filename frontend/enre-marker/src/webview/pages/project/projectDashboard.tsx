@@ -1,11 +1,11 @@
-import React, { useContext } from 'react';
+import React, { useContext, useState } from 'react';
 import {
   Typography, Button, Space, Card, Alert, Upload, Input, Form,
 } from 'antd';
-import { useDebounce, useEventListener } from 'ahooks';
 import { GithubOutlined, DesktopOutlined, FolderOutlined } from '@ant-design/icons';
+import { useNavigate } from 'react-router-dom';
 import { getApi } from '../../compatible/apiAdapter';
-import { WorkingContext } from '../../context';
+import { WorkingContext, NavContext } from '../../context';
 
 const { Title, Paragraph, Text } = Typography;
 
@@ -15,12 +15,50 @@ export const ProjectDashboard: React.FC<{
 }> = ({ init, collaborator }) => {
   // TODO: consume collaborator
 
-  // @ts-ignore
-  const { state: { project: { githubUrl } } } = useContext(WorkingContext);
+  const {
+    state: { project: { pid, githubUrl, version } },
+    dispatcher: workingDispatcher,
+  } = useContext(WorkingContext);
+  const { dispatcher: navDispatcher } = useContext(NavContext);
+  const navigate = useNavigate();
 
   const [form] = Form.useForm();
 
+  const [executing, setExecuting] = useState(false);
+
   if (init) {
+    const handleCloneClicked = ({ folderPath }: { folderPath: string }) => {
+      setExecuting(true);
+
+      getApi.postMessage({
+        command: 'git-clone',
+        payload: {
+          githubUrl,
+          version,
+          absPath: folderPath,
+        },
+      });
+
+      const listener = (
+        { data: { command, payload: { success, fsPath } } }: any,
+        // eslint-disable-next-line consistent-return
+      ) => {
+        if (command === 'return-git-clone') {
+          setExecuting(false);
+
+          if (success) {
+            window.removeEventListener('message', listener);
+            workingDispatcher({ payload: { project: { fsPath } } });
+            // TODO: fetching files data
+            navDispatcher({ payload: 'file' });
+            navigate(`project/${pid}/file`);
+          }
+        }
+      };
+
+      window.addEventListener('message', listener);
+    };
+
     return (
       <Space direction="vertical">
         <Title level={4}>
@@ -35,7 +73,7 @@ export const ProjectDashboard: React.FC<{
           )}
         >
           <Space direction="vertical">
-            <Form layout="inline" form={form}>
+            <Form layout="inline" form={form} onFinish={handleCloneClicked}>
               <Form.Item
                 name="folderPath"
                 trigger="onChange"
@@ -49,7 +87,13 @@ export const ProjectDashboard: React.FC<{
                   () => ({
                     validator(_, value) {
                       return new Promise((resolve, reject) => {
-                        getApi.postMessage({ command: 'validate-path', payload: value });
+                        getApi.postMessage({
+                          command: 'validate-path',
+                          payload: {
+                            value,
+                            pname: githubUrl.split('/')[1],
+                          },
+                        });
 
                         const listener = (
                           { data: { command, payload: { result, message } } }: any,
@@ -59,8 +103,6 @@ export const ProjectDashboard: React.FC<{
                             window.removeEventListener('message', listener);
                             if (result === 'success') {
                               return resolve('success');
-                            } if (result === 'warning') {
-                              return reject(new Error(message));
                             }
                             return reject(new Error(message));
                           }
@@ -71,18 +113,17 @@ export const ProjectDashboard: React.FC<{
                     },
                   }),
                 ]}
-                hasFeedback
               >
                 <Input
                   style={{ width: '300px' }}
                   placeholder="Base folder"
                   prefix={<FolderOutlined style={{ color: 'rgba(0,0,0,0.25)' }} />}
                   allowClear
+                  disabled={executing}
                 />
               </Form.Item>
               <Form.Item>
-                {/* TODO: handle button clicked to redirect to files page */}
-                <Button type="primary" htmlType="submit">Git clone</Button>
+                <Button type="primary" htmlType="submit" loading={executing}>Git clone</Button>
               </Form.Item>
             </Form>
             <Paragraph>
@@ -97,7 +138,7 @@ export const ProjectDashboard: React.FC<{
                   Click the &quot;Git clone&quot; button, and ENRE-marker will run&nbsp;
                   <Text code>
                     git clone&nbsp;
-                    {`https://github.com/${githubUrl}`}
+                    {`https://github.com/${githubUrl}.git`}
                   </Text>
                   &nbsp;in background.
                 </li>

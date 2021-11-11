@@ -8,9 +8,10 @@ module.exports = {
       message: 'success',
       "project|1-10": [{
         "pid|+1": 100,
-        githubUrl: 'xxx/yyy',
+        githubUrl: 'thisrabbit/Screen-Time-on-Chrome',
         name: '@word',
-        version: /([a-z]|[0-9]){7}/,
+        //version: /([a-z]|[0-9]){7}/,
+        version: '86ced82',
         "lang|+1": ['js', 'java', 'cpp', 'go', 'python'],
         'progress|0-100': 0,
         'claimed|1': true,

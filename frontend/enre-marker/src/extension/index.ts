@@ -38,6 +38,11 @@ export const activate = (context: vscode.ExtensionContext) => {
         context.subscriptions
       );
 
+      const callbackMessage = ({ command, payload }: { command: string, payload: any }) => panel?.webview.postMessage({
+        command,
+        payload,
+      });
+
       panel.webview.onDidReceiveMessage(
         ({ command, payload }: localMsgType) => {
           if (msgHandler[command] === undefined) {
@@ -45,7 +50,7 @@ export const activate = (context: vscode.ExtensionContext) => {
             return;
           }
 
-          const anything = msgHandler[command](payload, (panel as vscode.WebviewPanel).webview.postMessage);
+          const anything = msgHandler[command](payload, callbackMessage);
 
           if (typeof anything === 'function') {
             // TODO: handle return type is a function
@@ -61,7 +66,8 @@ export const activate = (context: vscode.ExtensionContext) => {
         const sel = e.selections[0];
         if (e.kind === 2) {
           panel?.webview.postMessage({
-            command: 'selection-change', payload: {
+            command: 'selection-change',
+            payload: {
               name: e.textEditor.document.getText(sel),
               loc: {
                 start: {

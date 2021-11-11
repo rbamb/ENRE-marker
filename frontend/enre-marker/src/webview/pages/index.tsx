@@ -58,29 +58,14 @@ const RequireAuth = ({ children }: React.PropsWithChildren<any>) => {
 };
 
 export const App: React.FC = () => {
-  // useEffect(() => {
-  //   window.addEventListener('message', ({ data }) => {
-  //     switch (data.type) {
-  //       case 'continueUrl':
-
-  //         break;
-  //       default:
-  //         break;
-  //     }
-  //   });
-  // });
-
   const [loginState, loginDispatcher] = useReducer(loginReducer, getApi.getState()?.login);
   const [workingState, workingDispatcher] = useReducer(workingReducer, getApi.getState()?.working);
   const [navState, navDispatcher] = useReducer(navReducer, 'index');
 
   return (
     <>
-      {/* @ts-ignore */}
       <LoginContext.Provider value={{ state: loginState, dispatcher: loginDispatcher }}>
-        {/* @ts-ignore */}
         <WorkingContext.Provider value={{ state: workingState, dispatcher: workingDispatcher }}>
-          {/* @ts-ignore */}
           <NavContext.Provider value={{ state: navState, dispatcher: navDispatcher }}>
             <BrowserRouter>
               <Menu mode="horizontal" selectedKeys={[navState]} onClick={({ key }) => navDispatcher({ payload: key })}>

@@ -11,11 +11,9 @@ import { langTable, langTableIndex } from '../../.static/config';
 import { getApi } from '../../compatible/apiAdapter';
 
 const RenderAction = (claimed: boolean, {
-  pid, name, githubUrl, state,
+  pid, name, githubUrl, state, version,
 }: remote.project) => {
-  // @ts-ignore
   const { dispatcher: workingDispatcher } = useContext(WorkingContext);
-  // @ts-ignore
   const { dispatcher: navDispatcher } = useContext(NavContext);
   const navigate = useNavigate();
 
@@ -29,7 +27,13 @@ const RenderAction = (claimed: boolean, {
     try {
       const { collaborator }: remote.resClaim = await request(`POST project/${pid}/claim`);
 
-      workingDispatcher({ payload: { project: { pid, name, githubUrl } } });
+      workingDispatcher({
+        payload: {
+          project: {
+            pid, name, githubUrl, version,
+          },
+        },
+      });
       navDispatcher({ payload: 'pid' });
       navigate(`/project/${pid}`, {
         state: {

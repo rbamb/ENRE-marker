@@ -8,13 +8,11 @@ import { request } from '../../compatible/httpAdapter';
 import { LoginContext } from '../../context';
 
 export const Login: React.FC<{ uid?: string }> = ({ uid }) => {
-  // @ts-ignore
   const { dispatcher } = useContext(LoginContext);
 
   const { loading, run } = useRequest((body: any) => request('POST user/login', body), {
     manual: true,
     onSuccess: (res, param) => {
-      // @ts-ignore
       dispatcher({ payload: { uid: param[0].uid, token: res.token } });
     },
   });
