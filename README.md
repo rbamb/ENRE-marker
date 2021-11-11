@@ -256,7 +256,7 @@ declare type relation {
   e_from: entity,
   e_to: entity,
   toFid: number,
-  type: number,
+  r_type: number,
   status: status
 }
 
@@ -269,9 +269,9 @@ declare type status {
 }
 
 declare type manuallyRelation {
-  from: entity,
-  to: entity,
-  type: number
+  e_from: entity,
+  e_to: entity,
+  r_type: number
 }
 ```
 
