@@ -253,8 +253,8 @@ Get all relations **started from** the specified file.
 
 declare type relation {
   rid: number,
-  from: entity,
-  to: entity,
+  e_from: entity,
+  e_to: entity,
   toFid: number,
   type: number,
   status: status
