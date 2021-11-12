@@ -11,14 +11,15 @@
     "Other"
   ],
   "activationEvents": [
-    "onCommand:enre-marker.management"
+    "onCommand:enre-marker.start",
+    "onWebviewPanel:ENREMarker"
   ],
   "main": "./dist/extension.js",
   "contributes": {
     "commands": [
       {
-        "command": "enre-marker.management",
-        "title": "Management Center",
+        "command": "enre-marker.start",
+        "title": "Start",
         "category": "ENRE-marker"
       },
       {

@@ -41,12 +41,9 @@ const RenderAction = (claimed: boolean, {
           collaborator,
         },
       });
-
-      message.success({
-        content: `Claimed to ${name}`,
-        key: 'claim',
-      });
     } catch (e) {
+      // destroy
+    } finally {
       message.destroy('claim');
     }
   };

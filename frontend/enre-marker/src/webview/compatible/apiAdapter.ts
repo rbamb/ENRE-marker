@@ -15,6 +15,7 @@ const mockState = {
     project: {
       pid: 100,
       name: 'ENRE.js',
+      // fsPath: 'd://test/ENRE.js',
     },
     file: {
       fid: 0,
@@ -23,6 +24,8 @@ const mockState = {
     },
   },
 };
+
+// const mockState = {};
 
 export const getApi = onlySingleCopy || {
   postMessage: (message: any, transfer: any) => console.log(message),

@@ -1,6 +1,31 @@
 import React, { createContext } from 'react';
 import { getApi, loginState, workingState } from './compatible/apiAdapter';
 
+// TODO: currently only support object with maximum 2 layers
+const differ = (old: any, latest: any): any => {
+  /** using spread operator to clone the old object into a new memory space
+   * so that react will see the difference and do re-render
+   * sort of pass by reference thing
+   */
+  const obj = { ...old };
+
+  Object.keys(latest).forEach((k1) => {
+    if (typeof latest[k1] === 'object') {
+      Object.keys(latest[k1]).forEach((k2) => {
+        if (Object.keys(old).includes(k1)) {
+          obj[k1][k2] = latest[k1][k2];
+        } else {
+          obj[k1] = { [k2]: latest[k1][k2] };
+        }
+      });
+    } else {
+      obj[k1] = latest[k1];
+    }
+  });
+
+  return obj;
+};
+
 /** these values will be and should be never used
  * since we provide value when wrap our component with <XXXContext.Provider>,
  * and only to make the whole thing TypeScript-compatible
@@ -22,7 +47,7 @@ export const loginReducer = (state: any, action: any) => {
 
   if (state) {
     if (action) {
-      newState = { ...state, ...action.payload };
+      newState = differ(state, action.payload);
     } else {
       newState = undefined;
     }
@@ -46,7 +71,7 @@ export const workingReducer = (state: any, action: any) => {
 
   if (state) {
     if (action) {
-      newState = { ...state, ...action.payload };
+      newState = differ(state, action.payload);
     } else {
       newState = undefined;
     }
@@ -55,8 +80,6 @@ export const workingReducer = (state: any, action: any) => {
   } else {
     newState = undefined;
   }
-
-  console.log(newState);
 
   getApi.setState({ working: newState });
   return newState;

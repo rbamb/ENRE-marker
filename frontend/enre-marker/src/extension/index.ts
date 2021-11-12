@@ -2,17 +2,18 @@ import * as vscode from 'vscode';
 import path from 'path';
 import { htmlAdapter } from './webPanel/htmlAdapter';
 import { localMsgType, msgHandler } from './core/msgHandler';
+import { ENREMarkerSerializer } from './webPanel/serializer';
 
 export const activate = (context: vscode.ExtensionContext) => {
   let panel: vscode.WebviewPanel | undefined = undefined;
 
-  let registerWebview = vscode.commands.registerCommand('enre-marker.management', () => {
+  let registerWebview = vscode.commands.registerCommand('enre-marker.start', () => {
     if (panel) {
       panel.reveal();
     } else {
       panel = vscode.window.createWebviewPanel(
-        'ENREMarkerManagementCenter',
-        'ENRE-marker Management Center',
+        'ENREMarker',
+        'ENRE-marker',
         vscode.ViewColumn.Two,
         {
           enableScripts: true,
@@ -32,6 +33,7 @@ export const activate = (context: vscode.ExtensionContext) => {
 
       // Handle any post-close logic in here
       panel.onDidDispose(() => {
+
         panel = undefined;
       },
         null,
@@ -84,6 +86,9 @@ export const activate = (context: vscode.ExtensionContext) => {
         }
       });
     }
+
+    // return this panel in case the command is called programmatically
+    return panel;
   });
 
   let test = vscode.commands.registerTextEditorCommand('enre-marker.test', (editor, edit) => {
@@ -99,5 +104,8 @@ export const activate = (context: vscode.ExtensionContext) => {
   });
 
   context.subscriptions.push(registerWebview);
+  // this will help webview auto restart when vscode is restarted
+  vscode.window.registerWebviewPanelSerializer('ENREMarker', new ENREMarkerSerializer());
+
   context.subscriptions.push(test);
 };

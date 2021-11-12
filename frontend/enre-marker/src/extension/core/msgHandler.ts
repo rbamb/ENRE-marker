@@ -4,23 +4,25 @@ import open from 'open';
 import { statSync, mkdirSync } from 'fs';
 import { exec } from 'child_process';
 
-export type commands = 'open-url-in-browser' | 'validate-path' | 'git-clone';
+export type localCommands = 'open-url-in-browser' | 'open-folder' | 'validate-path' | 'git-clone' | 'try-select-project' | 'ready-open-folder';
 
 const { window: { showErrorMessage } } = vscode;
 
 export interface localMsgType {
-  command: commands,
+  command: localCommands,
   payload: any,
 }
 
-// TODO: Refactor to allow using Promise-based API and return Promise
+// TODO: Promisify!!!
 export const msgHandler:
   Record<
-    commands,
+    localCommands,
     (payload: any, callbackMessage: ({ command, payload }: { command: string; payload: any; }) => Thenable<boolean> | undefined) =>
       ((payload: any, callbackMessage: ({ command, payload }: { command: string; payload: any; }) => Thenable<boolean> | undefined) => never) | any
   > = {
   'open-url-in-browser': (payload: string) => open(payload),
+
+  'open-folder': (payload: string) => open(payload),
 
   'validate-path': ({ value, pname }: { value: string, pname: string }) => {
     if (!path.isAbsolute(value)) {
@@ -118,5 +120,78 @@ export const msgHandler:
         });
       });
     });
+  },
+
+  'try-select-project': ({ version }: { version: string }, callbackMessage) => {
+    vscode.window.showOpenDialog({
+      canSelectFolders: true,
+      canSelectMany: false,
+      title: 'Select a directory to existed project',
+    })
+      .then((value => {
+        if (value) {
+          let possiblePath = value[0].fsPath;
+
+          exec('git rev-parse --git-dir', { cwd: possiblePath }, (error, stdout) => {
+            if (error) {
+              showErrorMessage(error.message);
+              callbackMessage({
+                command: 'return-try-select-project',
+                payload: {
+                  success: false,
+                }
+              });
+              return;
+            }
+
+            // if user select a folder in deeper layer, that is, not the top level folder
+            // note that the output is NOT simply '.git', but '.git' with some white chars
+            if (!/^\.git/.test(stdout)) {
+              possiblePath = path.resolve(possiblePath, '..');
+            }
+
+            exec(`git checkout ${version}`, { cwd: possiblePath }, (err) => {
+              if (err) {
+                showErrorMessage(err.message);
+                callbackMessage({
+                  command: 'return-try-select-project',
+                  payload: {
+                    success: false,
+                  }
+                });
+                return;
+              } else {
+
+                callbackMessage({
+                  command: 'return-try-select-project',
+                  payload: {
+                    success: true,
+                    fsPath: possiblePath,
+                  }
+                });
+              }
+            });
+          });
+        } else {
+          callbackMessage({
+            command: 'return-try-select-project',
+            payload: {
+              success: false,
+            }
+          });
+        }
+      }), (reason => {
+        showErrorMessage(reason);
+        callbackMessage({
+          command: 'return-try-select-project',
+          payload: {
+            success: false,
+          }
+        });
+      }));
+  },
+
+  'ready-open-folder': ({ fsPath }: { fsPath: string }) => {
+    vscode.commands.executeCommand('vscode.openFolder', vscode.Uri.file(fsPath));
   }
 };
