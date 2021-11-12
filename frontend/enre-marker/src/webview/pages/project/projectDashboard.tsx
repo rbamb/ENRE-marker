@@ -1,6 +1,6 @@
 import React, { useContext, useState } from 'react';
 import {
-  Typography, Button, Space, Card, Alert, Upload, Input, Form,
+  Typography, Button, Space, Card, Alert, Input, Form, Descriptions, Tooltip, message,
 } from 'antd';
 import { GithubOutlined, DesktopOutlined, FolderOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
@@ -16,19 +16,36 @@ export const ProjectDashboard: React.FC<{
   // TODO: consume collaborator
 
   const {
-    state: { project: { pid, githubUrl, version } },
+    state: {
+      project: {
+        pid, name, githubUrl, version, fsPath,
+      },
+    },
     dispatcher: workingDispatcher,
   } = useContext(WorkingContext);
   const { dispatcher: navDispatcher } = useContext(NavContext);
+
   const navigate = useNavigate();
 
   const [form] = Form.useForm();
 
-  const [executing, setExecuting] = useState(false);
+  const [executing, setExecuting] = useState(false as false | 'clone' | 'select');
 
-  if (init) {
+  if (init || (!init && !fsPath)) {
+    const toPages = (path: string) => {
+      workingDispatcher({ payload: { project: { fsPath: path } } });
+      navDispatcher({ payload: 'file' });
+      navigate(`project/${pid}/file`);
+    };
+
     const handleCloneClicked = ({ folderPath }: { folderPath: string }) => {
-      setExecuting(true);
+      setExecuting('clone');
+
+      message.loading({
+        content: '(1/2) Fetching project...',
+        duration: 0,
+        key: 'clone',
+      });
 
       getApi.postMessage({
         command: 'git-clone',
@@ -40,18 +57,52 @@ export const ProjectDashboard: React.FC<{
       });
 
       const listener = (
-        { data: { command, payload: { success, fsPath } } }: any,
+        { data: { command, payload: { success, fsPath: returnedPath } } }: any,
         // eslint-disable-next-line consistent-return
       ) => {
         if (command === 'return-git-clone') {
           setExecuting(false);
 
           if (success) {
+            message.loading({
+              content: '(2/2) Fetching files data...',
+              duration: 0,
+              key: 'clone',
+            });
+
             window.removeEventListener('message', listener);
-            workingDispatcher({ payload: { project: { fsPath } } });
-            // TODO: fetching files data
-            navDispatcher({ payload: 'file' });
-            navigate(`project/${pid}/file`);
+            /** there is no need to set component's state since will be redirected soon */
+            toPages(returnedPath);
+          }
+
+          message.destroy('clone');
+        }
+      };
+
+      window.addEventListener('message', listener);
+    };
+
+    const handleSelectClicked = () => {
+      setExecuting('select');
+
+      getApi.postMessage({
+        command: 'try-select-project',
+        payload: { version },
+      });
+
+      const listener = (
+        { data: { command, payload: { success, fsPath: returnedPath } } }: any,
+      ) => {
+        if (command === 'return-try-select-project') {
+          setExecuting(false);
+
+          // TODO: save fsPath and send message 'ready-open-folder',
+          // and refactor index page to loading before restore message is received
+          // FIXME: state module seems to be incorrect
+
+          if (success) {
+            window.removeEventListener('message', listener);
+            toPages(returnedPath);
           }
         }
       };
@@ -60,7 +111,7 @@ export const ProjectDashboard: React.FC<{
     };
 
     return (
-      <Space direction="vertical">
+      <Space direction="vertical" style={{ width: '100%' }}>
         <Title level={4}>
           Fetch the project to your local machine by...
         </Title>
@@ -72,7 +123,7 @@ export const ProjectDashboard: React.FC<{
             </Space>
           )}
         >
-          <Space direction="vertical">
+          <Space direction="vertical" style={{ width: '100%' }}>
             <Form layout="inline" form={form} onFinish={handleCloneClicked}>
               <Form.Item
                 name="folderPath"
@@ -96,7 +147,7 @@ export const ProjectDashboard: React.FC<{
                         });
 
                         const listener = (
-                          { data: { command, payload: { result, message } } }: any,
+                          { data: { command, payload: { result, message: msg } } }: any,
                           // eslint-disable-next-line consistent-return
                         ) => {
                           if (command === 'return-validate-path') {
@@ -104,7 +155,7 @@ export const ProjectDashboard: React.FC<{
                             if (result === 'success') {
                               return resolve('success');
                             }
-                            return reject(new Error(message));
+                            return reject(new Error(msg));
                           }
                         };
 
@@ -119,11 +170,18 @@ export const ProjectDashboard: React.FC<{
                   placeholder="Base folder"
                   prefix={<FolderOutlined style={{ color: 'rgba(0,0,0,0.25)' }} />}
                   allowClear
-                  disabled={executing}
+                  readOnly={executing === 'clone'}
                 />
               </Form.Item>
               <Form.Item>
-                <Button type="primary" htmlType="submit" loading={executing}>Git clone</Button>
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  loading={executing === 'clone'}
+                  disabled={executing === 'select'}
+                >
+                  Git clone
+                </Button>
               </Form.Item>
             </Form>
             <Paragraph>
@@ -161,18 +219,24 @@ export const ProjectDashboard: React.FC<{
             </Space>
           )}
         >
-          <Space direction="vertical">
-            <Upload directory>
-              <Button type="primary">Select a folder</Button>
-            </Upload>
+          <Space direction="vertical" style={{ width: '100%' }}>
+            {/** not using antd's upload component since it can only get files */}
+            <Button
+              type="primary"
+              onClick={handleSelectClicked}
+              loading={executing === 'select'}
+              disabled={executing === 'clone'}
+            >
+              Select a folder
+            </Button>
             <Paragraph>
               If your local driver has already contained
-              this project, you can tell ENRE-marker
+              this project (with git enabled), you can tell ENRE-marker
               to directly reuse it.
             </Paragraph>
             <Alert
-              message="Scan needed, and it may take a while"
-              description="ENRE-marker will scan all files in that folder to make sure them have not been modified and match the version specified in our server."
+              message="Project will be reset (if necessary)"
+              description={'ENRE-marker will run "git checkout" to reset project to match the version specified in our server, so do not select a folder in which you have made some edits.'}
               type="warning"
               showIcon
             />
@@ -181,5 +245,55 @@ export const ProjectDashboard: React.FC<{
       </Space>
     );
   }
-  return <p>bs</p>;
+
+  // if no fsPath (not inited)
+  return (
+    <Space direction="vertical" style={{ width: '100%' }}>
+      <Title level={4}>
+        A copy of project&nbsp;
+        <Typography.Text code>
+          {name}
+        </Typography.Text>
+        &nbsp;is stored in your machine
+      </Title>
+      <Card
+        title={(
+          <Space>
+            <DesktopOutlined style={{ color: 'rgba(0,0,0,0.75)' }} />
+            <span>Reassign the working folder to another path</span>
+          </Space>
+        )}
+      >
+        <Space direction="vertical" style={{ width: '100%' }}>
+          <Descriptions>
+            <Descriptions.Item label="Current">
+              <Tooltip title="View in file explorer">
+                <a
+                  onClick={() => getApi.postMessage({ command: 'open-folder', payload: fsPath })}
+                >
+                  {fsPath}
+                </a>
+              </Tooltip>
+              &nbsp;with commit hash&nbsp;
+              <Typography.Text code>
+                {version}
+              </Typography.Text>
+            </Descriptions.Item>
+          </Descriptions>
+          <Button
+            danger
+            onClick={() => {
+              workingDispatcher({ payload: { project: { fsPath: undefined } } });
+            }}
+          >
+            Reassign a path
+          </Button>
+          <Alert
+            message="You will NOT be able to continue your work until the process is successfully and completely finished."
+            type="warning"
+          />
+        </Space>
+      </Card>
+    </Space>
+  );
 };
