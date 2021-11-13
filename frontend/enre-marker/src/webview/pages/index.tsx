@@ -62,10 +62,10 @@ export const App: React.FC = () => {
   const [workingState, workingDispatcher] = useReducer(workingReducer, getApi.getState()?.working);
   const [navState, navDispatcher] = useReducer(navReducer, 'index');
 
-  /** restore state fi necessary */
+  /** restore state if necessary */
   window.addEventListener('message', ({ data: { command, payload } }: any) => {
     if (command === 'restore-state') {
-      console.log(`restore-state${JSON.stringify(payload)}`);
+      console.log(`restore-state ${JSON.stringify(payload)}`);
       loginDispatcher({ payload: payload.login });
       workingDispatcher({ payload: payload.working });
     }

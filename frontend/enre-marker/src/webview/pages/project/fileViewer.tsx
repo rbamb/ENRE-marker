@@ -1,8 +1,10 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { Table, Progress, Button } from 'antd';
+import { useRequest } from 'ahooks';
 import { request } from '../../compatible/httpAdapter';
 import { WorkingContext, NavContext } from '../../context';
+import { getApi } from '../../compatible/apiAdapter';
 
 const RenderAction = (record: remote.file, type: 'entity' | 'relation') => {
   const { fid, path } = record;
@@ -44,11 +46,20 @@ const RenderAction = (record: remote.file, type: 'entity' | 'relation') => {
   );
 };
 
-const columns = [
+const columns = (fsPath: string) => ([
   {
     title: 'File Path',
     dataIndex: 'path',
     key: 'fpath',
+    render: (fpath: string) => (
+      <a
+        onClick={() => {
+          getApi.postMessage({ command: 'open-file', payload: { fpath, mode: 'entity', base: fsPath } });
+        }}
+      >
+        {fpath}
+      </a>
+    ),
   },
   {
     title: 'Entity',
@@ -98,34 +109,27 @@ const columns = [
       },
     ],
   },
-];
+]);
 
-export const FileViewer: React.FC<{ data?: Array<remote.file> }> = ({ data }) => {
-  // if get to this page by redirecting, and data hasn't been set
-  const { state } = useLocation();
+/** to support view mode (only view files rather than claim the project and do mark things),
+ * the component should fetch pid from the url,
+ * if url's pid === state's pid, then we are in mark mode,
+ * else we are in view mode.
+ */
+export const FileViewer: React.FC = () => {
+  const { pid: urlPid } = useParams();
 
-  // if get to this page by click the navbar, data and state are neither set
-  // need to fetch data from the server
-  const [remoteFetch, setRemoteFetch] = useState<Array<remote.file>>();
-  // @ts-ignore
-  const { state: { project: { pid } } } = useContext(WorkingContext);
+  const { state: { project: { pid: statePid, fsPath } } } = useContext(WorkingContext);
 
-  useEffect(() => {
-    if (!(data || state || remoteFetch)) {
-      (async () => {
-        const res: remote.resFiles = await request(`GET project/${pid}`);
-        setRemoteFetch(res.fileHash);
-      })();
-    }
-  });
+  const { data, loading } = useRequest(() => request(`GET project/${urlPid}`).then(({ file }: remote.resFiles) => file));
 
   return (
     <Table
-      dataSource={data || state || remoteFetch}
-      loading={!(data || state || remoteFetch)}
+      dataSource={data}
+      loading={loading}
       rowKey={(record) => record.fid}
       // @ts-ignore
-      columns={columns}
+      columns={columns(fsPath)}
       pagination={false}
     />
   );

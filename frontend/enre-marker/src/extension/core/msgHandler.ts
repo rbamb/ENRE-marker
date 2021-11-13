@@ -4,9 +4,16 @@ import open from 'open';
 import { statSync, mkdirSync } from 'fs';
 import { exec } from 'child_process';
 
-export type localCommands = 'open-url-in-browser' | 'open-folder' | 'validate-path' | 'git-clone' | 'try-select-project' | 'ready-open-folder';
+export type localCommands =
+  'open-url-in-browser'
+  | 'open-folder'
+  | 'validate-path'
+  | 'git-clone'
+  | 'try-select-project'
+  | 'ready-open-folder'
+  | 'open-file';
 
-const { window: { showErrorMessage } } = vscode;
+const { window: { showErrorMessage, showWarningMessage } } = vscode;
 
 export interface localMsgType {
   command: localCommands,
@@ -23,6 +30,14 @@ export const msgHandler:
   'open-url-in-browser': (payload: string) => open(payload),
 
   'open-folder': (payload: string) => open(payload),
+
+  'open-file': (({ fpath, base, mode }: { fpath: string, base: string, mode: 'entity' | 'relation-to' | 'relation-from' }) => {
+    switch (mode) {
+      case 'entity':
+        vscode.workspace.openTextDocument(path.join(base, fpath))
+          .then((value) => vscode.window.showTextDocument(value, 1));
+    }
+  }),
 
   'validate-path': ({ value, pname }: { value: string, pname: string }) => {
     if (!path.isAbsolute(value)) {
@@ -147,6 +162,7 @@ export const msgHandler:
             // if user select a folder in deeper layer, that is, not the top level folder
             // note that the output is NOT simply '.git', but '.git' with some white chars
             if (!/^\.git/.test(stdout)) {
+              showWarningMessage('A subfolder was given, which has been automatically convert to top level folder.');
               possiblePath = path.resolve(possiblePath, '..');
             }
 

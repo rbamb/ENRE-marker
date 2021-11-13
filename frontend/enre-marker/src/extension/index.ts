@@ -64,6 +64,15 @@ export const activate = (context: vscode.ExtensionContext) => {
         context.subscriptions
       );
 
+      vscode.window.onDidChangeActiveTextEditor(e => {
+        console.log(e);
+        if (panel) {
+          if (!panel.visible) {
+            panel.reveal(2);
+          }
+        }
+      });
+
       vscode.window.onDidChangeTextEditorSelection(e => {
         const sel = e.selections[0];
         if (e.kind === 2) {

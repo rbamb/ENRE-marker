@@ -15,13 +15,13 @@ const mockState = {
     project: {
       pid: 100,
       name: 'ENRE.js',
-      // fsPath: 'd://test/ENRE.js',
+      fsPath: 'd://test/ENRE.js',
     },
-    file: {
-      fid: 0,
-      path: '/some/to/path/a.js',
-      workingOn: 'entity',
-    },
+    // file: {
+    //   fid: 0,
+    //   path: '/some/to/path/a.js',
+    //   workingOn: 'entity',
+    // },
   },
 };
 

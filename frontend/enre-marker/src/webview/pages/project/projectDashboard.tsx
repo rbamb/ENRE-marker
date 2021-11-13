@@ -42,7 +42,7 @@ export const ProjectDashboard: React.FC<{
       setExecuting('clone');
 
       message.loading({
-        content: '(1/2) Fetching project...',
+        content: 'Fetching project from GitHub...',
         duration: 0,
         key: 'clone',
       });
@@ -62,20 +62,12 @@ export const ProjectDashboard: React.FC<{
       ) => {
         if (command === 'return-git-clone') {
           setExecuting(false);
+          message.destroy('clone');
 
           if (success) {
-            message.loading({
-              content: '(2/2) Fetching files data...',
-              duration: 0,
-              key: 'clone',
-            });
-
             window.removeEventListener('message', listener);
-            /** there is no need to set component's state since will be redirected soon */
             toPages(returnedPath);
           }
-
-          message.destroy('clone');
         }
       };
 
@@ -227,7 +219,7 @@ export const ProjectDashboard: React.FC<{
               loading={executing === 'select'}
               disabled={executing === 'clone'}
             >
-              Select a folder
+              {executing === 'select' ? 'Selecting...' : 'Select a folder'}
             </Button>
             <Paragraph>
               If your local driver has already contained

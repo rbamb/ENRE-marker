@@ -41,7 +41,7 @@ module.exports = {
       message: 'success',
       'file|1-10': [{
         'fid|+1': 0,
-        path: '/some/path/to/a.js',
+        path: 'package.json',
         entity: {
           'count|0-200': 0,
           'progress|0-100': 0

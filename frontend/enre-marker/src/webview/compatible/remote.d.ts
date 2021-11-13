@@ -42,8 +42,7 @@ declare namespace remote {
 
   interface resFiles extends resCommon {
     dir: string,
-    fileHash: Array<file>,
-    hash: string,
+    file: Array<file>,
   }
 
   interface file {
@@ -56,8 +55,7 @@ declare namespace remote {
     relation: {
       count: number,
       progress: number,
-    }
-    hash: string,
+    },
   }
 
   interface location {
