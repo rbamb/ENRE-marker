@@ -187,7 +187,7 @@ declare type entity {
   eid: number,
   name: string,
   loc: location,
-  type: number,
+  eType: number,
   status: status
 }
 
@@ -220,7 +220,7 @@ declare enum operation {
 declare type manuallyEntity {
   name: string,
   loc: location,
-  type: number
+  eType: number
 }
 ```
 
@@ -253,10 +253,10 @@ Get all relations **started from** the specified file.
 
 declare type relation {
   rid: number,
-  e_from: entity,
-  e_to: entity,
+  eFrom: entity,
+  eTo: entity,
   toFid: number,
-  r_type: number,
+  rType: number,
   status: status
 }
 
@@ -269,9 +269,9 @@ declare type status {
 }
 
 declare type manuallyRelation {
-  e_from: entity,
-  e_to: entity,
-  r_type: number
+  eFrom: entity,
+  eTo: entity,
+  rType: number
 }
 ```
 
@@ -312,7 +312,7 @@ declare type entityUserResult {
 declare type entityFixPatch {
   shouldBe: fixOption,
   // Below properties only appear if shouldBe is 2 (modified)
-  new: manuallyEntity
+  newly: manuallyEntity
 }
 
 declare enum fixOption {
@@ -371,13 +371,13 @@ declare type relationUserResult {
 declare type relationFixPatch {
   shouldBe: fixOption,
   // Below properties only appear if shouldBe is 2 (modified)
-  new: onlyEid
+  newly: onlyEid
 }
 
 declare type onlyEid {
-  from: number,
-  to: number,
-  type: number
+  eFrom: number,
+  eTo: number,
+  rType: number
 }
 ```
 
