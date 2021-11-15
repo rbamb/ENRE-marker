@@ -5,9 +5,7 @@ interface langTableElement {
 
 export type langTableIndex = 'js' | 'java' | 'cpp' | 'go' | 'python';
 
-type langTableType = Record<langTableIndex, langTableElement>
-
-export const langTable: langTableType = {
+export const langTable: Record<langTableIndex, langTableElement> = {
   js: {
     text: 'JavaScript',
     color: 'gold',
@@ -30,42 +28,30 @@ export const langTable: langTableType = {
   }
 }
 
-export enum jsEntity {
-
+interface typeTableElement {
+  entity: Array<string>,
+  relation: Array<string>,
 }
 
-export enum jsRelation {
-
-}
-
-export enum javaEntity {
-
-}
-
-export enum javaRelation {
-
-}
-
-export enum cppEntity {
-
-}
-
-export enum cppRelation {
-
-}
-
-export enum golangEntity {
-
-}
-
-export enum golangRelation {
-
-}
-
-export enum pythonEntity {
-
-}
-
-export enum pythonRelation {
-
+export const typeTable: Record<langTableIndex, typeTableElement> = {
+  js: {
+    entity: [],
+    relation: [],
+  },
+  java: {
+    entity: [],
+    relation: [],
+  },
+  cpp: {
+    entity: ['Variable', 'Function'],
+    relation: ['Call', 'Use'],
+  },
+  go: {
+    entity: [],
+    relation: [],
+  },
+  python: {
+    entity: [],
+    relation: [],
+  }
 }

@@ -91,14 +91,14 @@ declare namespace remote {
     eid: number,
     name: string,
     loc: location,
-    type: string,
+    eType: number,
     status: status,
   }
 
   interface manuallyEntity {
     name: string,
     loc: location,
-    type: string,
+    eType: number,
   }
 
   interface resRelations extends resCommon {
@@ -107,16 +107,16 @@ declare namespace remote {
 
   interface relation {
     rid: number,
-    from: entity,
-    to: entity,
+    eFrom: entity,
+    eTo: entity,
     toFid: number,
-    type: number,
+    rType: number,
     status: status,
   }
 
   interface manuallyRelation {
-    from: entity,
-    to: entity,
-    type: number,
+    eFrom: entity,
+    eTo: entity,
+    rType: number,
   }
 }

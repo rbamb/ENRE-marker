@@ -11,7 +11,7 @@ import { langTable, langTableIndex } from '../../.static/config';
 import { getApi } from '../../compatible/apiAdapter';
 
 const RenderAction = (claimed: boolean, {
-  pid, name, githubUrl, state, version,
+  pid, name, githubUrl, state, version, lang,
 }: remote.project) => {
   const { dispatcher: workingDispatcher } = useContext(WorkingContext);
   const { dispatcher: navDispatcher } = useContext(NavContext);
@@ -27,10 +27,18 @@ const RenderAction = (claimed: boolean, {
     try {
       const { collaborator }: remote.resClaim = await request(`POST project/${pid}/claim`);
 
+      // clean up
+      workingDispatcher({
+        payload: {
+          project: undefined,
+          file: undefined,
+        },
+      });
+      // set new
       workingDispatcher({
         payload: {
           project: {
-            pid, name, githubUrl, version,
+            pid, name, githubUrl, version, lang,
           },
         },
       });

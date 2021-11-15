@@ -9,8 +9,15 @@ const differ = (old: any, latest: any): any => {
    */
   const obj = { ...old };
 
+  console.log('old', obj);
+  console.log('new', latest);
+
   Object.keys(latest).forEach((k1) => {
     if (typeof latest[k1] === 'object') {
+      if (!obj[k1]) {
+        obj[k1] = latest[k1];
+        return;
+      }
       let added = false;
       Object.keys(latest[k1]).forEach((k2) => {
         if (Object.keys(old).includes(k1) || added) {
@@ -78,6 +85,7 @@ export const workingReducer = (state: any, action: any) => {
       newState = undefined;
     }
   } else if (action) {
+    console.log('here');
     newState = { ...action.payload };
   } else {
     newState = undefined;

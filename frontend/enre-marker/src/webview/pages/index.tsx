@@ -6,7 +6,7 @@ import {
   NavLink,
   Navigate,
 } from 'react-router-dom';
-import { Menu, notification, Button } from 'antd';
+import { Menu, notification } from 'antd';
 import {
   UserOutlined,
   ProjectOutlined,
@@ -16,6 +16,7 @@ import {
   Loading3QuartersOutlined,
 } from '@ant-design/icons';
 import { Login } from './user/login';
+import { Settings } from './user/settings';
 import { FileViewer } from './project/fileViewer';
 import { ProjectViewer } from './project/projectViewer';
 import {
@@ -30,7 +31,6 @@ import { RelationViewer } from './er/relationViewer';
 const enabled = false;
 
 const RequireAuth = ({ children }: React.PropsWithChildren<any>) => {
-  // @ts-ignore
   const { state } = useContext(LoginContext);
 
   if (!enabled) {
@@ -136,14 +136,7 @@ export const App: React.FC = () => {
                     path="/"
                     element={
                       loginState?.token
-                        ? (
-                          <Button onClick={
-                            () => loginDispatcher({ payload: { token: undefined } })
-                          }
-                          >
-                            Log out
-                          </Button>
-                        )
+                        ? <Settings />
                         : <Login uid={loginState?.uid} />
                     }
                   />

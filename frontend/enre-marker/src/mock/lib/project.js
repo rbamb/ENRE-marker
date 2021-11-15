@@ -12,10 +12,10 @@ module.exports = {
         name: '@word',
         //version: /([a-z]|[0-9]){7}/,
         version: '86ced82',
-        "lang|+1": ['js', 'java', 'cpp', 'go', 'python'],
+        "lang": 'cpp',
         'progress|0-100': 0,
         'claimed|1': true,
-        'state|0-1': 0,
+        'state': 0,
       }]
     }));
   },

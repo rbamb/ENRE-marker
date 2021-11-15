@@ -1,22 +1,33 @@
 import { useEventListener, useRequest } from 'ahooks';
 import {
-  Table, Badge, Tooltip, Button, Card, Typography, Modal, Descriptions, Alert, Divider, Select,
+  Table,
+  Badge,
+  Tooltip,
+  Button,
+  Card,
+  Typography,
+  Modal,
+  Descriptions,
+  Alert,
+  Divider,
+  Select,
+  message,
 } from 'antd';
 import {
-  CheckOutlined, CloseOutlined, EditOutlined,
+  CheckOutlined, CloseOutlined, EditOutlined, PlusOutlined,
 } from '@ant-design/icons';
-import React, { useContext, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { request } from '../../compatible/httpAdapter';
 import { WorkingContext } from '../../context';
+import { langTableIndex, typeTable } from '../../.static/config';
 
 const { Option } = Select;
 
-const ControlledEntityInfo: React.FC<{
-  name: string,
-  loc: remote.location,
-  type: string
-}> = ({ name, loc, type }) => {
-  // TODO: consume type
+/** disable this rule since it will wrongly indent the return body */
+// eslint-disable-next-line max-len
+const ControlledEntityInfo: React.FC<{ lang: langTableIndex, name?: string, loc?: remote.location, type?: number }> = ({
+  lang, name, loc, type,
+}) => {
   const [trackedName, setName] = useState(name);
   const [trackedLoc, setLoc] = useState(loc);
 
@@ -34,78 +45,164 @@ const ControlledEntityInfo: React.FC<{
         message="Select new range of the wanted entity name directly in the code editor left, and infos will be synced to here."
       />
       <Descriptions column={1} style={{ marginTop: '1em' }}>
-        <Descriptions.Item label="Code name">{trackedName}</Descriptions.Item>
-        <Descriptions.Item label="Starts at">{`line ${trackedLoc.start.line}, column ${trackedLoc.start.column}`}</Descriptions.Item>
-        <Descriptions.Item label="Ends at">{`line ${trackedLoc.end.line}, column ${trackedLoc.end.column}`}</Descriptions.Item>
+        <Descriptions.Item label="Code name">{trackedName || '-'}</Descriptions.Item>
+        <Descriptions.Item label="Starts at">{trackedLoc ? `line ${trackedLoc?.start.line}, column ${trackedLoc?.start.column}` : '-'}</Descriptions.Item>
+        <Descriptions.Item label="Ends at">{trackedLoc ? `line ${trackedLoc?.end.line}, column ${trackedLoc?.end.column}` : '-'}</Descriptions.Item>
       </Descriptions>
       <Divider />
       <Select
         showSearch
         placeholder="Entity Type"
         style={{ width: '100%' }}
+        defaultValue={type}
       >
-        <Option value="1">
-          map types to option
-        </Option>
+        {typeTable[lang].entity.map((t, i) => (
+          <Option key={t} value={i}>
+            {t}
+          </Option>
+        ))}
       </Select>
     </>
   );
 };
 
-const RenderExpandedRow = ({ name, loc, type }: remote.entity) => {
-  const showModifyModal = () => {
-    Modal.confirm({
-      title: 'Modify to...',
-      icon: <EditOutlined />,
-      content: <ControlledEntityInfo name={name} loc={loc} type={type} />,
-    });
-  };
-
-  return (
-    <Card title={(
-      <>
-        <span>Operation to entity </span>
-        <Typography.Text code>{name}</Typography.Text>
-      </>
-    )}
-    >
-      <Card.Grid style={{ padding: 0 }}>
-        <Button
-          type="link"
-          icon={<CheckOutlined />}
-          style={{ height: '72px', color: 'green' }}
-          block
-        >
-          Correct
-        </Button>
-      </Card.Grid>
-      <Card.Grid style={{ padding: 0 }}>
-        <Button
-          type="link"
-          icon={<CloseOutlined />}
-          style={{ height: '72px' }}
-          block
-          danger
-        >
-          Remove
-        </Button>
-      </Card.Grid>
-      <Card.Grid style={{ padding: 0 }}>
-        <Button
-          type="link"
-          icon={<EditOutlined />}
-          style={{ height: '72px', color: 'darkorange' }}
-          block
-          onClick={showModifyModal}
-        >
-          Modify
-        </Button>
-      </Card.Grid>
-    </Card>
-  );
+const showModifyModal = (
+  pid: number,
+  fid: number,
+  lang: langTableIndex,
+  name?: string,
+  loc?: remote.location,
+  type?: number,
+) => {
+  Modal.confirm({
+    title: name ? 'Modify to...' : 'Insert an entity...',
+    icon: name ? <EditOutlined /> : <PlusOutlined style={{ color: '#108ee9' }} />,
+    content: <ControlledEntityInfo lang={lang} name={name} loc={loc} type={type} />,
+  });
 };
 
-const columns = [
+let locker: boolean = false;
+
+const handleOperationClicked = (
+  pid: number,
+  fid: number,
+  type: string,
+  eid?: number,
+  entity?: remote.manuallyEntity,
+) => {
+  if (!locker) {
+    locker = true;
+    switch (type) {
+      case 'pass':
+        message.loading({
+          content: 'Uploading to the server',
+          duration: 0,
+          key: 'operation',
+        });
+        request(`POST project/${pid}/file/${fid}/entity`, {
+          data: [
+            { isManually: false, eid, isCorrect: true },
+          ],
+        }).then(() => {
+          message.success({
+            content: 'Mark succeeded',
+            key: 'operation',
+          });
+        }).catch((json) => {
+          message.error({
+            content: json.message,
+            key: 'operation',
+          });
+        });
+        break;
+      case 'remove':
+        request(`POST project/${pid}/file/${fid}/entity`, {
+          data: [
+            {
+              isManually: false, eid, isCorrect: false, fix: { shouldBe: 1 },
+            },
+          ],
+        });
+        break;
+      case 'modify':
+        request(`POST project/${pid}/file/${fid}/entity`, {
+          data: [
+            {
+              isManually: false,
+              eid,
+              isCorrect: false,
+              fix: {
+                shouldBe: 2,
+                newly: entity,
+              },
+            },
+          ],
+        });
+        break;
+      case 'insert':
+        request(`POST project/${pid}/file/${fid}/entity`, {
+          data: [
+            {
+              isManually: true,
+              entity,
+            },
+          ],
+        });
+        break;
+      default:
+        throw new Error('Unwanted operation type');
+    }
+  }
+};
+
+const RenderExpandedRow = ({
+  eid, name, loc, eType,
+}: remote.entity, lang: langTableIndex, pid: number, fid: number) => (
+  <Card title={(
+    <>
+      <span>Operation to entity&nbsp;</span>
+      <Typography.Text code>{name}</Typography.Text>
+    </>
+  )}
+  >
+    <Card.Grid style={{ padding: 0 }}>
+      <Button
+        type="link"
+        icon={<CheckOutlined />}
+        style={{ height: '72px', color: 'green' }}
+        block
+        onClick={() => handleOperationClicked(pid, fid, 'pass', eid)}
+      >
+        Correct
+      </Button>
+    </Card.Grid>
+    <Card.Grid style={{ padding: 0 }}>
+      <Button
+        type="link"
+        icon={<CloseOutlined />}
+        style={{ height: '72px' }}
+        block
+        danger
+        onClick={() => handleOperationClicked(pid, fid, 'remove', eid)}
+      >
+        Remove
+      </Button>
+    </Card.Grid>
+    <Card.Grid style={{ padding: 0 }}>
+      <Button
+        type="link"
+        icon={<EditOutlined />}
+        style={{ height: '72px', color: 'darkorange' }}
+        block
+        onClick={() => showModifyModal(pid, fid, lang, name, loc, eType)}
+      >
+        Modify
+      </Button>
+    </Card.Grid>
+  </Card>
+);
+
+const columns = (lang: langTableIndex) => [
   {
     title: 'Status',
     align: 'center',
@@ -130,14 +227,20 @@ const columns = [
                 <Badge status="warning" />
               </Tooltip>
             );
+          case 3 as remote.operation.insert:
+            return (
+              <Tooltip title="Inserted">
+                <Badge color="blue" />
+              </Tooltip>
+            );
           default:
-            return <Badge />;
+            return 'COLOR';
         }
       }
 
       return (
         <Tooltip title="Waiting for review">
-          <Badge status="processing" />
+          <Badge status="default" />
         </Tooltip>
       );
     },
@@ -146,12 +249,13 @@ const columns = [
     title: 'Code Name',
     dataIndex: 'name',
     key: 'name',
-    render: (name: string) => <Button type="link">{name}</Button>,
+    render: (name: string) => <Button type="link" style={{ paddingLeft: 0 }}>{name}</Button>,
   },
   {
     title: 'Entity Type',
-    dataIndex: 'type',
+    dataIndex: 'eType',
     key: 'type',
+    render: (value: number) => typeTable[lang].entity[value],
   },
   {
     title: 'Location',
@@ -195,24 +299,60 @@ const columns = [
 ];
 
 export const EntityViewer: React.FC = () => {
-  // @ts-ignore
-  const { state: { project: { pid }, file: { fid } } } = useContext(WorkingContext);
+  const {
+    state: {
+      project: {
+        pid,
+        lang,
+      },
+      file: { fid },
+    },
+    dispatcher,
+  } = useContext(WorkingContext);
+
   const { data, loading } = useRequest(() => request(`GET project/${pid}/file/${fid}/entity`).then(({ entity }: remote.resEntities) => entity));
 
+  useEffect(() => {
+    dispatcher({ payload: { file: { cache: data } } });
+  }, [loading]);
+
   return (
-    <Table
-      loading={loading}
-      dataSource={data}
-      rowKey={(record) => record.eid}
-      // @ts-ignore
-      columns={columns}
-      pagination={false}
-      expandable={{
-        expandRowByClick: true,
-        rowExpandable: (record) => !record.status.hasBeenReviewed,
-        expandIconColumnIndex: -1,
-        expandedRowRender: RenderExpandedRow,
-      }}
-    />
+    <>
+      <Table
+        loading={loading}
+        dataSource={data}
+        rowKey={(record) => record.eid}
+        // @ts-ignore
+        columns={columns(lang, pid, fid)}
+        pagination={false}
+        expandable={{
+          expandRowByClick: true,
+          rowExpandable: (record) => !record.status.hasBeenReviewed,
+          expandIconColumnIndex: -1,
+          expandedRowRender: (entity) => RenderExpandedRow(
+            entity,
+            lang as langTableIndex,
+            pid,
+            fid,
+          ),
+        }}
+      />
+      <Tooltip
+        title="Manually insert an entity"
+        placement="left"
+      >
+        <Button
+          style={{
+            position: 'absolute', right: '2.5em', bottom: '2.5em', zIndex: 9999,
+          }}
+          type="primary"
+          shape="circle"
+          size="large"
+          onClick={() => showModifyModal(pid, fid, lang as langTableIndex)}
+        >
+          <PlusOutlined />
+        </Button>
+      </Tooltip>
+    </>
   );
 };

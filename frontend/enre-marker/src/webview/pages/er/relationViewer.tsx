@@ -1,29 +1,39 @@
 import {
-  Table, Button, Tooltip, Badge, Card, Modal, Typography, Select, Alert, Descriptions, Divider,
+  Table,
+  Button,
+  Tooltip,
+  Badge,
+  Card,
+  Modal,
+  Typography,
+  Select,
+  Alert,
+  Descriptions,
+  Divider,
+  Space,
+  Radio,
 } from 'antd';
 import {
-  CheckOutlined, CloseOutlined, EditOutlined,
+  CheckOutlined, CloseOutlined, EditOutlined, PlusOutlined,
 } from '@ant-design/icons';
 import React, { useContext, useState } from 'react';
 import { useRequest, useEventListener } from 'ahooks';
 import { request } from '../../compatible/httpAdapter';
 import { WorkingContext } from '../../context';
+import { langTableIndex, typeTable } from '../../.static/config';
 
 const { Option } = Select;
 
-const ControlledRelationInfo: React.FC<{
-  name: string,
-  loc: remote.location,
-  type: string
-}> = ({ name, loc, type }) => {
-  // TODO: consume type
-  const [trackedName, setName] = useState(name);
-  const [trackedLoc, setLoc] = useState(loc);
+// eslint-disable-next-line max-len
+const ControlledRelationInfo: React.FC<{ lang: langTableIndex, eFrom?: remote.entity, eTo?: remote.entity, type?: number }> = ({
+  lang, eFrom, eTo, type,
+}) => {
+  const [ef, setEf] = useState(eFrom);
+  const [et, setEt] = useState(eTo);
 
   useEventListener('message', ({ data: { command, payload } }) => {
     if (command === 'selection-change') {
-      setName(payload.name);
-      setLoc(payload.loc);
+      // TODO:
     }
   });
 
@@ -31,97 +41,110 @@ const ControlledRelationInfo: React.FC<{
     <>
       <Alert
         type="info"
-        message="Select new range of the wanted entity name directly in the code editor left, and infos will be synced to here."
+        message="Place the cursor in the range of an entity's code name, and that entity's info will be synced to here."
       />
-      <Descriptions column={1} style={{ marginTop: '1em' }}>
-        <Descriptions.Item label="Code name">{trackedName}</Descriptions.Item>
-        <Descriptions.Item label="Starts at">{`line ${trackedLoc.start.line}, column ${trackedLoc.start.column}`}</Descriptions.Item>
-        <Descriptions.Item label="Ends at">{`line ${trackedLoc.end.line}, column ${trackedLoc.end.column}`}</Descriptions.Item>
-      </Descriptions>
+      <Space direction="vertical" style={{ width: '100%', marginTop: '1.2em' }}>
+        <Radio.Group style={{ width: '100%' }}>
+          <Radio.Button value="From Entity" style={{ width: '50%', textAlign: 'center' }}>From Entity</Radio.Button>
+          <Radio.Button value="To Entity" style={{ width: '50%', textAlign: 'center' }}>To Entity</Radio.Button>
+        </Radio.Group>
+        <Space direction="horizontal" size="middle" align="start" style={{ width: '100%' }}>
+          <Descriptions column={1}>
+            <Descriptions.Item label="Code name">{ef ? <Typography.Text style={{ width: '80px' }} ellipsis={{ tooltip: ef.name }}>{ef.name}</Typography.Text> : '-'}</Descriptions.Item>
+            <Descriptions.Item label="Starts at">{ef ? `line ${ef.loc.start.line}, column ${ef.loc.start.column}` : '-'}</Descriptions.Item>
+            <Descriptions.Item label="Ends at">{ef ? `line ${ef.loc.end.line}, column ${ef.loc.end.column}` : '-'}</Descriptions.Item>
+            <Descriptions.Item label="Type">{ef ? typeTable[lang].entity[ef.eType] : '-'}</Descriptions.Item>
+          </Descriptions>
+          <Descriptions column={1}>
+            <Descriptions.Item label="Code name">{et ? <Typography.Text style={{ width: '80px' }} ellipsis={{ tooltip: et.name }}>{et.name}</Typography.Text> : '-'}</Descriptions.Item>
+            <Descriptions.Item label="Starts at">{et ? `line ${et.loc.start.line}, column ${et.loc.start.column}` : '-'}</Descriptions.Item>
+            <Descriptions.Item label="Ends at">{et ? `line ${et.loc.end.line}, column ${et.loc.end.column}` : '-'}</Descriptions.Item>
+            <Descriptions.Item label="Type">{et ? typeTable[lang].entity[et.eType] : '-'}</Descriptions.Item>
+          </Descriptions>
+        </Space>
+      </Space>
       <Divider />
       <Select
         showSearch
-        placeholder="Entity Type"
+        placeholder="Relation Type"
         style={{ width: '100%' }}
+        defaultValue={type}
       >
-        <Option value="1">
-          map types to option
-        </Option>
+        {typeTable[lang].relation.map((t, i) => (
+          <Option key={t} value={i}>
+            {t}
+          </Option>
+        ))}
       </Select>
     </>
   );
 };
 
-const RenderExpandedRow = ({
-  from: {
-    name: fromName,
-  },
-  to: {
-    name: toName,
-  },
-  type,
-}: remote.relation) => {
-  const showModifyModal = () => {
-    Modal.confirm({
-      title: 'Modify to...',
-      icon: <EditOutlined />,
-      content: 'aaa',
-    });
-  };
-
-  return (
-    <Card title={(
-      <>
-        <span>Operation to relation </span>
-        <Typography.Text code>
-          {fromName}
-        </Typography.Text>
-        <span>
-          {` --${type}-> `}
-        </span>
-        <Typography.Text code>
-          {toName}
-        </Typography.Text>
-      </>
-    )}
-    >
-      <Card.Grid style={{ padding: 0 }}>
-        <Button
-          type="link"
-          icon={<CheckOutlined />}
-          style={{ height: '72px', color: 'green' }}
-          block
-        >
-          Correct
-        </Button>
-      </Card.Grid>
-      <Card.Grid style={{ padding: 0 }}>
-        <Button
-          type="link"
-          icon={<CloseOutlined />}
-          style={{ height: '72px' }}
-          block
-          danger
-        >
-          Remove
-        </Button>
-      </Card.Grid>
-      <Card.Grid style={{ padding: 0 }}>
-        <Button
-          type="link"
-          icon={<EditOutlined />}
-          style={{ height: '72px', color: 'darkorange' }}
-          block
-          onClick={showModifyModal}
-        >
-          Modify
-        </Button>
-      </Card.Grid>
-    </Card>
-  );
+const showModifyModal = (
+  lang: langTableIndex,
+  eFrom?: remote.entity,
+  eTo?: remote.entity,
+  type?: number,
+) => {
+  Modal.confirm({
+    title: eFrom ? 'Modify to...' : 'Insert a relation...',
+    icon: eFrom ? <EditOutlined /> : <PlusOutlined style={{ color: '#108ee9' }} />,
+    content: <ControlledRelationInfo lang={lang} eFrom={eFrom} eTo={eTo} type={type} />,
+  });
 };
 
-const columns = [
+const RenderExpandedRow = ({ eFrom, eTo, rType }: remote.relation, lang: langTableIndex) => (
+  <Card title={(
+    <>
+      <span>Operation to relation&nbsp;</span>
+      <Typography.Text code>
+        {eFrom.name}
+      </Typography.Text>
+      <span>
+        {` --${typeTable[lang].relation[rType]}-> `}
+      </span>
+      <Typography.Text code>
+        {eTo.name}
+      </Typography.Text>
+    </>
+  )}
+  >
+    <Card.Grid style={{ padding: 0 }}>
+      <Button
+        type="link"
+        icon={<CheckOutlined />}
+        style={{ height: '72px', color: 'green' }}
+        block
+      >
+        Correct
+      </Button>
+    </Card.Grid>
+    <Card.Grid style={{ padding: 0 }}>
+      <Button
+        type="link"
+        icon={<CloseOutlined />}
+        style={{ height: '72px' }}
+        block
+        danger
+      >
+        Remove
+      </Button>
+    </Card.Grid>
+    <Card.Grid style={{ padding: 0 }}>
+      <Button
+        type="link"
+        icon={<EditOutlined />}
+        style={{ height: '72px', color: 'darkorange' }}
+        block
+        onClick={() => showModifyModal(lang, eFrom, eTo, rType)}
+      >
+        Modify
+      </Button>
+    </Card.Grid>
+  </Card>
+);
+
+const columns = (lang: langTableIndex) => [
   {
     title: 'Status',
     align: 'center',
@@ -146,6 +169,12 @@ const columns = [
                 <Badge status="warning" />
               </Tooltip>
             );
+          case 3 as remote.operation.insert:
+            return (
+              <Tooltip title="Inserted">
+                <Badge color="blue" />
+              </Tooltip>
+            );
           default:
             return <Badge />;
         }
@@ -153,7 +182,7 @@ const columns = [
 
       return (
         <Tooltip title="Waiting for review">
-          <Badge status="processing" />
+          <Badge status="default" />
         </Tooltip>
       );
     },
@@ -163,59 +192,80 @@ const columns = [
     children: [
       {
         title: 'Code Name',
-        dataIndex: ['from', 'name'],
+        dataIndex: ['eFrom', 'name'],
         key: 'fn',
-        render: (name: string) => <Button type="link">{name}</Button>,
+        render: (name: string) => <Button type="link" style={{ paddingLeft: 0 }}>{name}</Button>,
       },
       {
         title: 'Entity Type',
-        dataIndex: ['from', 'type'],
+        dataIndex: ['eFrom', 'eType'],
         key: 'ft',
+        render: (value: number) => typeTable[lang].entity[value],
       },
     ],
+  },
+  {
+    title: 'Relation Type',
+    dataIndex: 'rType',
+    key: 'type',
+    render: (value: number) => typeTable[lang].relation[value],
   },
   {
     title: 'To Entity',
     children: [
       {
         title: 'Code Name',
-        dataIndex: ['to', 'name'],
+        dataIndex: ['eTo', 'name'],
         key: 'tn',
-        render: (name: string) => <Button type="link">{name}</Button>,
+        render: (name: string) => <Button type="link" style={{ paddingLeft: 0 }}>{name}</Button>,
       },
       {
         title: 'Entity Type',
-        dataIndex: ['to', 'type'],
+        dataIndex: ['eTo', 'eType'],
         key: 'tt',
+        render: (value: number) => typeTable[lang].entity[value],
       },
     ],
-  },
-  {
-    title: 'Relation Type',
-    dataIndex: 'type',
-    key: 'type',
   },
 ];
 
 export const RelationViewer: React.FC = () => {
-  // @ts-ignore
-  const { state: { project: { pid }, file: { fid } } } = useContext(WorkingContext);
+  const { state: { project: { pid, lang }, file: { fid } } } = useContext(WorkingContext);
   const { data, loading } = useRequest(() => request(`GET project/${pid}/file/${fid}/relation`).then(({ relation }: remote.resRelations) => relation));
 
   return (
-    <Table
-      loading={loading}
-      dataSource={data}
-      rowKey={(record) => record.rid}
-      // @ts-ignore
-      columns={columns}
-      pagination={false}
-      expandable={{
-        expandRowByClick: true,
-        rowExpandable: (record) => !record.status.hasBeenReviewed,
-        expandIconColumnIndex: -1,
-        expandedRowRender: RenderExpandedRow,
-      }}
-    />
+    <>
+      <Table
+        loading={loading}
+        dataSource={data}
+        rowKey={(record) => record.rid}
+        // @ts-ignore
+        columns={columns(lang)}
+        pagination={false}
+        expandable={{
+          expandRowByClick: true,
+          rowExpandable: (record) => !record.status.hasBeenReviewed,
+          expandIconColumnIndex: -1,
+          expandedRowRender:
+            (record: remote.relation) => RenderExpandedRow(record, lang as langTableIndex),
+        }}
+      />
+      <Tooltip
+        title="Manually insert a relation"
+        placement="left"
+      >
+        <Button
+          style={{
+            position: 'absolute', right: '2.5em', bottom: '2.5em', zIndex: 999,
+          }}
+          type="primary"
+          shape="circle"
+          size="large"
+          onClick={() => { showModifyModal(lang as langTableIndex); }}
+        >
+          <PlusOutlined />
+        </Button>
+      </Tooltip>
+    </>
   );
 };

@@ -60,6 +60,8 @@ export const ProjectDashboard: React.FC<{
         { data: { command, payload: { success, fsPath: returnedPath } } }: any,
         // eslint-disable-next-line consistent-return
       ) => {
+        // FIXME: there seems to have a bug
+
         if (command === 'return-git-clone') {
           setExecuting(false);
           message.destroy('clone');

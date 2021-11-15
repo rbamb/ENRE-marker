@@ -30,6 +30,9 @@ export const request = (methodUrl: string, body?: any): Promise<any> => {
           });
           // TODO: redirect
           reject();
+        } else if (json.code >= 1000) {
+          // business related error should be handled by itself
+          reject(json);
         } else {
           notification.error({
             message: `${json.code} ${json.message}`,

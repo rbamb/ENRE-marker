@@ -9,38 +9,19 @@ import { getApi } from '../../compatible/apiAdapter';
 const RenderAction = (record: remote.file, type: 'entity' | 'relation') => {
   const { fid, path } = record;
 
-  // @ts-ignore
   const { state, dispatcher: workingDispatcher } = useContext(WorkingContext);
-  // @ts-ignore
   const { dispatcher: navDiapatcher } = useContext(NavContext);
 
-  // eslint-disable-next-line react/destructuring-assignment
-  if (record[type].progress !== 100) {
-    return (
-      <Link to={`/project/${state.project.pid}/file/${fid}/${type}?action=mark`}>
-        <Button
-          onClick={() => {
-            workingDispatcher({ payload: { file: { fid, path, workingOn: type } } });
-            navDiapatcher({ payload: type });
-          }}
-        >
-          Mark
-        </Button>
-      </Link>
-    );
-  }
-
   return (
-    // eslint-disable-next-line react/destructuring-assignment
-    <Link to={`/project/${state.project.pid}/file/${fid}/${type}?action=view`}>
+    <Link to={`/project/${state.project.pid}/file/${fid}/${type}`}>
       <Button
-        type="dashed"
         onClick={() => {
+          workingDispatcher({ payload: { file: undefined } });
           workingDispatcher({ payload: { file: { fid, path, workingOn: type } } });
           navDiapatcher({ payload: type });
         }}
       >
-        View
+        Mark
       </Button>
     </Link>
   );
@@ -119,9 +100,27 @@ const columns = (fsPath: string) => ([
 export const FileViewer: React.FC = () => {
   const { pid: urlPid } = useParams();
 
-  const { state: { project: { pid: statePid, fsPath } } } = useContext(WorkingContext);
+  // TODO: view mode
+  // eslint-disable-next-line max-len
+  const { state: { project: { pid: statePid, fsPath, cache } }, dispatcher } = useContext(WorkingContext);
 
   const { data, loading } = useRequest(() => request(`GET project/${urlPid}`).then(({ file }: remote.resFiles) => file));
+
+  // in mark mode
+  useEffect(() => {
+    if (parseInt(urlPid as string, 10) === statePid && data) {
+      dispatcher({
+        payload: {
+          project: {
+            cache: data.map((i) => ({
+              fid: i.fid,
+              path: i.path,
+            })),
+          },
+        },
+      });
+    }
+  }, [loading]);
 
   return (
     <Table

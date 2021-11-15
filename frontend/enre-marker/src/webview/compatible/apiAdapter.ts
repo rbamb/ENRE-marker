@@ -16,12 +16,25 @@ const mockState = {
       pid: 100,
       name: 'ENRE.js',
       fsPath: 'd://test/ENRE.js',
+      version: 'abcdefg',
+      lang: 'cpp',
+      // cache: [
+      //   {
+      //     fid: 0,
+      //     path: 'package.json',
+      //   },
+      // ],
     },
-    // file: {
-    //   fid: 0,
-    //   path: '/some/to/path/a.js',
-    //   workingOn: 'entity',
-    // },
+    file: {
+      fid: 0,
+      path: '/some/to/path/a.js',
+      workingOn: 'entity',
+      cache: [
+        {
+          eid: 0,
+        },
+      ],
+    },
   },
 };
 
@@ -59,11 +72,17 @@ export interface projectState {
   lang: string,
   locked: boolean,
   fsPath: string,
+  cache: Array<fid2Path>,
+}
+
+export interface fid2Path {
+  fid: number,
+  path: string,
 }
 
 export interface fileState {
   fid: number,
   path: string,
   workingOn: 'entity' | 'relation',
-  mode: 'mark' | 'view',
+  cache: Array<remote.entity>
 }

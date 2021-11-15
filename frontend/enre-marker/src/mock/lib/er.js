@@ -19,10 +19,10 @@ module.exports = {
             column: 5
           }
         },
-        type: 'variable',
+        eType: 0,
         status: {
           'hasBeenReviewed|1': true,
-          'operation|0-2': 0,
+          'operation|0-3': 0,
           'newEntity': {
             name: 'newName',
             loc: {
@@ -35,7 +35,7 @@ module.exports = {
                 column: 6
               }
             },
-            type: 'function'
+            eType: 1
           }
         }
       }]
@@ -48,7 +48,7 @@ module.exports = {
       message: 'success',
       'relation|1-10': [{
         'rid|+1': 0,
-        from: {
+        eFrom: {
           'eid|+1': 0,
           name: 'var name from',
           loc: {
@@ -61,11 +61,11 @@ module.exports = {
               column: 5
             }
           },
-          type: 'variable',
+          eType: 0,
           'isManually|1': true,
           status: {
             'hasBeenReviewed|1': true,
-            'operation|0-2': 0,
+            'operation|0-3': 0,
             'newEntity': {
               name: 'newName',
               loc: {
@@ -78,11 +78,11 @@ module.exports = {
                   column: 6
                 }
               },
-              type: 'function'
+              eType: 1
             }
           }
         },
-        to: {
+        eTo: {
           'eid|+1': 0,
           name: 'var name to',
           loc: {
@@ -95,7 +95,7 @@ module.exports = {
               column: 5
             }
           },
-          type: 'variable',
+          eType: 1,
           'isManually|1': true,
           status: {
             'hasBeenReviewed|1': true,
@@ -112,20 +112,20 @@ module.exports = {
                   column: 6
                 }
               },
-              type: 'function'
+              eType: 1,
             }
           }
         },
         'toFid|1-100': 0,
-        'type': 'use',
+        'rType': 0,
         'isManually|1': true,
         status: {
           'hasBeenReviewed|1': true,
           'operation|0-2': 0,
           'newRelation': {
-            from: {},
-            to: {},
-            type: 'call'
+            eFrom: {},
+            eTo: {},
+            rType: 1,
           }
         }
       }]
