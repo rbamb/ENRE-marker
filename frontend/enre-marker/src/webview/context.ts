@@ -11,10 +11,12 @@ const differ = (old: any, latest: any): any => {
 
   Object.keys(latest).forEach((k1) => {
     if (typeof latest[k1] === 'object') {
+      let added = false;
       Object.keys(latest[k1]).forEach((k2) => {
-        if (Object.keys(old).includes(k1)) {
+        if (Object.keys(old).includes(k1) || added) {
           obj[k1][k2] = latest[k1][k2];
         } else {
+          added = true;
           obj[k1] = { [k2]: latest[k1][k2] };
         }
       });
