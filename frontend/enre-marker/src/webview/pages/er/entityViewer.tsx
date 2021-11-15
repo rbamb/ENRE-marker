@@ -343,7 +343,7 @@ export const EntityViewer: React.FC = () => {
       >
         <Button
           style={{
-            position: 'absolute', right: '2.5em', bottom: '2.5em', zIndex: 9999,
+            position: 'absolute', right: '2.5em', bottom: '2.5em', zIndex: 999,
           }}
           type="primary"
           shape="circle"
