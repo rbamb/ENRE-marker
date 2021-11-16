@@ -11,12 +11,12 @@ module.exports = {
         name: 'var name',
         loc: {
           start: {
-            line: 1,
-            column: 2
+            'line|+1': 1,
+            'column|2-5': 2
           },
           end: {
-            line: 1,
-            column: 5
+            'line|+1': 1,
+            'column|6-9': 6
           }
         },
         eType: 0,
@@ -136,7 +136,6 @@ module.exports = {
     res.json(Mock.mock({
       code: 200,
       message: 'success',
-      token: sha256
     }));
   },
 

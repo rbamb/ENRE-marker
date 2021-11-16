@@ -1,8 +1,9 @@
 import * as vscode from 'vscode';
 import path from 'path';
 import { htmlAdapter } from './webPanel/htmlAdapter';
-import { localMsgType, msgHandler } from './core/msgHandler';
+import { getSelApproved, localMsgType, msgHandler } from './core/msgHandler';
 import { ENREMarkerSerializer } from './webPanel/serializer';
+import { entityDecorations } from './core/decorations';
 
 export const activate = (context: vscode.ExtensionContext) => {
   let panel: vscode.WebviewPanel | undefined = undefined;
@@ -33,7 +34,6 @@ export const activate = (context: vscode.ExtensionContext) => {
 
       // Handle any post-close logic in here
       panel.onDidDispose(() => {
-
         panel = undefined;
       },
         null,
@@ -74,24 +74,26 @@ export const activate = (context: vscode.ExtensionContext) => {
       });
 
       vscode.window.onDidChangeTextEditorSelection(e => {
-        const sel = e.selections[0];
-        if (e.kind === 2) {
-          panel?.webview.postMessage({
-            command: 'selection-change',
-            payload: {
-              name: e.textEditor.document.getText(sel),
-              loc: {
-                start: {
-                  line: sel.start.line,
-                  column: sel.start.character
-                },
-                end: {
-                  line: sel.end.line,
-                  column: sel.end.character
+        if (getSelApproved()) {
+          const sel = e.selections[0];
+          if ((e.kind === 2) && (sel.start.line === sel.end.line) && (sel.start.character !== sel.end.character)) {
+            panel?.webview.postMessage({
+              command: 'selection-change',
+              payload: {
+                name: e.textEditor.document.getText(sel),
+                loc: {
+                  start: {
+                    line: sel.start.line,
+                    column: sel.start.character
+                  },
+                  end: {
+                    line: sel.end.line,
+                    column: sel.end.character
+                  }
                 }
               }
-            }
-          });
+            });
+          }
         }
       });
     }
@@ -100,21 +102,7 @@ export const activate = (context: vscode.ExtensionContext) => {
     return panel;
   });
 
-  let test = vscode.commands.registerTextEditorCommand('enre-marker.test', (editor, edit) => {
-    let decorators = vscode.window.createTextEditorDecorationType({
-      isWholeLine: true,
-      dark: {
-        backgroundColor: 'green',
-        color: 'black'
-      }
-    });
-
-    editor.setDecorations(decorators, [new vscode.Range(new vscode.Position(0, 0), new vscode.Position(0, 5))]);
-  });
-
   context.subscriptions.push(registerWebview);
   // this will help webview auto restart when vscode is restarted
-  vscode.window.registerWebviewPanelSerializer('ENREMarker', new ENREMarkerSerializer());
-
-  context.subscriptions.push(test);
+  // vscode.window.registerWebviewPanelSerializer('ENREMarker', new ENREMarkerSerializer());
 };

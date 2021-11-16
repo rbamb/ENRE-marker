@@ -20,6 +20,7 @@ import React, { useContext, useEffect, useState } from 'react';
 import { request } from '../../compatible/httpAdapter';
 import { WorkingContext } from '../../context';
 import { langTableIndex, typeTable } from '../../.static/config';
+import { getApi } from '../../compatible/apiAdapter';
 
 const { Option } = Select;
 
@@ -81,7 +82,7 @@ const showModifyModal = (
   });
 };
 
-let locker: boolean = false;
+let lock: boolean = false;
 
 const handleOperationClicked = (
   pid: number,
@@ -90,15 +91,15 @@ const handleOperationClicked = (
   eid?: number,
   entity?: remote.manuallyEntity,
 ) => {
-  if (!locker) {
-    locker = true;
+  if (!lock) {
+    lock = true;
+    message.loading({
+      content: 'Uploading to the server',
+      duration: 0,
+      key: 'operation',
+    });
     switch (type) {
       case 'pass':
-        message.loading({
-          content: 'Uploading to the server',
-          duration: 0,
-          key: 'operation',
-        });
         request(`POST project/${pid}/file/${fid}/entity`, {
           data: [
             { isManually: false, eid, isCorrect: true },
@@ -108,11 +109,14 @@ const handleOperationClicked = (
             content: 'Mark succeeded',
             key: 'operation',
           });
+          lock = false;
+          refreshF();
         }).catch((json) => {
           message.error({
             content: json.message,
             key: 'operation',
           });
+          lock = false;
         });
         break;
       case 'remove':
@@ -122,6 +126,18 @@ const handleOperationClicked = (
               isManually: false, eid, isCorrect: false, fix: { shouldBe: 1 },
             },
           ],
+        }).then(() => {
+          message.success({
+            content: 'Mark succeeded',
+            key: 'operation',
+          });
+          lock = false;
+        }).catch((json) => {
+          message.error({
+            content: json.message,
+            key: 'operation',
+          });
+          lock = false;
         });
         break;
       case 'modify':
@@ -137,6 +153,18 @@ const handleOperationClicked = (
               },
             },
           ],
+        }).then(() => {
+          message.success({
+            content: 'Mark succeeded',
+            key: 'operation',
+          });
+          lock = false;
+        }).catch((json) => {
+          message.error({
+            content: json.message,
+            key: 'operation',
+          });
+          lock = false;
         });
         break;
       case 'insert':
@@ -147,10 +175,26 @@ const handleOperationClicked = (
               entity,
             },
           ],
+        }).then(() => {
+          message.success({
+            content: 'Mark succeeded',
+            key: 'operation',
+          });
+          lock = false;
+        }).catch((json) => {
+          message.error({
+            content: json.message,
+            key: 'operation',
+          });
+          lock = false;
         });
         break;
       default:
-        throw new Error('Unwanted operation type');
+        message.error({
+          content: 'Unknown operation type',
+          key: 'operation',
+        });
+        lock = false;
     }
   }
 };
@@ -298,22 +342,32 @@ const columns = (lang: langTableIndex) => [
   },
 ];
 
+let refreshF: any;
+
 export const EntityViewer: React.FC = () => {
   const {
     state: {
       project: {
         pid,
         lang,
+        fsPath,
       },
-      file: { fid },
+      file: { fid, path },
     },
-    dispatcher,
   } = useContext(WorkingContext);
 
-  const { data, loading } = useRequest(() => request(`GET project/${pid}/file/${fid}/entity`).then(({ entity }: remote.resEntities) => entity));
+  const { data, loading, refresh } = useRequest(
+    () => request(`GET project/${pid}/file/${fid}/entity`).then(({ entity }: remote.resEntities) => entity),
+  );
+
+  refreshF = refresh;
 
   useEffect(() => {
-    dispatcher({ payload: { file: { cache: data } } });
+    if (data) {
+      // in case directly go to this page by click the navbar
+      getApi.postMessage({ command: 'open-file', payload: { fpath: path, mode: 'entity', base: fsPath } });
+      getApi.postMessage({ command: 'show-entity', payload: data });
+    }
   }, [loading]);
 
   return (

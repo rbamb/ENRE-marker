@@ -84,5 +84,4 @@ export interface fileState {
   fid: number,
   path: string,
   workingOn: 'entity' | 'relation',
-  cache: Array<remote.entity>
 }

@@ -3,6 +3,8 @@ import path from 'path';
 import open from 'open';
 import { statSync, mkdirSync } from 'fs';
 import { exec } from 'child_process';
+import { projectState } from '../../webview/compatible/apiAdapter';
+import { entityDecorations } from './decorations';
 
 export type localCommands =
   'open-url-in-browser'
@@ -11,7 +13,9 @@ export type localCommands =
   | 'git-clone'
   | 'try-select-project'
   | 'ready-open-folder'
-  | 'open-file';
+  | 'open-file'
+  | 'post-project-cache'
+  | 'show-entity';
 
 const { window: { showErrorMessage, showWarningMessage } } = vscode;
 
@@ -19,6 +23,12 @@ export interface localMsgType {
   command: localCommands,
   payload: any,
 }
+
+let projectCache = undefined;
+let currControledDoc: vscode.TextEditor | undefined = undefined;
+let selApproved: boolean = false;
+
+export const getSelApproved = () => selApproved;
 
 // TODO: Promisify!!!
 export const msgHandler:
@@ -31,11 +41,16 @@ export const msgHandler:
 
   'open-folder': (payload: string) => open(payload),
 
+  'post-project-cache': (payload: projectState['cache']) => projectCache = payload,
+
   'open-file': (({ fpath, base, mode }: { fpath: string, base: string, mode: 'entity' | 'relation-to' | 'relation-from' }) => {
     switch (mode) {
       case 'entity':
         vscode.workspace.openTextDocument(path.join(base, fpath))
-          .then((value) => vscode.window.showTextDocument(value, 1));
+          .then((doc) => {
+            vscode.window.showTextDocument(doc, 1)
+              .then(editor => currControledDoc = editor);
+          });
     }
   }),
 
@@ -209,5 +224,58 @@ export const msgHandler:
 
   'ready-open-folder': ({ fsPath }: { fsPath: string }) => {
     vscode.commands.executeCommand('vscode.openFolder', vscode.Uri.file(fsPath));
+  },
+
+  'show-entity': (data: Array<any>) => {
+    selApproved = true;
+    let passed: Array<vscode.Range> = [];
+    data
+      .filter((e) => e.status.hasBeenReviewed && e.status.operation === 0)
+      .forEach((e) => passed.push(
+        new vscode.Range(
+          new vscode.Position(e.loc.start.line, e.loc.start.column),
+          new vscode.Position(e.loc.end.line, e.loc.end.column))
+      ));
+    currControledDoc?.setDecorations(entityDecorations.entityPassed, passed);
+
+    let removed: Array<vscode.Range> = [];
+    data
+      .filter((e) => e.status.hasBeenReviewed && e.status.operation === 1)
+      .forEach((e) => removed.push(
+        new vscode.Range(
+          new vscode.Position(e.loc.start.line, e.loc.start.column),
+          new vscode.Position(e.loc.end.line, e.loc.end.column))
+      ));
+    currControledDoc?.setDecorations(entityDecorations.entityRemoved, removed);
+
+    let modified: Array<vscode.Range> = [];
+    data
+      .filter((e) => e.status.hasBeenReviewed && e.status.operation === 2)
+      .forEach((e) => modified.push(
+        new vscode.Range(
+          new vscode.Position(e.loc.start.line, e.loc.start.column),
+          new vscode.Position(e.loc.end.line, e.loc.end.column))
+      ));
+    currControledDoc?.setDecorations(entityDecorations.entityModified, modified);
+
+    let inserted: Array<vscode.Range> = [];
+    data
+      .filter((e) => e.status.hasBeenReviewed && e.status.operation === 3)
+      .forEach((e) => inserted.push(
+        new vscode.Range(
+          new vscode.Position(e.loc.start.line, e.loc.start.column),
+          new vscode.Position(e.loc.end.line, e.loc.end.column))
+      ));
+    currControledDoc?.setDecorations(entityDecorations.entityInserted, inserted);
+
+    let unreviewed: Array<vscode.Range> = [];
+    data
+      .filter((e) => !e.status.hasBeenReviewed)
+      .forEach((e) => unreviewed.push(
+        new vscode.Range(
+          new vscode.Position(e.loc.start.line, e.loc.start.column),
+          new vscode.Position(e.loc.end.line, e.loc.end.column))
+      ));
+    currControledDoc?.setDecorations(entityDecorations.entityUnreviewed, unreviewed);
   }
 };

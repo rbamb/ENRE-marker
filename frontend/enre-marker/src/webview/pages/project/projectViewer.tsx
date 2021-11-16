@@ -214,6 +214,11 @@ export const ProjectViewer: React.FC = () => {
           },
         ),
       ),
+    {
+      // for cool data, enableing cache mechanism
+      cacheKey: 'projects',
+      staleTime: 60000,
+    },
   );
 
   return (

@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Table, Progress, Button } from 'antd';
 import { useRequest } from 'ahooks';
@@ -6,7 +6,7 @@ import { request } from '../../compatible/httpAdapter';
 import { WorkingContext, NavContext } from '../../context';
 import { getApi } from '../../compatible/apiAdapter';
 
-const RenderAction = (record: remote.file, type: 'entity' | 'relation') => {
+const RenderAction = (record: remote.file, type: 'entity' | 'relation', fsPath: string) => {
   const { fid, path } = record;
 
   const { state, dispatcher: workingDispatcher } = useContext(WorkingContext);
@@ -19,6 +19,7 @@ const RenderAction = (record: remote.file, type: 'entity' | 'relation') => {
           workingDispatcher({ payload: { file: undefined } });
           workingDispatcher({ payload: { file: { fid, path, workingOn: type } } });
           navDiapatcher({ payload: type });
+          getApi.postMessage({ command: 'open-file', payload: { fpath: path, mode: type, base: fsPath } });
         }}
       >
         Mark
@@ -62,7 +63,7 @@ const columns = (fsPath: string) => ([
         title: 'Action',
         key: 'eaction',
         align: 'center',
-        render: (_: undefined, record: remote.file) => RenderAction(record, 'entity'),
+        render: (_: undefined, record: remote.file) => RenderAction(record, 'entity', fsPath),
       },
     ],
   },
@@ -86,7 +87,7 @@ const columns = (fsPath: string) => ([
         title: 'Action',
         key: 'raction',
         align: 'center',
-        render: (_: undefined, record: remote.file) => RenderAction(record, 'relation'),
+        render: (_: undefined, record: remote.file) => RenderAction(record, 'relation', fsPath),
       },
     ],
   },
@@ -104,20 +105,32 @@ export const FileViewer: React.FC = () => {
   // eslint-disable-next-line max-len
   const { state: { project: { pid: statePid, fsPath, cache } }, dispatcher } = useContext(WorkingContext);
 
-  const { data, loading } = useRequest(() => request(`GET project/${urlPid}`).then(({ file }: remote.resFiles) => file));
+  const { data, loading } = useRequest(
+    () => request(`GET project/${urlPid}`).then(({ file }: remote.resFiles) => file),
+    {
+      cacheKey: 'files',
+      staleTime: 30000,
+    },
+  );
 
   // in mark mode
   useEffect(() => {
     if (parseInt(urlPid as string, 10) === statePid && data) {
+      const c = data.map((i) => ({
+        fid: i.fid,
+        path: i.path,
+      }));
+
       dispatcher({
         payload: {
           project: {
-            cache: data.map((i) => ({
-              fid: i.fid,
-              path: i.path,
-            })),
+            cache: c,
           },
         },
+      });
+      getApi.postMessage({
+        command: 'post-project-cache',
+        payload: c,
       });
     }
   }, [loading]);

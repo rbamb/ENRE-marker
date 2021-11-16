@@ -21,11 +21,6 @@
         "command": "enre-marker.start",
         "title": "Start",
         "category": "ENRE-marker"
-      },
-      {
-        "command": "enre-marker.test",
-        "title": "Show color in editor view",
-        "category": "ENRE-marker"
       }
     ]
   },
