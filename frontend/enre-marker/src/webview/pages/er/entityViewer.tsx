@@ -24,6 +24,10 @@ import { getApi } from '../../compatible/apiAdapter';
 
 const { Option } = Select;
 
+let gname: any;
+let gloc: any;
+let gtype: any;
+
 /** disable this rule since it will wrongly indent the return body */
 // eslint-disable-next-line max-len
 const ControlledEntityInfo: React.FC<{ lang: langTableIndex, name?: string, loc?: remote.location, type?: number }> = ({
@@ -31,6 +35,13 @@ const ControlledEntityInfo: React.FC<{ lang: langTableIndex, name?: string, loc?
 }) => {
   const [trackedName, setName] = useState(name);
   const [trackedLoc, setLoc] = useState(loc);
+  const [trackedType, setType] = useState(type);
+
+  useEffect(() => {
+    gname = trackedName;
+    gloc = trackedLoc;
+    gtype = trackedType;
+  });
 
   useEventListener('message', ({ data: { command, payload } }) => {
     if (command === 'selection-change') {
@@ -55,7 +66,8 @@ const ControlledEntityInfo: React.FC<{ lang: langTableIndex, name?: string, loc?
         showSearch
         placeholder="Entity Type"
         style={{ width: '100%' }}
-        defaultValue={type}
+        defaultValue={trackedType}
+        onSelect={(value) => setType(value)}
       >
         {typeTable[lang].entity.map((t, i) => (
           <Option key={t} value={i}>
@@ -71,6 +83,7 @@ const showModifyModal = (
   pid: number,
   fid: number,
   lang: langTableIndex,
+  eid?: number,
   name?: string,
   loc?: remote.location,
   type?: number,
@@ -79,6 +92,18 @@ const showModifyModal = (
     title: name ? 'Modify to...' : 'Insert an entity...',
     icon: name ? <EditOutlined /> : <PlusOutlined style={{ color: '#108ee9' }} />,
     content: <ControlledEntityInfo lang={lang} name={name} loc={loc} type={type} />,
+    onOk: (close) => {
+      if (!gname || !gloc || gtype === undefined) {
+        message.warning('Contents are not fullfilled');
+        return;
+      }
+      if (name === gname && JSON.stringify(loc) === JSON.stringify(gloc) && type === gtype) {
+        message.warning('Modified content is identical comparing to the old one');
+        return;
+      }
+      handleOperationClicked(pid, fid, eid !== undefined ? 'modify' : 'insert', eid, { name: gname, loc: gloc, eType: gtype });
+      close();
+    },
   });
 };
 
@@ -241,7 +266,7 @@ const RenderExpandedRow = ({
         icon={<EditOutlined />}
         style={{ height: '72px', color: 'darkorange' }}
         block
-        onClick={() => showModifyModal(pid, fid, lang, name, loc, eType)}
+        onClick={() => showModifyModal(pid, fid, lang, eid, name, loc, eType)}
       >
         Modify
       </Button>
@@ -383,6 +408,7 @@ export const EntityViewer: React.FC = () => {
         columns={columns(lang, pid, fid)}
         pagination={false}
         expandable={{
+          // TODO: handle collapse all after refreshed
           expandRowByClick: true,
           rowExpandable: (record) => !record.status.hasBeenReviewed,
           expandIconColumnIndex: -1,
