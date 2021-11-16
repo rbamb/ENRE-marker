@@ -132,6 +132,7 @@ const handleOperationClicked = (
             key: 'operation',
           });
           lock = false;
+          refreshF();
         }).catch((json) => {
           message.error({
             content: json.message,
@@ -159,6 +160,7 @@ const handleOperationClicked = (
             key: 'operation',
           });
           lock = false;
+          refreshF();
         }).catch((json) => {
           message.error({
             content: json.message,
@@ -181,6 +183,7 @@ const handleOperationClicked = (
             key: 'operation',
           });
           lock = false;
+          refreshF();
         }).catch((json) => {
           message.error({
             content: json.message,
