@@ -321,7 +321,20 @@ const columns = (lang: langTableIndex) => [
     title: 'Code Name',
     dataIndex: 'name',
     key: 'name',
-    render: (name: string) => <Button type="link" style={{ paddingLeft: 0 }}>{name}</Button>,
+    render: (name: string, record: remote.entity) => (
+      <Button
+        type="link"
+        style={{ paddingLeft: 0 }}
+        onClick={() => {
+          getApi.postMessage({
+            command: 'highlight-entity',
+            payload: record.loc,
+          });
+        }}
+      >
+        {name}
+      </Button>
+    ),
   },
   {
     title: 'Entity Type',
@@ -395,12 +408,17 @@ export const EntityViewer: React.FC = () => {
       // in case directly go to this page by click the navbar
       getApi.postMessage({ command: 'open-file', payload: { fpath: path, mode: 'entity', base: fsPath } });
       getApi.postMessage({ command: 'show-entity', payload: data });
+      // clear previous highlight after refresh
+      getApi.postMessage({ command: 'highlight-entity', payload: undefined });
     }
   }, [loading]);
+
+  const [expandRow, setExpandRow] = useState(-1);
 
   return (
     <>
       <Table
+        sticky
         loading={loading}
         dataSource={data}
         rowKey={(record) => record.eid}
@@ -410,6 +428,7 @@ export const EntityViewer: React.FC = () => {
         expandable={{
           // TODO: handle collapse all after refreshed
           expandRowByClick: true,
+          expandedRowKeys: [expandRow],
           rowExpandable: (record) => !record.status.hasBeenReviewed,
           expandIconColumnIndex: -1,
           expandedRowRender: (entity) => RenderExpandedRow(
@@ -418,6 +437,22 @@ export const EntityViewer: React.FC = () => {
             pid,
             fid,
           ),
+          // only one line can expand in a single time
+          onExpandedRowsChange: (rows) => {
+            if (rows.length === 0) {
+              getApi.postMessage({
+                command: 'highlight-entity',
+                payload: undefined,
+              });
+            } else {
+              const selectedKey = rows[rows.length - 1] as number;
+              setExpandRow(selectedKey);
+              getApi.postMessage({
+                command: 'highlight-entity',
+                payload: data?.find((i) => i.eid === selectedKey)?.loc,
+              });
+            }
+          },
         }}
       />
       <Tooltip

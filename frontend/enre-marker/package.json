@@ -15,6 +15,15 @@
     "onWebviewPanel:ENREMarker"
   ],
   "main": "./dist/extension.js",
+  "files": [
+    "./dist/extension.js",
+    "./dist/webview.js",
+    "./dist/webview.css"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/xjtu-enre/ENRE-marker"
+  },
   "contributes": {
     "commands": [
       {
@@ -31,9 +40,11 @@
     "compile:ext-only": "cd src/extension && npm run compile:dev-w",
     "compile:prod": "concurrently \"cd src/extension && npm run compile:prod\" \"cd src/webview && npm run compile:prod\"",
     "start:mock": "cd src/mock && npm start",
+    "package": "npm run compile:prod",
     "vscode:prepublish": "npm run package"
   },
   "devDependencies": {
-    "concurrently": "^6.3.0"
+    "concurrently": "^6.3.0",
+    "vsce": "^2.3.0"
   }
 }

@@ -15,7 +15,7 @@ export const activate = (context: vscode.ExtensionContext) => {
       panel = vscode.window.createWebviewPanel(
         'ENREMarker',
         'ENRE-marker',
-        vscode.ViewColumn.Two,
+        vscode.ViewColumn.Three,
         {
           enableScripts: true,
           retainContextWhenHidden: true
@@ -27,10 +27,22 @@ export const activate = (context: vscode.ExtensionContext) => {
         vscode.Uri.file(path.join(context.extensionPath, 'dist', 'webview.css')).with({ scheme: 'vscode-resource' })
       );
 
+      // restore state if there is
+      const lastStored = context.globalState.get('webviewState');
       panel.webview.postMessage({
-        type: 'switchPage',
-        payload: 'project'
+        command: 'restore-state',
+        payload: lastStored || { url: '/' },
       });
+
+      // let eventLock = false;
+      // panel.onDidChangeViewState(({ webviewPanel: p }) => {
+      //   if (!eventLock && (!p.visible || p.viewColumn !== 2)) {
+      //     eventLock = true;
+      //   } else {
+      //     eventLock = false;
+      //   }
+      //   console.log('state changed with ', p.active, p.viewColumn, p.visible);
+      // });
 
       // Handle any post-close logic in here
       panel.onDidDispose(() => {
@@ -40,10 +52,15 @@ export const activate = (context: vscode.ExtensionContext) => {
         context.subscriptions
       );
 
-      const callbackMessage = ({ command, payload }: { command: string, payload: any }) => panel?.webview.postMessage({
-        command,
-        payload,
-      });
+      const callbackMessage = ({ command, payload }: { command: string, payload: any }) =>
+        panel?.webview.postMessage({
+          command,
+          payload,
+        });
+
+      const setState = (state: any) => {
+        context.globalState.update('webviewState', state);
+      };
 
       panel.webview.onDidReceiveMessage(
         ({ command, payload }: localMsgType) => {
@@ -52,11 +69,11 @@ export const activate = (context: vscode.ExtensionContext) => {
             return;
           }
 
-          const anything = msgHandler[command](payload, callbackMessage);
+          const anything = msgHandler[command](payload, callbackMessage, setState);
 
           if (typeof anything === 'function') {
             // TODO: handle return type is a function
-          } else {
+          } else if (typeof anything !== 'undefined') {
             panel?.webview.postMessage({ command: `return-${command}`, payload: anything });
           }
         },
@@ -65,7 +82,7 @@ export const activate = (context: vscode.ExtensionContext) => {
       );
 
       vscode.window.onDidChangeActiveTextEditor(e => {
-        console.log(e);
+        // console.log(e);
         if (panel) {
           if (!panel.visible) {
             panel.reveal(2);

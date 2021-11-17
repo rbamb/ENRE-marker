@@ -1,5 +1,6 @@
 # frontend
 frontend/enre-marker/**/node_modules
 frontend/enre-marker/**/dist
+.DS_Store
 
 # backend

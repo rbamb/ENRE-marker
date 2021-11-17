@@ -5,6 +5,7 @@ import {
   Route,
   NavLink,
   Navigate,
+  useLocation,
 } from 'react-router-dom';
 import { Menu, notification } from 'antd';
 import {
@@ -15,6 +16,7 @@ import {
   NodeIndexOutlined,
   Loading3QuartersOutlined,
 } from '@ant-design/icons';
+import { useEventListener } from 'ahooks';
 import { Login } from './user/login';
 import { Settings } from './user/settings';
 import { FileViewer } from './project/fileViewer';
@@ -62,12 +64,26 @@ export const App: React.FC = () => {
   const [workingState, workingDispatcher] = useReducer(workingReducer, getApi.getState()?.working);
   const [navState, navDispatcher] = useReducer(navReducer, 'index');
 
+  /** post state to extension to presist */
+  getApi.postMessage({
+    command: 'set-state',
+    payload: {
+      login: loginState,
+      working: workingState,
+    },
+  });
+
   /** restore state if necessary */
-  window.addEventListener('message', ({ data: { command, payload } }: any) => {
+  useEventListener('message', ({
+    data: {
+      command, payload: {
+        login, working,
+      },
+    },
+  }: any) => {
     if (command === 'restore-state') {
-      console.log(`restore-state ${JSON.stringify(payload)}`);
-      loginDispatcher({ payload: payload.login });
-      workingDispatcher({ payload: payload.working });
+      loginDispatcher({ payload: login });
+      workingDispatcher({ payload: working });
     }
   });
 
@@ -134,6 +150,14 @@ export const App: React.FC = () => {
                 <Routes>
                   <Route
                     path="/"
+                    element={
+                      loginState?.token
+                        ? <Settings />
+                        : <Login uid={loginState?.uid} />
+                    }
+                  />
+                  <Route
+                    path="*"
                     element={
                       loginState?.token
                         ? <Settings />

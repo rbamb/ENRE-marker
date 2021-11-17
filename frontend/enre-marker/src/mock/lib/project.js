@@ -14,7 +14,7 @@ module.exports = {
         version: '86ced82',
         "lang": 'cpp',
         'progress|0-100': 0,
-        'claimed|1': true,
+        'claimed|1': false,
         'state': 0,
       }]
     }));

@@ -35,7 +35,7 @@ export const ProjectDashboard: React.FC<{
     const toPages = (path: string) => {
       workingDispatcher({ payload: { project: { fsPath: path } } });
       navDispatcher({ payload: 'file' });
-      navigate(`project/${pid}/file`);
+      navigate(`/project/${pid}/file`);
     };
 
     const handleCloneClicked = ({ folderPath }: { folderPath: string }) => {

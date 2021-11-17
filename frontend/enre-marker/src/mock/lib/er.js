@@ -6,7 +6,7 @@ module.exports = {
     res.json(Mock.mock({
       code: 200,
       message: 'success',
-      'entity|1-10': [{
+      'entity|1-100': [{
         'eid|+1': 0,
         name: 'var name',
         loc: {

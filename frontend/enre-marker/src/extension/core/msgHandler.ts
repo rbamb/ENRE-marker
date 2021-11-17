@@ -7,7 +7,8 @@ import { projectState } from '../../webview/compatible/apiAdapter';
 import { entityDecorations } from './decorations';
 
 export type localCommands =
-  'open-url-in-browser'
+  'set-state'
+  | 'open-url-in-browser'
   | 'open-folder'
   | 'validate-path'
   | 'git-clone'
@@ -15,7 +16,8 @@ export type localCommands =
   | 'ready-open-folder'
   | 'open-file'
   | 'post-project-cache'
-  | 'show-entity';
+  | 'show-entity'
+  | 'highlight-entity';
 
 const { window: { showErrorMessage, showWarningMessage } } = vscode;
 
@@ -34,9 +36,10 @@ export const getSelApproved = () => selApproved;
 export const msgHandler:
   Record<
     localCommands,
-    (payload: any, callbackMessage: ({ command, payload }: { command: string; payload: any; }) => Thenable<boolean> | undefined) =>
-      ((payload: any, callbackMessage: ({ command, payload }: { command: string; payload: any; }) => Thenable<boolean> | undefined) => never) | any
+    (payload: any, callbackMessage: ({ command, payload }: { command: string; payload: any; }) => Thenable<boolean> | undefined, setState: (state: any) => void) => any
   > = {
+  'set-state': (payload, _, setState) => setState(payload),
+
   'open-url-in-browser': (payload: string) => open(payload),
 
   'open-folder': (payload: string) => open(payload),
@@ -78,6 +81,12 @@ export const msgHandler:
            * because a) color of warning is hard to read, b) warning will also block submit operation.
            * so path does not exist, which isn't a really big problem, has to be trated as error.
            */
+          result: 'warning',
+          message: 'Path does not exist'
+        };
+      } else if (err.errno === -2) {
+        // macos will return this if entry doesn't exist
+        return {
           result: 'warning',
           message: 'Path does not exist'
         };
@@ -156,7 +165,7 @@ export const msgHandler:
     vscode.window.showOpenDialog({
       canSelectFolders: true,
       canSelectMany: false,
-      title: 'Select a directory to existed project',
+      title: 'Select a directory to an existed project',
     })
       .then((value => {
         if (value) {
@@ -277,5 +286,21 @@ export const msgHandler:
           new vscode.Position(e.loc.end.line, e.loc.end.column))
       ));
     currControledDoc?.setDecorations(entityDecorations.entityUnreviewed, unreviewed);
+  },
+
+  'highlight-entity': (loc) => {
+    if (loc) {
+      const range = new vscode.Range(
+        new vscode.Position(loc.start.line, loc.start.column),
+        new vscode.Position(loc.end.line, loc.end.column)
+      );
+      currControledDoc?.setDecorations(entityDecorations.entityHighlighted,
+        [range]
+      );
+      currControledDoc?.revealRange(range, vscode.TextEditorRevealType.InCenter);
+    } else {
+      currControledDoc?.setDecorations(entityDecorations.entityHighlighted, []);
+    }
+
   }
 };
