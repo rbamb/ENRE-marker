@@ -16,11 +16,12 @@ import {
 import {
   CheckOutlined, CloseOutlined, EditOutlined, PlusOutlined,
 } from '@ant-design/icons';
-import React, { useContext, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { useRequest, useEventListener } from 'ahooks';
 import { request } from '../../compatible/httpAdapter';
 import { WorkingContext } from '../../context';
 import { langTableIndex, typeTable } from '../../.static/config';
+import { getApi } from '../../compatible/apiAdapter';
 
 const { Option } = Select;
 
@@ -93,7 +94,7 @@ const showModifyModal = (
   });
 };
 
-const RenderExpandedRow = ({ eFrom, eTo, rType }: remote.relation, lang: langTableIndex) => (
+const RenderExpandedRow = ({ eFrom, eTo, rType }: remote.relation) => (
   <Card title={(
     <>
       <span>Operation to relation&nbsp;</span>
@@ -101,7 +102,7 @@ const RenderExpandedRow = ({ eFrom, eTo, rType }: remote.relation, lang: langTab
         {eFrom.name}
       </Typography.Text>
       <span>
-        {` --${typeTable[lang].relation[rType]}-> `}
+        {` --${typeTable[glang].relation[rType]}-> `}
       </span>
       <Typography.Text code>
         {eTo.name}
@@ -136,7 +137,7 @@ const RenderExpandedRow = ({ eFrom, eTo, rType }: remote.relation, lang: langTab
         icon={<EditOutlined />}
         style={{ height: '72px', color: 'darkorange' }}
         block
-        onClick={() => showModifyModal(lang, eFrom, eTo, rType)}
+        onClick={() => showModifyModal(glang, eFrom, eTo, rType)}
       >
         Modify
       </Button>
@@ -144,7 +145,7 @@ const RenderExpandedRow = ({ eFrom, eTo, rType }: remote.relation, lang: langTab
   </Card>
 );
 
-const columns = (lang: langTableIndex) => [
+const columns = [
   {
     title: 'Status',
     align: 'center',
@@ -200,7 +201,7 @@ const columns = (lang: langTableIndex) => [
         title: 'Entity Type',
         dataIndex: ['eFrom', 'eType'],
         key: 'ft',
-        render: (value: number) => typeTable[lang].entity[value],
+        render: (value: number) => typeTable[glang].entity[value],
       },
     ],
   },
@@ -208,7 +209,8 @@ const columns = (lang: langTableIndex) => [
     title: 'Relation Type',
     dataIndex: 'rType',
     key: 'type',
-    render: (value: number) => typeTable[lang].relation[value],
+    align: 'center',
+    render: (value: number) => typeTable[glang].relation[value],
   },
   {
     title: 'To Entity',
@@ -223,31 +225,83 @@ const columns = (lang: langTableIndex) => [
         title: 'Entity Type',
         dataIndex: ['eTo', 'eType'],
         key: 'tt',
-        render: (value: number) => typeTable[lang].entity[value],
+        render: (value: number) => typeTable[glang].entity[value],
       },
     ],
   },
 ];
 
+let grefresh: any;
+let glang: langTableIndex;
+let gpid: number;
+let gfid: number;
+
 export const RelationViewer: React.FC = () => {
-  const { state: { project: { pid, lang }, file: { fid } } } = useContext(WorkingContext);
-  const { data, loading } = useRequest(() => request(`GET project/${pid}/file/${fid}/relation`).then(({ relation }: remote.resRelations) => relation));
+  const {
+    state: {
+      project: { pid, lang, fsPath }, file: { fid, path },
+    },
+  } = useContext(WorkingContext);
+
+  /** set some global variables to avoid pass them as function's paras */
+  glang = lang;
+  gpid = pid;
+  gfid = fid;
+
+  const { data, loading, refresh } = useRequest(
+    () => request(`GET project/${pid}/file/${fid}/relation`).then(({ relation }: remote.resRelations) => relation),
+  );
+
+  const [expandRow, setExpandRow] = useState(-1);
+
+  grefresh = () => {
+    setExpandRow(-1);
+    refresh();
+  };
+
+  useEffect(() => {
+    if (data) {
+      getApi.postMessage({
+        command: 'open-file',
+        payload: {},
+      });
+    }
+  }, [loading]);
 
   return (
     <>
       <Table
+        sticky
         loading={loading}
         dataSource={data}
         rowKey={(record) => record.rid}
         // @ts-ignore
-        columns={columns(lang)}
+        columns={columns}
         pagination={false}
         expandable={{
           expandRowByClick: true,
+          expandedRowKeys: [expandRow],
           rowExpandable: (record) => !record.status.hasBeenReviewed,
           expandIconColumnIndex: -1,
           expandedRowRender:
-            (record: remote.relation) => RenderExpandedRow(record, lang as langTableIndex),
+            (record: remote.relation) => RenderExpandedRow(record),
+          // only one line can expand in a single time
+          onExpandedRowsChange: (rows) => {
+            if (rows.length === 0) {
+              // getApi.postMessage({
+              //   command: 'highlight-entity',
+              //   payload: undefined,
+              // });
+            } else {
+              const selectedKey = rows[rows.length - 1] as number;
+              setExpandRow(selectedKey);
+              // getApi.postMessage({
+              //   command: 'highlight-entity',
+              //   payload: data?.find((i) => i.eid === selectedKey)?.loc,
+              // });
+            }
+          },
+
         }}
       />
       <Tooltip

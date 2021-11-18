@@ -3,6 +3,8 @@
 /* eslint-disable max-len */
 // @ts-nocheck
 
+import { langTableIndex } from '../.static/config';
+
 const onlySingleCopy = typeof acquireVsCodeApi === 'undefined' ? undefined : acquireVsCodeApi();
 
 // FIXME: only for debug purpose
@@ -69,10 +71,10 @@ export interface projectState {
   name: string,
   githubUrl: string,
   version: string,
-  lang: string,
+  lang: langTableIndex,
   locked: boolean,
   fsPath: string,
-  cache: Array<fid2Path>,
+  map: Array<fid2Path>,
 }
 
 export interface fid2Path {

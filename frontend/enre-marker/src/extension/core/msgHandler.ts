@@ -15,7 +15,6 @@ export type localCommands =
   | 'try-select-project'
   | 'ready-open-folder'
   | 'open-file'
-  | 'post-project-cache'
   | 'show-entity'
   | 'highlight-entity';
 
@@ -26,7 +25,6 @@ export interface localMsgType {
   payload: any,
 }
 
-let projectCache = undefined;
 let currControledDoc: vscode.TextEditor | undefined = undefined;
 let selApproved: boolean = false;
 
@@ -43,8 +41,6 @@ export const msgHandler:
   'open-url-in-browser': (payload: string) => open(payload),
 
   'open-folder': (payload: string) => open(payload),
-
-  'post-project-cache': (payload: projectState['cache']) => projectCache = payload,
 
   'open-file': (({ fpath, base, mode }: { fpath: string, base: string, mode: 'entity' | 'relation-to' | 'relation-from' }) => {
     switch (mode) {

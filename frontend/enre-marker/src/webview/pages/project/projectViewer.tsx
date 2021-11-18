@@ -70,6 +70,7 @@ const RenderAction = (claimed: boolean, {
           <Button
             style={{ paddingLeft: 0 }}
             type="link"
+            disabled
           >
             View
           </Button>
@@ -91,6 +92,7 @@ const RenderAction = (claimed: boolean, {
         <Button
           style={{ paddingLeft: 0 }}
           type="link"
+          disabled
         >
           View
         </Button>
@@ -106,7 +108,8 @@ const columns = [
     key: 'pname',
     render: (name: string, data: remote.project) => (
       <>
-        <Link to={`/project/${data.pid}`}>{name}</Link>
+        {/** <Link to={`/project/${data.pid}`}>{name}</Link>* */}
+        {name}
         {data.state === 1
           ? (
             <Tooltip title="Locked, view only" placement="right">
@@ -215,7 +218,7 @@ export const ProjectViewer: React.FC = () => {
         ),
       ),
     {
-      // for cool data, enableing cache mechanism
+      // for cold data, enabling cache mechanism
       cacheKey: 'projects',
       staleTime: 60000,
     },
@@ -223,6 +226,7 @@ export const ProjectViewer: React.FC = () => {
 
   return (
     <Table
+      sticky
       dataSource={data}
       rowKey={(record) => record.pid}
       // @ts-ignore

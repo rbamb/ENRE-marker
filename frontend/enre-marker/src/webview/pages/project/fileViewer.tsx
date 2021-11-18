@@ -102,8 +102,14 @@ export const FileViewer: React.FC = () => {
   const { pid: urlPid } = useParams();
 
   // TODO: view mode
-  // eslint-disable-next-line max-len
-  const { state: { project: { pid: statePid, fsPath, cache } }, dispatcher } = useContext(WorkingContext);
+  const {
+    state: {
+      project: {
+        pid:
+        statePid, fsPath, map,
+      },
+    }, dispatcher,
+  } = useContext(WorkingContext);
 
   const { data, loading } = useRequest(
     () => request(`GET project/${urlPid}`).then(({ file }: remote.resFiles) => file),
@@ -121,22 +127,13 @@ export const FileViewer: React.FC = () => {
         path: i.path,
       }));
 
-      dispatcher({
-        payload: {
-          project: {
-            cache: c,
-          },
-        },
-      });
-      getApi.postMessage({
-        command: 'post-project-cache',
-        payload: c,
-      });
+      dispatcher({ payload: { project: { map: c } } });
     }
   }, [loading]);
 
   return (
     <Table
+      sticky
       dataSource={data}
       loading={loading}
       rowKey={(record) => record.fid}

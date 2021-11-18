@@ -21,26 +21,27 @@ import { request } from '../../compatible/httpAdapter';
 import { WorkingContext } from '../../context';
 import { langTableIndex, typeTable } from '../../.static/config';
 import { getApi } from '../../compatible/apiAdapter';
+import { isLocEqual } from '../../utils/compare';
 
 const { Option } = Select;
 
-let gname: any;
-let gloc: any;
-let gtype: any;
+let mname: any;
+let mloc: any;
+let mtype: any;
 
 /** disable this rule since it will wrongly indent the return body */
 // eslint-disable-next-line max-len
-const ControlledEntityInfo: React.FC<{ lang: langTableIndex, name?: string, loc?: remote.location, type?: number }> = ({
-  lang, name, loc, type,
+const ControlledEntityInfo: React.FC<{ name?: string, loc?: remote.location, type?: number }> = ({
+  name, loc, type,
 }) => {
   const [trackedName, setName] = useState(name);
   const [trackedLoc, setLoc] = useState(loc);
   const [trackedType, setType] = useState(type);
 
   useEffect(() => {
-    gname = trackedName;
-    gloc = trackedLoc;
-    gtype = trackedType;
+    mname = trackedName;
+    mloc = trackedLoc;
+    mtype = trackedType;
   });
 
   useEventListener('message', ({ data: { command, payload } }) => {
@@ -69,7 +70,7 @@ const ControlledEntityInfo: React.FC<{ lang: langTableIndex, name?: string, loc?
         defaultValue={trackedType}
         onSelect={(value) => setType(value)}
       >
-        {typeTable[lang].entity.map((t, i) => (
+        {typeTable[glang].entity.map((t, i) => (
           <Option key={t} value={i}>
             {t}
           </Option>
@@ -80,9 +81,6 @@ const ControlledEntityInfo: React.FC<{ lang: langTableIndex, name?: string, loc?
 };
 
 const showModifyModal = (
-  pid: number,
-  fid: number,
-  lang: langTableIndex,
   eid?: number,
   name?: string,
   loc?: remote.location,
@@ -91,17 +89,22 @@ const showModifyModal = (
   Modal.confirm({
     title: name ? 'Modify to...' : 'Insert an entity...',
     icon: name ? <EditOutlined /> : <PlusOutlined style={{ color: '#108ee9' }} />,
-    content: <ControlledEntityInfo lang={lang} name={name} loc={loc} type={type} />,
+    content: <ControlledEntityInfo name={name} loc={loc} type={type} />,
     onOk: (close) => {
-      if (!gname || !gloc || gtype === undefined) {
+      if (!mname || !mloc || mtype === undefined) {
         message.warning('Contents are not fullfilled');
         return;
       }
-      if (name === gname && JSON.stringify(loc) === JSON.stringify(gloc) && type === gtype) {
-        message.warning('Modified content is identical comparing to the old one');
+      if (name === mname && JSON.stringify(loc) === JSON.stringify(mloc) && type === mtype) {
+        message.warning('Nothing changed comparing to the old one');
         return;
       }
-      handleOperationClicked(pid, fid, eid !== undefined ? 'modify' : 'insert', eid, { name: gname, loc: gloc, eType: gtype });
+      if (gdata.find((e) => isLocEqual(e.loc, mloc))) {
+        message.warning('Entity already exist, you may want do modify rather than insert');
+        return;
+      }
+
+      handleOperationClicked(eid !== undefined ? 'modify' : 'insert', eid, { name: mname, loc: mloc, eType: mtype });
       close();
     },
   });
@@ -110,42 +113,42 @@ const showModifyModal = (
 let lock: boolean = false;
 
 const handleOperationClicked = (
-  pid: number,
-  fid: number,
   type: string,
   eid?: number,
   entity?: remote.manuallyEntity,
 ) => {
   if (!lock) {
     lock = true;
+
+    const key = `operation${Math.floor(Math.random() * 100)}`;
     message.loading({
       content: 'Uploading to the server',
       duration: 0,
-      key: 'operation',
+      key,
     });
     switch (type) {
       case 'pass':
-        request(`POST project/${pid}/file/${fid}/entity`, {
+        request(`POST project/${gpid}/file/${gfid}/entity`, {
           data: [
             { isManually: false, eid, isCorrect: true },
           ],
         }).then(() => {
           message.success({
             content: 'Mark succeeded',
-            key: 'operation',
+            key,
           });
           lock = false;
-          refreshF();
+          grefresh();
         }).catch((json) => {
           message.error({
             content: json.message,
-            key: 'operation',
+            key,
           });
           lock = false;
         });
         break;
       case 'remove':
-        request(`POST project/${pid}/file/${fid}/entity`, {
+        request(`POST project/${gpid}/file/${gfid}/entity`, {
           data: [
             {
               isManually: false, eid, isCorrect: false, fix: { shouldBe: 1 },
@@ -154,20 +157,20 @@ const handleOperationClicked = (
         }).then(() => {
           message.success({
             content: 'Mark succeeded',
-            key: 'operation',
+            key,
           });
           lock = false;
-          refreshF();
+          grefresh();
         }).catch((json) => {
           message.error({
             content: json.message,
-            key: 'operation',
+            key,
           });
           lock = false;
         });
         break;
       case 'modify':
-        request(`POST project/${pid}/file/${fid}/entity`, {
+        request(`POST project/${gpid}/file/${gfid}/entity`, {
           data: [
             {
               isManually: false,
@@ -182,20 +185,20 @@ const handleOperationClicked = (
         }).then(() => {
           message.success({
             content: 'Mark succeeded',
-            key: 'operation',
+            key,
           });
           lock = false;
-          refreshF();
+          grefresh();
         }).catch((json) => {
           message.error({
             content: json.message,
-            key: 'operation',
+            key,
           });
           lock = false;
         });
         break;
       case 'insert':
-        request(`POST project/${pid}/file/${fid}/entity`, {
+        request(`POST project/${gpid}/file/${gfid}/entity`, {
           data: [
             {
               isManually: true,
@@ -205,14 +208,14 @@ const handleOperationClicked = (
         }).then(() => {
           message.success({
             content: 'Mark succeeded',
-            key: 'operation',
+            key,
           });
           lock = false;
-          refreshF();
+          grefresh();
         }).catch((json) => {
           message.error({
             content: json.message,
-            key: 'operation',
+            key,
           });
           lock = false;
         });
@@ -220,7 +223,7 @@ const handleOperationClicked = (
       default:
         message.error({
           content: 'Unknown operation type',
-          key: 'operation',
+          key,
         });
         lock = false;
     }
@@ -229,7 +232,7 @@ const handleOperationClicked = (
 
 const RenderExpandedRow = ({
   eid, name, loc, eType,
-}: remote.entity, lang: langTableIndex, pid: number, fid: number) => (
+}: remote.entity) => (
   <Card title={(
     <>
       <span>Operation to entity&nbsp;</span>
@@ -243,7 +246,7 @@ const RenderExpandedRow = ({
         icon={<CheckOutlined />}
         style={{ height: '72px', color: 'green' }}
         block
-        onClick={() => handleOperationClicked(pid, fid, 'pass', eid)}
+        onClick={() => handleOperationClicked('pass', eid)}
       >
         Correct
       </Button>
@@ -255,7 +258,7 @@ const RenderExpandedRow = ({
         style={{ height: '72px' }}
         block
         danger
-        onClick={() => handleOperationClicked(pid, fid, 'remove', eid)}
+        onClick={() => handleOperationClicked('remove', eid)}
       >
         Remove
       </Button>
@@ -266,7 +269,7 @@ const RenderExpandedRow = ({
         icon={<EditOutlined />}
         style={{ height: '72px', color: 'darkorange' }}
         block
-        onClick={() => showModifyModal(pid, fid, lang, eid, name, loc, eType)}
+        onClick={() => showModifyModal(eid, name, loc, eType)}
       >
         Modify
       </Button>
@@ -383,7 +386,11 @@ const columns = (lang: langTableIndex) => [
   },
 ];
 
-let refreshF: any;
+let grefresh: any;
+let glang: langTableIndex;
+let gpid: number;
+let gfid: number;
+let gdata: Array<remote.entity>;
 
 export const EntityViewer: React.FC = () => {
   const {
@@ -397,14 +404,25 @@ export const EntityViewer: React.FC = () => {
     },
   } = useContext(WorkingContext);
 
+  glang = lang;
+  gpid = pid;
+  gfid = fid;
+
   const { data, loading, refresh } = useRequest(
     () => request(`GET project/${pid}/file/${fid}/entity`).then(({ entity }: remote.resEntities) => entity),
   );
 
-  refreshF = refresh;
+  const [expandRow, setExpandRow] = useState(-1);
+
+  grefresh = () => {
+    setExpandRow(-1);
+    refresh();
+  };
 
   useEffect(() => {
     if (data) {
+      gdata = data;
+      // FIXME: latter command should be invoked after previous one is done
       // in case directly go to this page by click the navbar
       getApi.postMessage({ command: 'open-file', payload: { fpath: path, mode: 'entity', base: fsPath } });
       getApi.postMessage({ command: 'show-entity', payload: data });
@@ -412,8 +430,6 @@ export const EntityViewer: React.FC = () => {
       getApi.postMessage({ command: 'highlight-entity', payload: undefined });
     }
   }, [loading]);
-
-  const [expandRow, setExpandRow] = useState(-1);
 
   return (
     <>
@@ -431,12 +447,7 @@ export const EntityViewer: React.FC = () => {
           expandedRowKeys: [expandRow],
           rowExpandable: (record) => !record.status.hasBeenReviewed,
           expandIconColumnIndex: -1,
-          expandedRowRender: (entity) => RenderExpandedRow(
-            entity,
-            lang as langTableIndex,
-            pid,
-            fid,
-          ),
+          expandedRowRender: (entity) => RenderExpandedRow(entity),
           // only one line can expand in a single time
           onExpandedRowsChange: (rows) => {
             if (rows.length === 0) {
@@ -466,7 +477,7 @@ export const EntityViewer: React.FC = () => {
           type="primary"
           shape="circle"
           size="large"
-          onClick={() => showModifyModal(pid, fid, lang as langTableIndex)}
+          onClick={() => showModifyModal()}
         >
           <PlusOutlined />
         </Button>
