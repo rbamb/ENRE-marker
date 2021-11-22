@@ -39,8 +39,8 @@ export const typeTable: Record<langTableIndex, typeTableElement> = {
     relation: [],
   },
   java: {
-    entity: [],
-    relation: [],
+    entity: ['Unknown', 'Variable', 'Method', 'Interface', 'Annotation', 'Enum', 'Class', 'File', 'Package', 'Module'],
+    relation: ['Unknown', 'Import', 'Inherit', 'Implement', 'Call', 'Set', 'Use', 'Modify', 'Cast', 'Create', 'Typed'],
   },
   cpp: {
     entity: ['Variable', 'Function'],
@@ -51,7 +51,7 @@ export const typeTable: Record<langTableIndex, typeTableElement> = {
     relation: [],
   },
   python: {
-    entity: [],
-    relation: [],
+    entity: ['Unknown Class', 'Variable', 'Unresolved Attribute', 'Unknown Variable', 'Parameter', 'File', 'Attribute', 'Property', 'Ambiguous Attribute', 'Abstract Class', 'Function', 'Unknown Module', 'Module File', 'LambdaParameter', 'Unknown Package', 'Class', 'Package'],
+    relation: ['Couple', 'Declare', 'Declare Implicit', 'Raise', 'Define', 'Getter', 'Call', 'Import From', 'Import', 'Import Implicit', 'Set', 'Hasambiguous', 'Use', 'Contain', 'Inherit', 'Modify', 'Alias', 'Setter'],
   }
 }
