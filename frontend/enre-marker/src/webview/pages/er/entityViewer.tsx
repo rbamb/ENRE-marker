@@ -67,8 +67,10 @@ const ControlledEntityInfo: React.FC<{ name?: string, loc?: remote.location, typ
         showSearch
         placeholder="Entity Type"
         style={{ width: '100%' }}
+        filterOption={(input, option) => ((option?.key) as string)
+          .toLowerCase().indexOf(input.toLowerCase()) >= 0}
         defaultValue={trackedType}
-        onSelect={(value) => setType(value)}
+        onSelect={setType}
       >
         {typeTable[glang].entity.map((t, i) => (
           <Option key={t} value={i}>
@@ -137,7 +139,6 @@ const handleOperationClicked = (
             content: 'Mark succeeded',
             key,
           });
-          lock = false;
           gmutate((compound: any) => {
             const data = compound.list as Array<remote.entity>;
             const it = data.find((e) => e.eid === eid) as remote.entity;
@@ -150,8 +151,7 @@ const handleOperationClicked = (
             content: json.message,
             key,
           });
-          lock = false;
-        });
+        }).finally(() => { lock = false; });
         break;
       case 'remove':
         request(`POST project/${gpid}/file/${gfid}/entity`, {
@@ -165,7 +165,6 @@ const handleOperationClicked = (
             content: 'Mark succeeded',
             key,
           });
-          lock = false;
           gmutate((compound: any) => {
             const data = compound.list as Array<remote.entity>;
             const it = data.find((e) => e.eid === eid) as remote.entity;
@@ -178,8 +177,7 @@ const handleOperationClicked = (
             content: json.message,
             key,
           });
-          lock = false;
-        });
+        }).finally(() => { lock = false; });
         break;
       case 'modify':
         request(`POST project/${gpid}/file/${gfid}/entity`, {
@@ -199,7 +197,6 @@ const handleOperationClicked = (
             content: 'Mark succeeded',
             key,
           });
-          lock = false;
           gmutate((compound: any) => {
             const data = compound.list as Array<remote.entity>;
             const it = data.find((e) => e.eid === eid) as remote.entity;
@@ -213,8 +210,7 @@ const handleOperationClicked = (
             content: json.message,
             key,
           });
-          lock = false;
-        });
+        }).finally(() => { lock = false; });
         break;
       case 'insert':
         request(`POST project/${gpid}/file/${gfid}/entity`, {
@@ -229,7 +225,6 @@ const handleOperationClicked = (
             content: 'Mark succeeded',
             key,
           });
-          lock = false;
           /** since newly inserted entity should be assigned an eid,
            * so leave this to server side, just refresh the page
            */
@@ -239,8 +234,7 @@ const handleOperationClicked = (
             content: json.message,
             key,
           });
-          lock = false;
-        });
+        }).finally(() => { lock = false; });
         break;
       default:
         message.error({

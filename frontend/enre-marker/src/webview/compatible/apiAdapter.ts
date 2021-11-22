@@ -19,7 +19,7 @@ const mockState = {
       name: 'ENRE.js',
       fsPath: 'd://test/ENRE.js',
       version: 'abcdefg',
-      lang: 'cpp',
+      lang: 'java',
       // cache: [
       //   {
       //     fid: 0,

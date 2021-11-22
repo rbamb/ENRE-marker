@@ -48,7 +48,7 @@ module.exports = {
       code: 200,
       message: 'success',
       'total|100-5000': 100,
-      'relation|1-10': [{
+      'relation|100': [{
         'rid|+1': 0,
         eFrom: {
           'eid|+1': 0,

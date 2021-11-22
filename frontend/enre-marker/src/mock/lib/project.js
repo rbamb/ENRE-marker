@@ -12,7 +12,7 @@ module.exports = {
         name: '@word',
         //version: /([a-z]|[0-9]){7}/,
         version: '86ced82',
-        "lang": 'cpp',
+        "lang": 'java',
         'progress|0-100': 0,
         'claimed|1': false,
         'state': 0,

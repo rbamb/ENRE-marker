@@ -12,6 +12,7 @@ import {
   Divider,
   Space,
   Radio,
+  message,
 } from 'antd';
 import {
   CheckOutlined, CloseOutlined, EditOutlined, PlusOutlined,
@@ -25,24 +26,23 @@ import { getApi } from '../../compatible/apiAdapter';
 
 const { Option } = Select;
 
-// eslint-disable-next-line max-len
-const ControlledRelationInfo: React.FC<{ lang: langTableIndex, eFrom?: remote.entity, eTo?: remote.entity, type?: number }> = ({
-  lang, eFrom, eTo, type,
-}) => {
-  const [ef, setEf] = useState(eFrom);
-  const [et, setEt] = useState(eTo);
+let mtype: any;
 
-  useEventListener('message', ({ data: { command, payload } }) => {
-    if (command === 'selection-change') {
-      // TODO:
-    }
+// eslint-disable-next-line max-len
+const ControlledRelationInfo: React.FC<{ eFrom?: remote.entity, eTo?: remote.entity, type?: number }> = ({
+  eFrom, eTo, type,
+}) => {
+  const [trackedType, setType] = useState(type);
+
+  useEffect(() => {
+    mtype = trackedType;
   });
 
   return (
     <>
       <Alert
         type="info"
-        message="Place the cursor in the range of an entity's code name, and that entity's info will be synced to here."
+        message="Can only modify a relation's type."
       />
       <Space direction="vertical" style={{ width: '100%', marginTop: '1.2em' }}>
         <Radio.Group style={{ width: '100%' }}>
@@ -51,16 +51,16 @@ const ControlledRelationInfo: React.FC<{ lang: langTableIndex, eFrom?: remote.en
         </Radio.Group>
         <Space direction="horizontal" size="middle" align="start" style={{ width: '100%' }}>
           <Descriptions column={1}>
-            <Descriptions.Item label="Code name">{ef ? <Typography.Text style={{ width: '80px' }} ellipsis={{ tooltip: ef.name }}>{ef.name}</Typography.Text> : '-'}</Descriptions.Item>
-            <Descriptions.Item label="Starts at">{ef ? `line ${ef.loc.start.line}, column ${ef.loc.start.column}` : '-'}</Descriptions.Item>
-            <Descriptions.Item label="Ends at">{ef ? `line ${ef.loc.end.line}, column ${ef.loc.end.column}` : '-'}</Descriptions.Item>
-            <Descriptions.Item label="Type">{ef ? typeTable[lang].entity[ef.eType] : '-'}</Descriptions.Item>
+            <Descriptions.Item label="Code name">{eFrom ? <Typography.Text style={{ width: '80px' }} ellipsis={{ tooltip: eFrom.name }}>{eFrom.name}</Typography.Text> : '-'}</Descriptions.Item>
+            <Descriptions.Item label="Starts at">{eFrom ? `line ${eFrom.loc.start.line}, column ${eFrom.loc.start.column}` : '-'}</Descriptions.Item>
+            <Descriptions.Item label="Ends at">{eFrom ? `line ${eFrom.loc.end.line}, column ${eFrom.loc.end.column}` : '-'}</Descriptions.Item>
+            <Descriptions.Item label="Type">{eFrom ? typeTable[glang].entity[eFrom.eType] : '-'}</Descriptions.Item>
           </Descriptions>
           <Descriptions column={1}>
-            <Descriptions.Item label="Code name">{et ? <Typography.Text style={{ width: '80px' }} ellipsis={{ tooltip: et.name }}>{et.name}</Typography.Text> : '-'}</Descriptions.Item>
-            <Descriptions.Item label="Starts at">{et ? `line ${et.loc.start.line}, column ${et.loc.start.column}` : '-'}</Descriptions.Item>
-            <Descriptions.Item label="Ends at">{et ? `line ${et.loc.end.line}, column ${et.loc.end.column}` : '-'}</Descriptions.Item>
-            <Descriptions.Item label="Type">{et ? typeTable[lang].entity[et.eType] : '-'}</Descriptions.Item>
+            <Descriptions.Item label="Code name">{eTo ? <Typography.Text style={{ width: '80px' }} ellipsis={{ tooltip: eTo.name }}>{eTo.name}</Typography.Text> : '-'}</Descriptions.Item>
+            <Descriptions.Item label="Starts at">{eTo ? `line ${eTo.loc.start.line}, column ${eTo.loc.start.column}` : '-'}</Descriptions.Item>
+            <Descriptions.Item label="Ends at">{eTo ? `line ${eTo.loc.end.line}, column ${eTo.loc.end.column}` : '-'}</Descriptions.Item>
+            <Descriptions.Item label="Type">{eTo ? typeTable[glang].entity[eTo.eType] : '-'}</Descriptions.Item>
           </Descriptions>
         </Space>
       </Space>
@@ -69,9 +69,12 @@ const ControlledRelationInfo: React.FC<{ lang: langTableIndex, eFrom?: remote.en
         showSearch
         placeholder="Relation Type"
         style={{ width: '100%' }}
+        filterOption={(input, option) => ((option?.key) as string)
+          .toLowerCase().indexOf(input.toLowerCase()) >= 0}
         defaultValue={type}
+        onSelect={setType}
       >
-        {typeTable[lang].relation.map((t, i) => (
+        {typeTable[glang].relation.map((t, i) => (
           <Option key={t} value={i}>
             {t}
           </Option>
@@ -82,7 +85,7 @@ const ControlledRelationInfo: React.FC<{ lang: langTableIndex, eFrom?: remote.en
 };
 
 const showModifyModal = (
-  lang: langTableIndex,
+  rid?: number,
   eFrom?: remote.entity,
   eTo?: remote.entity,
   type?: number,
@@ -90,11 +93,154 @@ const showModifyModal = (
   Modal.confirm({
     title: eFrom ? 'Modify to...' : 'Insert a relation...',
     icon: eFrom ? <EditOutlined /> : <PlusOutlined style={{ color: '#108ee9' }} />,
-    content: <ControlledRelationInfo lang={lang} eFrom={eFrom} eTo={eTo} type={type} />,
+    content: <ControlledRelationInfo eFrom={eFrom} eTo={eTo} type={type} />,
+    onOk: (close) => {
+      if (type === mtype) {
+        message.warning('Nothing changed comparing to the old one');
+        return;
+      }
+
+      handleOperationClicked(type !== undefined ? 'modify' : 'insert', rid);
+      close();
+    },
   });
 };
 
-const RenderExpandedRow = ({ eFrom, eTo, rType }: remote.relation) => (
+let lock: boolean = false;
+
+const handleOperationClicked = (
+  type: string,
+  rid?: number,
+  relation?: remote.manuallyRelation,
+) => {
+  if (!lock) {
+    lock = true;
+
+    const key = `operation${Math.floor(Math.random() * 100)}`;
+    message.loading({
+      content: 'Uploading to the server',
+      duration: 0,
+      key,
+    });
+    switch (type) {
+      case 'pass':
+        request(`POST project/${gpid}/file/${gfid}/relation`, {
+          data: [
+            { isManually: false, rid, isCorrect: true },
+          ],
+        }).then(() => {
+          message.success({
+            content: 'Mark succeeded',
+            key,
+          });
+          gmutate((compound: any) => {
+            const data = compound.list as Array<remote.relation>;
+            const it = data.find((r) => r.rid === rid) as remote.relation;
+            it.status.hasBeenReviewed = true;
+            it.status.operation = 0;
+            return compound;
+          });
+        }).catch((json) => {
+          message.error({
+            content: json.message,
+            key,
+          });
+        }).finally(() => { lock = false; });
+        break;
+      case 'remove':
+        request(`POST project/${gpid}/file/${gfid}/relation`, {
+          data: [
+            {
+              isManually: false, rid, isCorrect: false, fix: { shouldBe: 1 },
+            },
+          ],
+        }).then(() => {
+          message.success({
+            content: 'Mark succeeded',
+            key,
+          });
+          gmutate((compound: any) => {
+            const data = compound.list as Array<remote.relation>;
+            const it = data.find((r) => r.rid === rid) as remote.relation;
+            it.status.hasBeenReviewed = true;
+            it.status.operation = 1;
+            return compound;
+          });
+        }).catch((json) => {
+          message.error({
+            content: json.message,
+            key,
+          });
+        }).finally(() => { lock = false; });
+        break;
+      case 'modify':
+        request(`POST project/${gpid}/file/${gfid}/relation`, {
+          data: [
+            {
+              isManually: false,
+              rid,
+              isCorrect: false,
+              fix: {
+                shouldBe: 2,
+                newly: relation,
+              },
+            },
+          ],
+        }).then(() => {
+          message.success({
+            content: 'Mark succeeded',
+            key,
+          });
+          gmutate((compound: any) => {
+            const data = compound.list as Array<remote.relation>;
+            const it = data.find((r) => r.rid === rid) as remote.relation;
+            it.status.hasBeenReviewed = true;
+            it.status.operation = 2;
+            // FIXME: construct newRelation
+            it.status.newRelation = relation;
+            return compound;
+          });
+        }).catch((json) => {
+          message.error({
+            content: json.message,
+            key,
+          });
+        }).finally(() => { lock = false; });
+        break;
+      case 'insert':
+        request(`POST project/${gpid}/file/${gfid}/relation`, {
+          data: [
+            {
+              isManually: true,
+              relation,
+            },
+          ],
+        }).then(() => {
+          message.success({
+            content: 'Mark succeeded',
+            key,
+          });
+          grefresh();
+        }).catch((json) => {
+          message.error({
+            content: json.message,
+            key,
+          });
+        }).finally(() => { lock = false; });
+        break;
+      default:
+        message.error({
+          content: 'Unknown operation type',
+          key,
+        });
+        lock = false;
+    }
+  }
+};
+
+const RenderExpandedRow = ({
+  rid, eFrom, eTo, rType,
+}: remote.relation) => (
   <Card title={(
     <>
       <span>Operation to relation&nbsp;</span>
@@ -116,6 +262,7 @@ const RenderExpandedRow = ({ eFrom, eTo, rType }: remote.relation) => (
         icon={<CheckOutlined />}
         style={{ height: '72px', color: 'green' }}
         block
+        onClick={() => handleOperationClicked('pass', rid)}
       >
         Correct
       </Button>
@@ -127,6 +274,7 @@ const RenderExpandedRow = ({ eFrom, eTo, rType }: remote.relation) => (
         style={{ height: '72px' }}
         block
         danger
+        onClick={() => handleOperationClicked('remove', rid)}
       >
         Remove
       </Button>
@@ -137,7 +285,7 @@ const RenderExpandedRow = ({ eFrom, eTo, rType }: remote.relation) => (
         icon={<EditOutlined />}
         style={{ height: '72px', color: 'darkorange' }}
         block
-        onClick={() => showModifyModal(glang, eFrom, eTo, rType)}
+        onClick={() => showModifyModal(rid, eFrom, eTo, rType)}
       >
         Modify
       </Button>
@@ -249,11 +397,28 @@ export const RelationViewer: React.FC = () => {
   gpid = pid;
   gfid = fid;
 
-  const { data, loading, refresh } = useRequest(
-    () => request(`GET project/${pid}/file/${fid}/relation`).then(({ relation }: remote.resRelations) => relation),
+  const {
+    tableProps, pagination, mutate, refresh,
+  } = useRequest(
+    ({ current, pageSize }) => request(`GET project/${pid}/file/${fid}/relation?page=${current}&size=${pageSize}`)
+      .then(({ relation, total }: remote.resRelations) => ({ list: relation, total })),
+    {
+      paginated: true,
+      defaultPageSize: 100,
+    },
   );
 
+  const {
+    dataSource: data,
+    loading,
+  } = tableProps;
+
   const [expandRow, setExpandRow] = useState(-1);
+
+  gmutate = (executable: any) => {
+    setExpandRow(-1);
+    mutate(executable);
+  };
 
   grefresh = () => {
     setExpandRow(-1);
@@ -273,12 +438,18 @@ export const RelationViewer: React.FC = () => {
     <>
       <Table
         sticky
-        loading={loading}
-        dataSource={data}
+        {...tableProps}
+        pagination={{
+          ...pagination as any,
+          position: ['topLeft', 'bottomLeft'],
+          showSizeChanger: false,
+          showQuickJumper: true,
+          showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} records`,
+          size: 'default',
+        }}
         rowKey={(record) => record.rid}
         // @ts-ignore
         columns={columns}
-        pagination={false}
         expandable={{
           expandRowByClick: true,
           expandedRowKeys: [expandRow],
@@ -305,7 +476,7 @@ export const RelationViewer: React.FC = () => {
 
         }}
       />
-      <Tooltip
+      {/* <Tooltip
         title="Manually insert a relation"
         placement="left"
       >
@@ -320,7 +491,7 @@ export const RelationViewer: React.FC = () => {
         >
           <PlusOutlined />
         </Button>
-      </Tooltip>
+      </Tooltip> */}
     </>
   );
 };
