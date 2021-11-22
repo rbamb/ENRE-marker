@@ -20,12 +20,6 @@ const mockState = {
       fsPath: 'd://test/ENRE.js',
       version: 'abcdefg',
       lang: 'java',
-      // cache: [
-      //   {
-      //     fid: 0,
-      //     path: 'package.json',
-      //   },
-      // ],
     },
     file: {
       fid: 0,
@@ -42,7 +36,18 @@ const mockState = {
 
 // const mockState = {};
 
-export const getApi = onlySingleCopy || {
+export const getApi = onlySingleCopy ? {
+  ...onlySingleCopy,
+  setState: (newState: any) => {
+    /** a wrapped version of vscode's original setState function,
+     * since it can only record a single object,
+     * so using keys to make state management works like mock version
+    */
+    const obj = { ...onlySingleCopy.getState() };
+    obj[Object.keys(newState)[0]] = newState[Object.keys(newState)[0]];
+    onlySingleCopy.setState(obj);
+  },
+} : {
   postMessage: (message: any, transfer: any) => console.log(message),
   getState: () => mockState,
   setState: (newState: any) => {

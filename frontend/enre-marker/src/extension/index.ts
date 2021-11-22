@@ -62,6 +62,10 @@ export const activate = (context: vscode.ExtensionContext) => {
         context.globalState.update('webviewState', state);
       };
 
+      const getState = () => {
+        return context.globalState.get('webviewState');
+      };
+
       panel.webview.onDidReceiveMessage(
         ({ command, payload }: localMsgType) => {
           if (msgHandler[command] === undefined) {
@@ -69,7 +73,7 @@ export const activate = (context: vscode.ExtensionContext) => {
             return;
           }
 
-          const anything = msgHandler[command](payload, callbackMessage, setState);
+          const anything = msgHandler[command](payload, callbackMessage, setState, getState);
 
           if (typeof anything === 'function') {
             // TODO: handle return type is a function

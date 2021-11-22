@@ -28,7 +28,9 @@ export const request = (methodUrl: string, body?: any): Promise<any> => {
             message: 'Login has expired',
             description: 'Now redirecting you to the login page.',
           });
-          // TODO: redirect
+          getApi.postMessage({
+            command: 're-login',
+          });
           reject();
         } else if (json.code >= 1000) {
           // business related error should be handled by itself

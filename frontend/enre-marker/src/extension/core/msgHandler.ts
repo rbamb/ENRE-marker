@@ -7,6 +7,7 @@ import { entityDecorations } from './decorations';
 
 export type localCommands =
   'set-state'
+  | 're-login'
   | 'open-url-in-browser'
   | 'open-folder'
   | 'validate-path'
@@ -33,9 +34,22 @@ export const getSelApproved = () => selApproved;
 export const msgHandler:
   Record<
     localCommands,
-    (payload: any, callbackMessage: ({ command, payload }: { command: string; payload: any; }) => Thenable<boolean> | undefined, setState: (state: any) => void) => any
+    (payload: any, callbackMessage: ({ command, payload }: { command: string; payload: any; }) => Thenable<boolean> | undefined, setState: (state: any) => void, getState: () => any) => any
   > = {
   'set-state': (payload, _, setState) => setState(payload),
+
+  're-login': (_, callbackMessage, setState, getState) => {
+    console.log('relogin request confirmed');
+    const lastStored = { ...getState() };
+    console.log('last state is ', lastStored);
+    lastStored.login.token = undefined;
+    console.log('and it is changed to ', lastStored);
+    setState(lastStored);
+    callbackMessage({
+      command: 'restore-state',
+      payload: lastStored,
+    });
+  },
 
   'open-url-in-browser': (payload: string) => open(payload),
 

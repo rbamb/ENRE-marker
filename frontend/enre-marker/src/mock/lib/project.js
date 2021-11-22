@@ -4,7 +4,7 @@ const { sha256 } = require('./common.js');
 module.exports = {
   'GET project': (req, res) => {
     res.json(Mock.mock({
-      code: 200,
+      code: 401,
       message: 'success',
       "project|1-10": [{
         "pid|+1": 100,

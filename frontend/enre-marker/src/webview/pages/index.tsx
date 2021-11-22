@@ -82,10 +82,14 @@ export const App: React.FC = () => {
     },
   }: any) => {
     if (command === 'restore-state') {
+      // FIXME: handle token is undefined and was omitted when tarnsforing to json
+      console.log('webview get restore state command');
       loginDispatcher({ payload: login });
       workingDispatcher({ payload: working });
     }
   });
+
+  console.log('login state', loginState);
 
   return (
     <>
