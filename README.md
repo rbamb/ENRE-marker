@@ -21,7 +21,7 @@ To register a user.
 ```ts
 {
   uid: 6-digits-number,
-  pswd: 256-chars,
+  pswd: 64-chars,
   claim: pid, 
   name: 256-chars
 }
@@ -67,7 +67,7 @@ To login a user.
 ```ts
 {
   uid: 6-digits-number,
-  pswd: 256-chars
+  pswd: 64-chars
 }
 ```
 
@@ -79,7 +79,7 @@ To login a user.
 {
   code: 200,
   message: 'success',
-  token: 256-chars,
+  token: 64-chars,
   name: string
 }
 ```
