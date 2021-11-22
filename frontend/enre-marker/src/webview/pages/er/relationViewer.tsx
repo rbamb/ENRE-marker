@@ -231,6 +231,7 @@ const columns = [
   },
 ];
 
+let gmutate: any;
 let grefresh: any;
 let glang: langTableIndex;
 let gpid: number;
@@ -239,7 +240,7 @@ let gfid: number;
 export const RelationViewer: React.FC = () => {
   const {
     state: {
-      project: { pid, lang, fsPath }, file: { fid, path },
+      project: { pid, lang }, file: { fid },
     },
   } = useContext(WorkingContext);
 

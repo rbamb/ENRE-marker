@@ -95,11 +95,11 @@ const showModifyModal = (
         message.warning('Contents are not fullfilled');
         return;
       }
-      if (name === mname && JSON.stringify(loc) === JSON.stringify(mloc) && type === mtype) {
+      if (name === mname && isLocEqual(loc as remote.location, mloc) && type === mtype) {
         message.warning('Nothing changed comparing to the old one');
         return;
       }
-      if (gdata.find((e) => isLocEqual(e.loc, mloc))) {
+      if (eid === undefined && gdata.find((e) => isLocEqual(e.loc, mloc))) {
         message.warning('Entity already exist, you may want do modify rather than insert');
         return;
       }
@@ -138,7 +138,13 @@ const handleOperationClicked = (
             key,
           });
           lock = false;
-          grefresh();
+          gmutate((compound: any) => {
+            const data = compound.list as Array<remote.entity>;
+            const it = data.find((e) => e.eid === eid) as remote.entity;
+            it.status.hasBeenReviewed = true;
+            it.status.operation = 0;
+            return compound;
+          });
         }).catch((json) => {
           message.error({
             content: json.message,
@@ -160,7 +166,13 @@ const handleOperationClicked = (
             key,
           });
           lock = false;
-          grefresh();
+          gmutate((compound: any) => {
+            const data = compound.list as Array<remote.entity>;
+            const it = data.find((e) => e.eid === eid) as remote.entity;
+            it.status.hasBeenReviewed = true;
+            it.status.operation = 1;
+            return compound;
+          });
         }).catch((json) => {
           message.error({
             content: json.message,
@@ -188,7 +200,14 @@ const handleOperationClicked = (
             key,
           });
           lock = false;
-          grefresh();
+          gmutate((compound: any) => {
+            const data = compound.list as Array<remote.entity>;
+            const it = data.find((e) => e.eid === eid) as remote.entity;
+            it.status.hasBeenReviewed = true;
+            it.status.operation = 2;
+            it.status.newEntity = entity;
+            return compound;
+          });
         }).catch((json) => {
           message.error({
             content: json.message,
@@ -211,6 +230,9 @@ const handleOperationClicked = (
             key,
           });
           lock = false;
+          /** since newly inserted entity should be assigned an eid,
+           * so leave this to server side, just refresh the page
+           */
           grefresh();
         }).catch((json) => {
           message.error({
@@ -277,7 +299,7 @@ const RenderExpandedRow = ({
   </Card>
 );
 
-const columns = (lang: langTableIndex) => [
+const columns = [
   {
     title: 'Status',
     align: 'center',
@@ -343,7 +365,7 @@ const columns = (lang: langTableIndex) => [
     title: 'Entity Type',
     dataIndex: 'eType',
     key: 'type',
-    render: (value: number) => typeTable[lang].entity[value],
+    render: (value: number) => typeTable[glang].entity[value],
   },
   {
     title: 'Location',
@@ -386,6 +408,7 @@ const columns = (lang: langTableIndex) => [
   },
 ];
 
+let gmutate: any;
 let grefresh: any;
 let glang: langTableIndex;
 let gpid: number;
@@ -408,11 +431,28 @@ export const EntityViewer: React.FC = () => {
   gpid = pid;
   gfid = fid;
 
-  const { data, loading, refresh } = useRequest(
-    () => request(`GET project/${pid}/file/${fid}/entity`).then(({ entity }: remote.resEntities) => entity),
+  const {
+    tableProps, pagination, mutate, refresh,
+  } = useRequest(
+    ({ current, pageSize }) => request(`GET project/${pid}/file/${fid}/entity?page=${current}&size=${pageSize}`)
+      .then(({ entity, total }: remote.resEntities) => ({ list: entity, total })),
+    {
+      paginated: true,
+      defaultPageSize: 100,
+    },
   );
 
+  const {
+    dataSource: data,
+    loading,
+  } = tableProps;
+
   const [expandRow, setExpandRow] = useState(-1);
+
+  gmutate = (executable: any) => {
+    setExpandRow(-1);
+    mutate(executable);
+  };
 
   grefresh = () => {
     setExpandRow(-1);
@@ -429,18 +469,25 @@ export const EntityViewer: React.FC = () => {
       // clear previous highlight after refresh
       getApi.postMessage({ command: 'highlight-entity', payload: undefined });
     }
+    // FIXME: mutate should also trigger this effect
   }, [loading]);
 
   return (
     <>
       <Table
         sticky
-        loading={loading}
-        dataSource={data}
+        {...tableProps}
+        pagination={{
+          ...pagination as any,
+          position: ['topLeft', 'bottomLeft'],
+          showSizeChanger: false,
+          showQuickJumper: true,
+          showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} records`,
+          size: 'default',
+        }}
         rowKey={(record) => record.eid}
         // @ts-ignore
-        columns={columns(lang, pid, fid)}
-        pagination={false}
+        columns={columns}
         expandable={{
           // TODO: handle collapse all after refreshed
           expandRowByClick: true,

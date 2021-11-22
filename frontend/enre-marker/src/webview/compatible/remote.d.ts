@@ -41,8 +41,8 @@ declare namespace remote {
   }
 
   interface resFiles extends resCommon {
-    dir: string,
     file: Array<file>,
+    total: number,
   }
 
   interface file {
@@ -85,6 +85,7 @@ declare namespace remote {
 
   interface resEntities extends resCommon {
     entity: Array<entity>,
+    total: number,
   }
 
   interface entity {
@@ -103,6 +104,7 @@ declare namespace remote {
 
   interface resRelations extends resCommon {
     relation: Array<relation>,
+    total: number,
   }
 
   interface relation {

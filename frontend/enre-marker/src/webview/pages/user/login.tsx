@@ -4,13 +4,18 @@ import {
 } from 'antd';
 import React, { useContext } from 'react';
 import { useRequest } from 'ahooks';
+// @ts-ignore
+import sha256 from 'sha256-es';
 import { request } from '../../compatible/httpAdapter';
 import { LoginContext } from '../../context';
 
 export const Login: React.FC<{ uid?: string }> = ({ uid }) => {
   const { dispatcher } = useContext(LoginContext);
 
-  const { loading, run } = useRequest((body: any) => request('POST user/login', body), {
+  const { loading, run } = useRequest(async ({ uid: id, pswd }: any) => request('POST user/login', {
+    uid: id,
+    pswd: sha256.hash(pswd),
+  }), {
     manual: true,
     onSuccess: (res, param) => {
       dispatcher({ payload: { uid: param[0].uid, token: res.token } });
@@ -32,7 +37,7 @@ export const Login: React.FC<{ uid?: string }> = ({ uid }) => {
         <Input prefix={<UserOutlined style={{ color: 'rgba(0,0,0,0.25)' }} />} placeholder="User ID" readOnly={loading} />
       </Form.Item>
       <Form.Item
-        name="password"
+        name="pswd"
         rules={[{ required: true }]}
       >
         <Input.Password prefix={<LockOutlined style={{ color: 'rgba(0,0,0,0.25)' }} />} placeholder="Password" readOnly={loading} />

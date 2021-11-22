@@ -39,6 +39,7 @@ module.exports = {
     res.json(Mock.mock({
       code: 200,
       message: 'success',
+      'total|100-5000': 100,
       'file|1-10': [{
         'fid|+1': 0,
         path: 'package.json',
