@@ -162,7 +162,7 @@ Claim a project to label. A user can only claim one project in a single time, an
 ```ts
 {
   code: 200,
-  message: 'succeeded',
+  message: 'success',
   collaborator: Array<user>
 }
 
@@ -179,7 +179,7 @@ declare type user {
 | any | 500 | error |
 | pid does not exist | 4001 | no such pid |
 
-#### `GET /project/<pid: number>`
+#### `GET /project/<pid: number>?page=<page: number>&size=<size: number>`
 
 View infos of the specificed project.
 
@@ -190,8 +190,9 @@ View infos of the specificed project.
 ```ts
 {
   code: 200,
-  message: 'succeeded',
+  message: 'success',
   file: Array<file>,
+  total: number
 }
 
 declare type file {
@@ -212,7 +213,7 @@ declare type file {
 
 * `file`'s `path` is a relative path from project's root;
 
-#### `GET /project/<pid: number>/file/<fid: number>/entity`
+#### `GET /project/<pid: number>/file/<fid: number>/entity?page=<page: number>&size=<size: number>`
 
 Get all entities in a specified file from a specified project.
 
@@ -224,7 +225,8 @@ Get all entities in a specified file from a specified project.
 {
   code: 200,
   message: 'success',
-  entity: Array<entity>
+  entity: Array<entity>,
+  total: number
 }
 
 declare type entity {
@@ -280,7 +282,7 @@ declare type manuallyEntity {
 | pid does not exist | 4001 | no such pid |
 | fid does not exist | 4002 | no such fid |
 
-#### `GET /project/<pid: number>/file/<fid: number>/relation`
+#### `GET /project/<pid: number>/file/<fid: number>/relation?page=<page: number>&size=<size: number>`
 
 Get all relations **started from** the specified file.
 
@@ -292,7 +294,8 @@ Get all relations **started from** the specified file.
 {
   code: 200,
   message: 'success',
-  reltion: Array<relation>
+  relation: Array<relation>,
+  total: number
 }
 
 declare type relation {
