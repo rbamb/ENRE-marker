@@ -388,11 +388,11 @@ let gfid: number;
 export const RelationViewer: React.FC = () => {
   const {
     state: {
-      project: { pid, lang }, file: { fid },
+      project: { pid, lang, fsPath }, file: { fid, path },
     },
   } = useContext(WorkingContext);
 
-  /** set some global variables to avoid pass them as function's paras */
+  /** set some global variables to avoid pass them as function's params */
   glang = lang;
   gpid = pid;
   gfid = fid;
@@ -427,10 +427,8 @@ export const RelationViewer: React.FC = () => {
 
   useEffect(() => {
     if (data) {
-      getApi.postMessage({
-        command: 'open-file',
-        payload: {},
-      });
+      getApi.postMessage({ command: 'open-file', payload: { fpath: path, mode: 'relation-from', base: fsPath } });
+      getApi.postMessage({ command: 'show-relation-from', payload: data });
     }
   }, [loading]);
 

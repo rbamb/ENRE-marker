@@ -3,7 +3,6 @@ import path from 'path';
 import open from 'open';
 import { statSync, mkdirSync } from 'fs';
 import { exec } from 'child_process';
-import { projectState } from '../../webview/compatible/apiAdapter';
 import { entityDecorations } from './decorations';
 
 export type localCommands =

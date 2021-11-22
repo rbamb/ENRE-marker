@@ -22,6 +22,7 @@ import { WorkingContext } from '../../context';
 import { langTableIndex, typeTable } from '../../.static/config';
 import { getApi } from '../../compatible/apiAdapter';
 import { isLocEqual } from '../../utils/compare';
+import { revealEntity } from '../../utils/reveal';
 
 const { Option } = Select;
 
@@ -429,7 +430,11 @@ export const EntityViewer: React.FC = () => {
     tableProps, pagination, mutate, refresh,
   } = useRequest(
     ({ current, pageSize }) => request(`GET project/${pid}/file/${fid}/entity?page=${current}&size=${pageSize}`)
-      .then(({ entity, total }: remote.resEntities) => ({ list: entity, total })),
+      .then(({ entity, total }: remote.resEntities) => ({
+        /** let modified entity display it's true value */
+        list: entity.map((e) => revealEntity(e)),
+        total,
+      })),
     {
       paginated: true,
       defaultPageSize: 100,
