@@ -56,16 +56,14 @@ def login(request):
         res = {
             'code': 401,
             'message': 'unauthorized',
-            'token': 'WRONG'
         }
         return JsonResponse(res, safe=False)
     try:
         user = User.objects.get(uid=userid, pswd=userpw)
     except:
         res = {
-            'code': 401,
-            'message': 'unauthorized',
-            'token': 'NO User'
+            'code': 4000,
+            'message': 'not match',
         }
         return JsonResponse(res, safe=False)
     if Login.objects.filter(uid=User.objects.get(uid=userid, pswd=userpw)).exists():

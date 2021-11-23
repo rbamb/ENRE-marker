@@ -93,6 +93,7 @@ Once the `token` has been sent to client, any further requests will contain this
 | case | code | message | other |
 | --- | --- | --- | --- |
 | any login issues | 401 | unauthorized |
+| wrong uid or pswd | 4000 | not match |
 
 > Code `401` should always be returned if `token` is wrong or expired **in APIs below**, which is omitted in latter error code table.
 
