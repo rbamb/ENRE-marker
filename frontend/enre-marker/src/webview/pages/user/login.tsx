@@ -1,6 +1,6 @@
 import { LockOutlined, UserOutlined } from '@ant-design/icons';
 import {
-  Button, Form, Input,
+  Button, Form, Input, message,
 } from 'antd';
 import React, { useContext } from 'react';
 import { useRequest } from 'ahooks';
@@ -19,6 +19,9 @@ export const Login: React.FC<{ uid?: string }> = ({ uid }) => {
     manual: true,
     onSuccess: (res, param) => {
       dispatcher({ payload: { uid: param[0].uid, token: res.token } });
+    },
+    onError: () => {
+      message.error('Wrong user ID or password');
     },
   });
 

@@ -33,7 +33,7 @@ export const request = (methodUrl: string, body?: any): Promise<any> => {
           });
           reject();
         } else if (json.code >= 1000) {
-          // business related error should be handled by itself
+          // business related error should be handled by callee itself
           reject(json);
         } else {
           notification.error({

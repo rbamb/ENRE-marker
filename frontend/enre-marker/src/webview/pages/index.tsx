@@ -60,6 +60,9 @@ const RequireAuth = ({ children }: React.PropsWithChildren<any>) => {
   );
 };
 
+/** this lock is used to indicate that
+ * whether a login issue is fired because expired,
+ * in which auto component should not toggle message */
 let lock: boolean = false;
 
 export const App: React.FC = () => {
@@ -89,7 +92,7 @@ export const App: React.FC = () => {
     } else if (command === 'return-re-login') {
       lock = true;
       loginDispatcher({ payload: { token: undefined } });
-      navDispatcher('index');
+      navDispatcher({ payload: 'index' });
     }
   });
 
