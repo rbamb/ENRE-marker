@@ -3,7 +3,6 @@ import path from 'path';
 import { htmlAdapter } from './webPanel/htmlAdapter';
 import { getSelApproved, localMsgType, msgHandler } from './core/msgHandler';
 import { ENREMarkerSerializer } from './webPanel/serializer';
-import { entityDecorations } from './core/decorations';
 
 export const activate = (context: vscode.ExtensionContext) => {
   let panel: vscode.WebviewPanel | undefined = undefined;

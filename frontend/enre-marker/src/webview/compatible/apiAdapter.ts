@@ -20,16 +20,21 @@ const mockState = {
       fsPath: 'd://test/ENRE.js',
       version: 'abcdefg',
       lang: 'java',
+      map: [
+        {
+          fid: 0,
+          path: 'package.json',
+        },
+        {
+          fid: 1,
+          path: 'tsconfig.json',
+        },
+      ],
     },
     file: {
       fid: 0,
       path: '/some/to/path/a.js',
       workingOn: 'entity',
-      cache: [
-        {
-          eid: 0,
-        },
-      ],
     },
   },
 };

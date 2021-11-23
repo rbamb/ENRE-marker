@@ -106,7 +106,7 @@ export const FileViewer: React.FC = () => {
     state: {
       project: {
         pid:
-        statePid, fsPath, map,
+        statePid, fsPath,
       },
     }, dispatcher,
   } = useContext(WorkingContext);

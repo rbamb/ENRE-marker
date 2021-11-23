@@ -16,7 +16,8 @@ export type localCommands =
   | 'ready-open-folder'
   | 'open-file'
   | 'show-entity'
-  | 'highlight-entity';
+  | 'highlight-entity'
+  | 'highlight-relation';
 
 const { window: { showErrorMessage, showWarningMessage } } = vscode;
 
@@ -26,6 +27,7 @@ export interface localMsgType {
 }
 
 let currControledDoc: vscode.TextEditor | undefined = undefined;
+let currControledDocTo: vscode.TextEditor | undefined = undefined;
 let selApproved: boolean = false;
 
 export const getSelApproved = () => selApproved;
@@ -52,10 +54,25 @@ export const msgHandler:
     switch (mode) {
       case 'entity':
         vscode.workspace.openTextDocument(path.join(base, fpath))
-          .then((doc) => {
+          .then(doc => {
             vscode.window.showTextDocument(doc, 1)
               .then(editor => currControledDoc = editor);
           });
+        break;
+      case 'relation-from':
+        vscode.workspace.openTextDocument(path.join(base, fpath))
+          .then(doc => {
+            vscode.window.showTextDocument(doc, 1)
+              .then(editor => currControledDoc = editor);
+          });
+        break;
+      case 'relation-to':
+        vscode.workspace.openTextDocument(path.join(base, fpath))
+          .then(doc => {
+            vscode.window.showTextDocument(doc, 1)
+              .then(editor => currControledDocTo = editor);
+          });
+        break;
     }
   }),
 
@@ -303,6 +320,31 @@ export const msgHandler:
     } else {
       currControledDoc?.setDecorations(entityDecorations.entityHighlighted, []);
     }
+  },
 
-  }
+  'highlight-relation': (compound) => {
+    if (compound) {
+      const { from, to } = compound;
+      const range0 = new vscode.Range(
+        new vscode.Position(from.start.line, from.start.column),
+        new vscode.Position(from.end.line, from.end.column)
+      );
+      currControledDoc?.setDecorations(entityDecorations.entityHighlighted,
+        [range0]
+      );
+      currControledDoc?.revealRange(range0, vscode.TextEditorRevealType.InCenter);
+
+      const range1 = new vscode.Range(
+        new vscode.Position(to.start.line, to.start.column),
+        new vscode.Position(to.end.line, to.end.column)
+      );
+      currControledDocTo?.setDecorations(entityDecorations.entityHighlighted,
+        [range1]
+      );
+      currControledDocTo?.revealRange(range1, vscode.TextEditorRevealType.InCenter);
+    } else {
+      currControledDoc?.setDecorations(entityDecorations.entityHighlighted, []);
+      currControledDocTo?.setDecorations(entityDecorations.entityHighlighted, []);
+    }
+  },
 };

@@ -22,7 +22,8 @@ import { useAntdTable } from 'ahooks';
 import { request } from '../../compatible/httpAdapter';
 import { WorkingContext } from '../../context';
 import { langTableIndex, typeTable } from '../../.static/config';
-import { getApi } from '../../compatible/apiAdapter';
+import { fid2Path, getApi } from '../../compatible/apiAdapter';
+import { revealEntity } from '../../utils/reveal';
 
 const { Option } = Select;
 
@@ -343,7 +344,31 @@ const columns = [
         title: 'Code Name',
         dataIndex: ['eFrom', 'name'],
         key: 'fn',
-        render: (name: string) => <Button type="link" style={{ paddingLeft: 0 }}>{name}</Button>,
+        render: (name: string, record: remote.relation) => (
+          <Button
+            type="link"
+            style={{ paddingLeft: 0 }}
+            onClick={() => {
+              getApi.postMessage({
+                command: 'open-file',
+                payload: {
+                  fpath: (gmap.find((i) => i.fid === record.toFid) as fid2Path).path,
+                  mode: 'relation-to',
+                  base: gfsPath,
+                },
+              });
+              getApi.postMessage({
+                command: 'highlight-relation',
+                payload: {
+                  from: record.eFrom.loc,
+                  to: record.eTo.loc,
+                },
+              });
+            }}
+          >
+            {name}
+          </Button>
+        ),
       },
       {
         title: 'Entity Type',
@@ -367,7 +392,31 @@ const columns = [
         title: 'Code Name',
         dataIndex: ['eTo', 'name'],
         key: 'tn',
-        render: (name: string) => <Button type="link" style={{ paddingLeft: 0 }}>{name}</Button>,
+        render: (name: string, record: remote.relation) => (
+          <Button
+            type="link"
+            style={{ paddingLeft: 0 }}
+            onClick={() => {
+              getApi.postMessage({
+                command: 'open-file',
+                payload: {
+                  fpath: (gmap.find((i) => i.fid === record.toFid) as fid2Path).path,
+                  mode: 'relation-to',
+                  base: gfsPath,
+                },
+              });
+              getApi.postMessage({
+                command: 'highlight-relation',
+                payload: {
+                  from: record.eFrom.loc,
+                  to: record.eTo.loc,
+                },
+              });
+            }}
+          >
+            {name}
+          </Button>
+        ),
       },
       {
         title: 'Entity Type',
@@ -383,25 +432,40 @@ let gmutate: any;
 let grefresh: any;
 let glang: langTableIndex;
 let gpid: number;
+let gfsPath: string;
 let gfid: number;
+let gmap: Array<fid2Path>;
 
 export const RelationViewer: React.FC = () => {
   const {
     state: {
-      project: { pid, lang, fsPath }, file: { fid, path },
+      project: {
+        pid, lang, fsPath, map,
+      }, file: { fid, path },
     },
   } = useContext(WorkingContext);
 
   /** set some global variables to avoid pass them as function's params */
   glang = lang;
   gpid = pid;
+  gfsPath = fsPath;
   gfid = fid;
+  gmap = map;
+
+  console.log('so map is ', map);
 
   const {
     tableProps, pagination, mutate, refresh,
   } = useAntdTable(
     ({ current, pageSize }) => request(`GET project/${pid}/file/${fid}/relation?page=${current}&size=${pageSize}`)
-      .then(({ relation, total }: remote.resRelations) => ({ list: relation, total })),
+      .then(({ relation, total }: remote.resRelations) => ({
+        list: relation.map((r) => ({
+          ...r,
+          eFrom: revealEntity(r.eFrom),
+          eTo: revealEntity(r.eTo),
+        })),
+        total,
+      })),
     {
       paginated: true,
       defaultPageSize: 100,
@@ -428,7 +492,6 @@ export const RelationViewer: React.FC = () => {
   useEffect(() => {
     if (data) {
       getApi.postMessage({ command: 'open-file', payload: { fpath: path, mode: 'relation-from', base: fsPath } });
-      getApi.postMessage({ command: 'show-relation-from', payload: data });
     }
   }, [loading]);
 
@@ -458,17 +521,29 @@ export const RelationViewer: React.FC = () => {
           // only one line can expand in a single time
           onExpandedRowsChange: (rows) => {
             if (rows.length === 0) {
-              // getApi.postMessage({
-              //   command: 'highlight-entity',
-              //   payload: undefined,
-              // });
+              getApi.postMessage({
+                command: 'highlight-relation',
+                payload: undefined,
+              });
             } else {
               const selectedKey = rows[rows.length - 1] as number;
+              const selectedRecord = data.find((i) => i.rid === selectedKey);
               setExpandRow(selectedKey);
-              // getApi.postMessage({
-              //   command: 'highlight-entity',
-              //   payload: data?.find((i) => i.eid === selectedKey)?.loc,
-              // });
+              getApi.postMessage({
+                command: 'open-file',
+                payload: {
+                  fpath: (map.find((i) => i.fid === selectedRecord.toFid) as fid2Path).path,
+                  mode: 'relation-to',
+                  base: fsPath,
+                },
+              });
+              getApi.postMessage({
+                command: 'highlight-relation',
+                payload: {
+                  from: selectedRecord.eFrom.loc,
+                  to: selectedRecord.eTo.loc,
+                },
+              });
             }
           },
 

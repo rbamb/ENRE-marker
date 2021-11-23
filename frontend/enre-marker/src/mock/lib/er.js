@@ -118,7 +118,7 @@ module.exports = {
             }
           }
         },
-        'toFid|1-100': 0,
+        'toFid': 1,
         'rType': 0,
         'isManually|1': true,
         status: {

@@ -42,7 +42,10 @@ module.exports = {
       'total|100-5000': 100,
       'file|1-10': [{
         'fid|+1': 0,
-        path: 'package.json',
+        'path|+1': [
+          'package.json',
+          'tsconfig.json'
+        ],
         entity: {
           'count|0-200': 0,
           'progress|0-100': 0
