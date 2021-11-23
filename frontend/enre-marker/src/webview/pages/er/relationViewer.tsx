@@ -18,7 +18,7 @@ import {
   CheckOutlined, CloseOutlined, EditOutlined, PlusOutlined,
 } from '@ant-design/icons';
 import React, { useContext, useEffect, useState } from 'react';
-import { useRequest, useEventListener } from 'ahooks';
+import { useAntdTable } from 'ahooks';
 import { request } from '../../compatible/httpAdapter';
 import { WorkingContext } from '../../context';
 import { langTableIndex, typeTable } from '../../.static/config';
@@ -399,7 +399,7 @@ export const RelationViewer: React.FC = () => {
 
   const {
     tableProps, pagination, mutate, refresh,
-  } = useRequest(
+  } = useAntdTable(
     ({ current, pageSize }) => request(`GET project/${pid}/file/${fid}/relation?page=${current}&size=${pageSize}`)
       .then(({ relation, total }: remote.resRelations) => ({ list: relation, total })),
     {

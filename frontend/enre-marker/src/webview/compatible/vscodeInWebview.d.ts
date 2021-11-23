@@ -1,4 +1,4 @@
-export {};
+export { };
 
 declare global {
   interface vscApi {
@@ -10,4 +10,8 @@ declare global {
   function acquireVsCodeApi(): vscApi;
 
   const REMOTE: string;
+
+  const IN_BROWSER: boolean;
+
+  const IN_EXTENSION: boolean;
 }

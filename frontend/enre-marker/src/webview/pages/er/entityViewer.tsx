@@ -1,4 +1,4 @@
-import { useEventListener, useRequest } from 'ahooks';
+import { useAntdTable, useEventListener } from 'ahooks';
 import {
   Table,
   Badge,
@@ -428,7 +428,7 @@ export const EntityViewer: React.FC = () => {
 
   const {
     tableProps, pagination, mutate, refresh,
-  } = useRequest(
+  } = useAntdTable(
     ({ current, pageSize }) => request(`GET project/${pid}/file/${fid}/entity?page=${current}&size=${pageSize}`)
       .then(({ entity, total }: remote.resEntities) => ({
         /** let modified entity display it's true value */

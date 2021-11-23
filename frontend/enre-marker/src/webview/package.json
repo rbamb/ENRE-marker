@@ -1,12 +1,13 @@
 {
   "name": "webview",
   "scripts": {
-    "compile:dev": "webpack-dev-server --node-env development",
+    "compile:browser": "webpack-dev-server --node-env development --env browser",
+    "compile:dev": "webpack --node-env development --env extension",
     "compile:prod": "webpack --node-env production"
   },
   "dependencies": {
     "@ant-design/icons": "^4.7.0",
-    "ahooks": "^2.10.12",
+    "ahooks": "^3.0.0-alpha.12",
     "antd": "^4.16.13",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",

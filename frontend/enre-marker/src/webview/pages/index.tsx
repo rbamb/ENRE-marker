@@ -29,21 +29,22 @@ import { ProjectDashboard } from './project/projectDashboard';
 import { EntityViewer } from './er/entityViewer';
 import { RelationViewer } from './er/relationViewer';
 
-// FIXME: for quick debug only, remove in production
-const enabled = false;
-
 const RequireAuth = ({ children }: React.PropsWithChildren<any>) => {
   const { state } = useContext(LoginContext);
 
-  if (!enabled) {
+  if (IN_BROWSER) {
     return children;
   }
 
   if (!state?.token) {
-    notification.error({
-      message: 'Login required',
-      description: 'Now Navigateing you to the login page.',
-    });
+    if (lock) {
+      lock = false;
+    } else {
+      notification.error({
+        message: 'Login required',
+        description: 'Now redirecting you to the login page.',
+      });
+    }
   }
 
   return (
@@ -58,6 +59,8 @@ const RequireAuth = ({ children }: React.PropsWithChildren<any>) => {
     )
   );
 };
+
+let lock: boolean = false;
 
 export const App: React.FC = () => {
   const [loginState, loginDispatcher] = useReducer(loginReducer, getApi.getState()?.login);
@@ -76,20 +79,19 @@ export const App: React.FC = () => {
   /** restore state if necessary */
   useEventListener('message', ({
     data: {
-      command, payload: {
-        login, working,
-      },
+      command, payload,
     },
   }: any) => {
     if (command === 'restore-state') {
-      // FIXME: handle token is undefined and was omitted when tarnsforing to json
-      console.log('webview get restore state command');
+      const { login, working } = payload;
       loginDispatcher({ payload: login });
       workingDispatcher({ payload: working });
+    } else if (command === 'return-re-login') {
+      lock = true;
+      loginDispatcher({ payload: { token: undefined } });
+      navDispatcher('index');
     }
   });
-
-  console.log('login state', loginState);
 
   return (
     <>

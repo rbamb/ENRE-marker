@@ -10,14 +10,18 @@ const { getThemeVariables } = require('antd/dist/theme');
 
 const { NODE_ENV } = process.env;
 
-/** @type env: any => WebpackConfig */
+/** @type env: { browser?: boolean, extension?: boolean } => WebpackConfig */
 const webviewConfig = (env) => ({
   target: 'web',
   mode: NODE_ENV,
 
   entry: './index.tsx',
   output: {
-    path: { development: path.resolve(__dirname, 'dist'), production: path.resolve(__dirname, '../../dist') }[NODE_ENV],
+    path:
+      {
+        development: path.resolve(__dirname, env.extension ? '../../dist' : 'dist'),
+        production: path.resolve(__dirname, '../../dist'),
+      }[NODE_ENV],
     filename: 'webview.js',
   },
   devServer: {
@@ -32,16 +36,25 @@ const webviewConfig = (env) => ({
     hot: true,
     port: 9000,
   },
-  plugins: [...{
-    development: [],
-    production: [
-      new MiniCssExtractPlugin({
-        filename: 'webview.css',
-      }),
-    ],
-  }[NODE_ENV], new DefinePlugin({
-    REMOTE: NODE_ENV === 'production' ? '"http://localhost:3000/api/v1/"' : '"http://localhost:3000/api/v1/"',
-  })],
+  plugins: [
+    ...{
+      development: [],
+      production: [
+        new MiniCssExtractPlugin({
+          filename: 'webview.css',
+        }),
+      ],
+    }[NODE_ENV],
+    new DefinePlugin({
+      REMOTE:
+        NODE_ENV === 'production'
+          ? JSON.stringify('TODO PRODUCTION URL')
+          : JSON.stringify('http://localhost:3000/api/v1/'),
+      IN_BROWSER:
+        env.browser === true,
+      IN_EXTENSION:
+        env.extension === true,
+    })],
   resolve: {
     extensions: ['.ts', '.tsx', '.js', '.less', '.css'],
   },

@@ -34,20 +34,13 @@ export const getSelApproved = () => selApproved;
 export const msgHandler:
   Record<
     localCommands,
-    (payload: any, callbackMessage: ({ command, payload }: { command: string; payload: any; }) => Thenable<boolean> | undefined, setState: (state: any) => void, getState: () => any) => any
+    (payload: any, callbackMessage: ({ command, payload }: { command: string; payload?: any; }) => Thenable<boolean> | undefined, setState: (state: any) => void, getState: () => any) => any
   > = {
   'set-state': (payload, _, setState) => setState(payload),
 
-  're-login': (_, callbackMessage, setState, getState) => {
-    console.log('relogin request confirmed');
-    const lastStored = { ...getState() };
-    console.log('last state is ', lastStored);
-    lastStored.login.token = undefined;
-    console.log('and it is changed to ', lastStored);
-    setState(lastStored);
+  're-login': (_, callbackMessage) => {
     callbackMessage({
-      command: 'restore-state',
-      payload: lastStored,
+      command: 'return-re-login',
     });
   },
 

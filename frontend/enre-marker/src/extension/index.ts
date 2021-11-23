@@ -52,7 +52,7 @@ export const activate = (context: vscode.ExtensionContext) => {
         context.subscriptions
       );
 
-      const callbackMessage = ({ command, payload }: { command: string, payload: any }) =>
+      const callbackMessage = ({ command, payload }: { command: string, payload?: any }) =>
         panel?.webview.postMessage({
           command,
           payload,
