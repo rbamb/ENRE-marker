@@ -350,16 +350,10 @@ const columns = [
             style={{ paddingLeft: 0 }}
             onClick={() => {
               getApi.postMessage({
-                command: 'open-file',
-                payload: {
-                  fpath: (gmap.find((i) => i.fid === record.toFid) as fid2Path).path,
-                  mode: 'relation-to',
-                  base: gfsPath,
-                },
-              });
-              getApi.postMessage({
                 command: 'highlight-relation',
                 payload: {
+                  fpath: (gmap.find((i) => i.fid === record.toFid) as fid2Path).path,
+                  base: gfsPath,
                   from: record.eFrom.loc,
                   to: record.eTo.loc,
                 },
@@ -401,16 +395,10 @@ const columns = [
                 style={{ paddingLeft: 0 }}
                 onClick={() => {
                   getApi.postMessage({
-                    command: 'open-file',
-                    payload: {
-                      fpath,
-                      mode: 'relation-to',
-                      base: gfsPath,
-                    },
-                  });
-                  getApi.postMessage({
                     command: 'highlight-relation',
                     payload: {
+                      fpath,
+                      base: gfsPath,
                       from: record.eFrom.loc,
                       to: record.eTo.loc,
                     },
@@ -494,10 +482,10 @@ export const RelationViewer: React.FC = () => {
 
   useEffect(() => {
     if (data) {
-      getApi.postMessage({ command: 'change-layout', payload: 'relation' });
       getApi.postMessage({ command: 'open-file', payload: { fpath: path, mode: 'relation-from', base: fsPath } });
       /** this will clear decorations if user jump from entity to relation page */
       getApi.postMessage({ command: 'show-entity', payload: undefined });
+      getApi.postMessage({ command: 'highlight-entity', payload: undefined });
     }
   }, [loading]);
 
@@ -537,16 +525,10 @@ export const RelationViewer: React.FC = () => {
               const selectedRecord = data.find((i) => i.rid === selectedKey);
               setExpandRow(selectedKey);
               getApi.postMessage({
-                command: 'open-file',
-                payload: {
-                  fpath: (map.find((i) => i.fid === selectedRecord.toFid) as fid2Path).path,
-                  mode: 'relation-to',
-                  base: fsPath,
-                },
-              });
-              getApi.postMessage({
                 command: 'highlight-relation',
                 payload: {
+                  fpath: (map.find((i) => i.fid === selectedRecord.toFid) as fid2Path).path,
+                  base: fsPath,
                   from: selectedRecord.eFrom.loc,
                   to: selectedRecord.eTo.loc,
                 },

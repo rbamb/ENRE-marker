@@ -469,13 +469,11 @@ export const EntityViewer: React.FC = () => {
       gdata = data;
       // FIXME: latter command should be invoked after previous one is done
       // in case directly go to this page by click the navbar
-      getApi.postMessage({ command: 'change-layout', payload: 'entity' });
       getApi.postMessage({ command: 'open-file', payload: { fpath: path, mode: 'entity', base: fsPath } });
       getApi.postMessage({ command: 'show-entity', payload: data });
       // clear previous highlight after refresh
       getApi.postMessage({ command: 'highlight-entity', payload: undefined });
     }
-    // FIXME: mutate should also trigger this effect
   }, [loading]);
 
   return (

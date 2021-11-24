@@ -93,13 +93,6 @@ export const msgHandler:
               .then(editor => currControledDoc = editor);
           });
         break;
-      case 'relation-to':
-        vscode.workspace.openTextDocument(path.join(base, fpath))
-          .then(doc => {
-            vscode.window.showTextDocument(doc, 2)
-              .then(editor => currControledDocTo = editor);
-          });
-        break;
     }
   }),
 
@@ -362,20 +355,32 @@ export const msgHandler:
 
   'highlight-relation': (compound) => {
     if (compound) {
-      const { from, to } = compound;
-      const range0 = new vscode.Range(
-        new vscode.Position(from.start.line, from.start.column),
-        new vscode.Position(from.end.line, from.end.column)
-      );
-      currControledDoc ? (currControledDoc.selection = new vscode.Selection(range0.start, range0.end)) : undefined;
-      currControledDoc?.revealRange(range0, vscode.TextEditorRevealType.InCenter);
+      const { fpath, base, from, to } = compound;
 
-      const range1 = new vscode.Range(
-        new vscode.Position(to.start.line, to.start.column),
-        new vscode.Position(to.end.line, to.end.column)
-      );
-      currControledDocTo ? (currControledDocTo.selection = new vscode.Selection(range1.start, range1.end)) : undefined;
-      currControledDocTo?.revealRange(range1, vscode.TextEditorRevealType.InCenter);
+      vscode.workspace.openTextDocument(path.join(base, fpath))
+        .then(doc => {
+          vscode.window.showTextDocument(doc, 3)
+            .then(editor => {
+              const range0 = new vscode.Range(
+                new vscode.Position(from.start.line, from.start.column),
+                new vscode.Position(from.end.line, from.end.column)
+              );
+              currControledDoc?.setDecorations(entityDecorations.entityHighlighted, [range0]);
+              currControledDoc?.revealRange(range0, vscode.TextEditorRevealType.InCenter);
+
+              currControledDocTo = editor;
+
+              const range1 = new vscode.Range(
+                new vscode.Position(to.start.line, to.start.column),
+                new vscode.Position(to.end.line, to.end.column)
+              );
+              editor.setDecorations(entityDecorations.entityHighlighted, [range1]);
+              currControledDocTo?.revealRange(range1, vscode.TextEditorRevealType.InCenter);
+            });
+        });
+    } else {
+      currControledDoc?.setDecorations(entityDecorations.entityHighlighted, []);
+      currControledDocTo?.setDecorations(entityDecorations.entityHighlighted, []);
     }
   },
 };
