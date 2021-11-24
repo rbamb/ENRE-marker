@@ -3,7 +3,7 @@
   "scripts": {
     "compile:browser": "webpack-dev-server --node-env development --env browser",
     "compile:dev": "webpack --node-env development --env extension",
-    "compile:prod": "webpack --node-env production"
+    "compile:prod": "webpack --mode production --node-env production --devtool hidden-source-map"
   },
   "dependencies": {
     "@ant-design/icons": "^4.7.0",
@@ -22,11 +22,9 @@
     "@types/react-dom": "^17.0.11",
     "@types/react-router-dom": "^5.3.2",
     "@types/webpack-env": "^1.16.3",
-    "@typescript-eslint/eslint-plugin": "^5.3.0",
-    "@typescript-eslint/parser": "^5.3.0",
     "babel-loader": "^8.2.3",
     "css-loader": "^6.5.0",
-    "eslint": "^7.32.0",
+    "css-minimizer-webpack-plugin": "^3.2.0",
     "eslint-config-airbnb": "^18.2.1",
     "eslint-plugin-import": "^2.25.2",
     "eslint-plugin-jsx-a11y": "^6.4.1",
@@ -35,11 +33,6 @@
     "less": "^4.1.2",
     "less-loader": "^10.2.0",
     "mini-css-extract-plugin": "^2.4.3",
-    "style-loader": "^3.3.1",
-    "ts-loader": "^9.2.6",
-    "typescript": "^4.4.4",
-    "webpack": "^5.61.0",
-    "webpack-cli": "^4.9.1",
-    "webpack-dev-server": "^4.4.0"
+    "style-loader": "^3.3.1"
   }
 }

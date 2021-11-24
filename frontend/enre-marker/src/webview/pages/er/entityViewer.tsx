@@ -436,7 +436,6 @@ export const EntityViewer: React.FC = () => {
         total,
       })),
     {
-      paginated: true,
       defaultPageSize: 100,
     },
   );

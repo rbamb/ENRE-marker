@@ -3,6 +3,7 @@
 const path = require('path');
 const { DefinePlugin } = require('webpack');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
 const { getThemeVariables } = require('antd/dist/theme');
 
 // @ts-check
@@ -48,7 +49,7 @@ const webviewConfig = (env) => ({
     new DefinePlugin({
       REMOTE:
         NODE_ENV === 'production'
-          ? JSON.stringify('TODO PRODUCTION URL')
+          ? JSON.stringify('http://localhost:3000/api/v1/')
           : JSON.stringify('http://localhost:3000/api/v1/'),
       IN_BROWSER:
         env.browser === true,
@@ -111,6 +112,11 @@ const webviewConfig = (env) => ({
     development: {},
     production: {
       usedExports: true,
+      minimize: true,
+      minimizer: [
+        '...',
+        new CssMinimizerPlugin(),
+      ],
     },
   }[NODE_ENV],
   devtool: 'eval-cheap-source-map',

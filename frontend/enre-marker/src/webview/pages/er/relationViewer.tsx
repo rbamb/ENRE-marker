@@ -458,7 +458,6 @@ export const RelationViewer: React.FC = () => {
         total,
       })),
     {
-      paginated: true,
       defaultPageSize: 100,
     },
   );

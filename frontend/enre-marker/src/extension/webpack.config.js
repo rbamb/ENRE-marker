@@ -11,7 +11,7 @@ const path = require('path');
 const extensionConfig = {
   target: 'node',
   // @ts-ignore
-	mode: process.env.NODE_ENV,
+  mode: process.env.NODE_ENV,
 
   entry: './index.ts',
   output: {
@@ -38,7 +38,7 @@ const extensionConfig = {
       }
     ]
   },
-  devtool: 'nosources-source-map'
+  devtool: 'nosources-source-map',
 };
 
 module.exports = extensionConfig;
