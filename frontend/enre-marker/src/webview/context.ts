@@ -96,13 +96,4 @@ export const NavContext = createContext({
   dispatcher: undefined as unknown as React.Dispatch<any>,
 });
 
-export const navReducer = (state: any, { payload }: any) => {
-  if (payload === 'entity' || payload === 'relation') {
-    getApi.postMessage({
-      command: 'change-layout',
-      payload,
-    });
-  }
-
-  return payload;
-};
+export const navReducer = (state: any, { payload }: any) => payload;

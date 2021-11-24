@@ -2,8 +2,6 @@ import * as vscode from 'vscode';
 
 export class ENREMarkerSerializer implements vscode.WebviewPanelSerializer {
   async deserializeWebviewPanel(webviewPanel: vscode.WebviewPanel, state: unknown): Promise<any> {
-    console.log(state);
-
     /** a tricky implementation for re-start our webview:
      * by just dispose old panel and auto run start command,
      * a new panel with all proper init configurations
@@ -17,12 +15,10 @@ export class ENREMarkerSerializer implements vscode.WebviewPanelSerializer {
       const panel: vscode.WebviewPanel | undefined = await vscode.commands.executeCommand('enre-marker.start');
 
       if (panel && state) {
-        setTimeout(() => {
-          panel.webview.postMessage({
-            command: 'restore-state',
-            payload: state,
-          });
-        }, 5000);
+        panel.webview.postMessage({
+          command: 'restore-state',
+          payload: state,
+        });
       }
 
       return Promise.resolve();

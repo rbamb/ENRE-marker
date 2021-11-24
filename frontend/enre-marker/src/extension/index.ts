@@ -124,5 +124,5 @@ export const activate = (context: vscode.ExtensionContext) => {
 
   context.subscriptions.push(registerWebview);
   // this will help webview auto restart when vscode is restarted
-  // vscode.window.registerWebviewPanelSerializer('ENREMarker', new ENREMarkerSerializer());
+  vscode.window.registerWebviewPanelSerializer('ENREMarker', new ENREMarkerSerializer());
 };

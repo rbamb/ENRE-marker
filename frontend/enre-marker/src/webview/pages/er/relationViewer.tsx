@@ -483,6 +483,7 @@ export const RelationViewer: React.FC = () => {
   useEffect(() => {
     if (data) {
       getApi.postMessage({ command: 'open-file', payload: { fpath: path, mode: 'relation-from', base: fsPath } });
+      getApi.postMessage({ command: 'change-layout', payload: 'relation' });
       /** this will clear decorations if user jump from entity to relation page */
       getApi.postMessage({ command: 'show-entity', payload: undefined });
       getApi.postMessage({ command: 'highlight-entity', payload: undefined });
