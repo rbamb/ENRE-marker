@@ -451,11 +451,17 @@ export const EntityViewer: React.FC = () => {
   gmutate = (executable: any) => {
     setExpandRow(-1);
     mutate(executable);
+    gdata = data;
+    getApi.postMessage({ command: 'open-file', payload: { fpath: path, mode: 'entity', base: fsPath } });
+    getApi.postMessage({ command: 'show-entity', payload: data });
   };
 
   grefresh = () => {
     setExpandRow(-1);
     refresh();
+    gdata = data;
+    getApi.postMessage({ command: 'open-file', payload: { fpath: path, mode: 'entity', base: fsPath } });
+    getApi.postMessage({ command: 'show-entity', payload: data });
   };
 
   useEffect(() => {
@@ -463,6 +469,7 @@ export const EntityViewer: React.FC = () => {
       gdata = data;
       // FIXME: latter command should be invoked after previous one is done
       // in case directly go to this page by click the navbar
+      getApi.postMessage({ command: 'change-layout', payload: 'entity' });
       getApi.postMessage({ command: 'open-file', payload: { fpath: path, mode: 'entity', base: fsPath } });
       getApi.postMessage({ command: 'show-entity', payload: data });
       // clear previous highlight after refresh
@@ -488,7 +495,6 @@ export const EntityViewer: React.FC = () => {
         // @ts-ignore
         columns={columns}
         expandable={{
-          // TODO: handle collapse all after refreshed
           expandRowByClick: true,
           expandedRowKeys: [expandRow],
           rowExpandable: (record) => !record.status.hasBeenReviewed,
@@ -497,6 +503,7 @@ export const EntityViewer: React.FC = () => {
           // only one line can expand in a single time
           onExpandedRowsChange: (rows) => {
             if (rows.length === 0) {
+              setExpandRow(-1);
               getApi.postMessage({
                 command: 'highlight-entity',
                 payload: undefined,

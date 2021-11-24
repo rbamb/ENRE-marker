@@ -44,7 +44,8 @@ module.exports = {
         'fid|+1': 0,
         'path|+1': [
           'package.json',
-          'tsconfig.json'
+          'tsconfig.json',
+          'src/pages/options/index.tsx',
         ],
         entity: {
           'count|0-200': 0,

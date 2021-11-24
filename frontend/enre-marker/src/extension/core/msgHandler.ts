@@ -8,6 +8,7 @@ import { entityDecorations } from './decorations';
 export type localCommands =
   'set-state'
   | 're-login'
+  | 'change-layout'
   | 'open-url-in-browser'
   | 'open-folder'
   | 'validate-path'
@@ -28,27 +29,53 @@ export interface localMsgType {
 
 let currControledDoc: vscode.TextEditor | undefined = undefined;
 let currControledDocTo: vscode.TextEditor | undefined = undefined;
-let selApproved: boolean = false;
 
-export const getSelApproved = () => selApproved;
-
-// TODO: Promisify!!!
 export const msgHandler:
   Record<
     localCommands,
-    (payload: any, callbackMessage: ({ command, payload }: { command: string; payload?: any; }) => Thenable<boolean> | undefined, setState: (state: any) => void, getState: () => any) => any
+    (
+      payload: any,
+      {
+        setState,
+        callbackMessage,
+        setLayout,
+      }: {
+        setState: (state: any) => void,
+        callbackMessage: any,
+        setLayout: any
+      }
+    ) => any
   > = {
-  'set-state': (payload, _, setState) => setState(payload),
+  'set-state': (payload, { setState }) => setState(payload),
 
-  're-login': (_, callbackMessage) => {
-    callbackMessage({
-      command: 'return-re-login',
-    });
+  're-login': () => {
+    return Promise.resolve(undefined);
   },
 
-  'open-url-in-browser': (payload: string) => open(payload),
+  'change-layout': (mode, { setLayout }) => {
+    switch (mode) {
+      case 'entity':
+        vscode.commands.executeCommand('workbench.action.editorLayoutTwoColumns')
+          .then(() => setLayout(vscode.ViewColumn.Two));
+        break;
+      case 'relation':
+        vscode.commands.executeCommand('workbench.action.editorLayoutTwoRowsRight')
+          .then(() => setLayout(vscode.ViewColumn.Two));
+        break;
+      default:
+        showWarningMessage(`Unknown layout mode ${mode}`);
+    }
+  },
 
-  'open-folder': (payload: string) => open(payload),
+  'open-url-in-browser': (payload: string) => {
+    open(payload);
+    return;
+  },
+
+  'open-folder': (payload: string) => {
+    open(payload);
+    return;
+  },
 
   'open-file': (({ fpath, base, mode }: { fpath: string, base: string, mode: 'entity' | 'relation-to' | 'relation-from' }) => {
     switch (mode) {
@@ -69,7 +96,7 @@ export const msgHandler:
       case 'relation-to':
         vscode.workspace.openTextDocument(path.join(base, fpath))
           .then(doc => {
-            vscode.window.showTextDocument(doc, 1)
+            vscode.window.showTextDocument(doc, 2)
               .then(editor => currControledDocTo = editor);
           });
         break;
@@ -78,53 +105,53 @@ export const msgHandler:
 
   'validate-path': ({ value, pname }: { value: string, pname: string }) => {
     if (!path.isAbsolute(value)) {
-      return {
+      return Promise.reject({
         result: 'error',
         message: 'Path is not absolute'
-      };
+      });
     }
 
     try {
       const res = statSync(value);
 
       if (res.isFile()) {
-        return {
+        return Promise.reject({
           result: 'error',
           message: 'Path can not direct to a file'
-        };
+        });
       }
     } catch (err: any) {
       if (err.errno === -4058) {
-        return {
+        return Promise.reject({
           /** in UI, warning will be rendered as error and act as error,
            * because a) color of warning is hard to read, b) warning will also block submit operation.
            * so path does not exist, which isn't a really big problem, has to be trated as error.
            */
           result: 'warning',
           message: 'Path does not exist'
-        };
+        });
       } else if (err.errno === -2) {
         // macos will return this if entry doesn't exist
-        return {
+        return Promise.reject({
           result: 'warning',
           message: 'Path does not exist'
-        };
+        });
       } else {
         showErrorMessage(`Unknown error with errno=${err.errno} and code=${err.code}`);
-        return {
+        return Promise.reject({
           result: 'error',
           message: 'Unknown error'
-        };
+        });
       }
     }
 
     try {
       statSync(path.join(value, pname));
 
-      return {
+      return Promise.reject({
         result: 'error',
         message: 'The project folder may already exist in the given path'
-      };
+      });
     } catch (err) { }
 
     return {
@@ -132,7 +159,7 @@ export const msgHandler:
     };
   },
 
-  'git-clone': ({ absPath, githubUrl, version }: { absPath: string, githubUrl: string, version: string }, callbackMessage) => {
+  'git-clone': ({ absPath, githubUrl, version }: { absPath: string, githubUrl: string, version: string }, { callbackMessage }) => {
     // create dir if not exist
     try {
       statSync(absPath);
@@ -180,7 +207,7 @@ export const msgHandler:
     });
   },
 
-  'try-select-project': ({ version }: { version: string }, callbackMessage) => {
+  'try-select-project': ({ version }: { version: string }, { callbackMessage }) => {
     vscode.window.showOpenDialog({
       canSelectFolders: true,
       canSelectMany: false,
@@ -219,16 +246,15 @@ export const msgHandler:
                   }
                 });
                 return;
-              } else {
-
-                callbackMessage({
-                  command: 'return-try-select-project',
-                  payload: {
-                    success: true,
-                    fsPath: possiblePath,
-                  }
-                });
               }
+
+              callbackMessage({
+                command: 'return-try-select-project',
+                payload: {
+                  success: true,
+                  fsPath: possiblePath,
+                }
+              });
             });
           });
         } else {
@@ -252,59 +278,71 @@ export const msgHandler:
 
   'ready-open-folder': ({ fsPath }: { fsPath: string }) => {
     vscode.commands.executeCommand('vscode.openFolder', vscode.Uri.file(fsPath));
+    return;
   },
 
   'show-entity': (data: Array<any>) => {
-    selApproved = true;
     let passed: Array<vscode.Range> = [];
-    data
-      .filter((e) => e.status.hasBeenReviewed && e.status.operation === 0)
-      .forEach((e) => passed.push(
-        new vscode.Range(
-          new vscode.Position(e.loc.start.line, e.loc.start.column),
-          new vscode.Position(e.loc.end.line, e.loc.end.column))
-      ));
-    currControledDoc?.setDecorations(entityDecorations.entityPassed, passed);
-
     let removed: Array<vscode.Range> = [];
-    data
-      .filter((e) => e.status.hasBeenReviewed && e.status.operation === 1)
-      .forEach((e) => removed.push(
-        new vscode.Range(
-          new vscode.Position(e.loc.start.line, e.loc.start.column),
-          new vscode.Position(e.loc.end.line, e.loc.end.column))
-      ));
-    currControledDoc?.setDecorations(entityDecorations.entityRemoved, removed);
-
     let modified: Array<vscode.Range> = [];
-    data
-      .filter((e) => e.status.hasBeenReviewed && e.status.operation === 2)
-      .forEach((e) => modified.push(
-        new vscode.Range(
-          new vscode.Position(e.loc.start.line, e.loc.start.column),
-          new vscode.Position(e.loc.end.line, e.loc.end.column))
-      ));
-    currControledDoc?.setDecorations(entityDecorations.entityModified, modified);
-
     let inserted: Array<vscode.Range> = [];
-    data
-      .filter((e) => e.status.hasBeenReviewed && e.status.operation === 3)
-      .forEach((e) => inserted.push(
-        new vscode.Range(
-          new vscode.Position(e.loc.start.line, e.loc.start.column),
-          new vscode.Position(e.loc.end.line, e.loc.end.column))
-      ));
-    currControledDoc?.setDecorations(entityDecorations.entityInserted, inserted);
-
     let unreviewed: Array<vscode.Range> = [];
-    data
-      .filter((e) => !e.status.hasBeenReviewed)
-      .forEach((e) => unreviewed.push(
-        new vscode.Range(
-          new vscode.Position(e.loc.start.line, e.loc.start.column),
-          new vscode.Position(e.loc.end.line, e.loc.end.column))
-      ));
-    currControledDoc?.setDecorations(entityDecorations.entityUnreviewed, unreviewed);
+
+    if (data) {
+      data.forEach((e) => {
+        if (e.status.hasBeenReviewed && e.status.operation === 0) {
+          passed.push(
+            new vscode.Range(
+              new vscode.Position(e.loc.start.line, e.loc.start.column),
+              new vscode.Position(e.loc.end.line, e.loc.end.column))
+          );
+        }
+
+        if (e.status.hasBeenReviewed && e.status.operation === 1) {
+          removed.push(
+            new vscode.Range(
+              new vscode.Position(e.loc.start.line, e.loc.start.column),
+              new vscode.Position(e.loc.end.line, e.loc.end.column))
+          );
+        }
+
+        if (e.status.hasBeenReviewed && e.status.operation === 2) {
+          modified.push(
+            new vscode.Range(
+              new vscode.Position(e.loc.start.line, e.loc.start.column),
+              new vscode.Position(e.loc.end.line, e.loc.end.column))
+          );
+        }
+
+        if (e.status.hasBeenReviewed && e.status.operation === 3) {
+          inserted.push(
+            new vscode.Range(
+              new vscode.Position(e.loc.start.line, e.loc.start.column),
+              new vscode.Position(e.loc.end.line, e.loc.end.column))
+          );
+        }
+
+        if (!e.status.hasBeenReviewed) {
+          unreviewed.push(
+            new vscode.Range(
+              new vscode.Position(e.loc.start.line, e.loc.start.column),
+              new vscode.Position(e.loc.end.line, e.loc.end.column))
+          );
+        }
+
+        currControledDoc?.setDecorations(entityDecorations.entityPassed, passed);
+        currControledDoc?.setDecorations(entityDecorations.entityRemoved, removed);
+        currControledDoc?.setDecorations(entityDecorations.entityModified, modified);
+        currControledDoc?.setDecorations(entityDecorations.entityInserted, inserted);
+        currControledDoc?.setDecorations(entityDecorations.entityUnreviewed, unreviewed);
+      });
+    } else {
+      currControledDoc?.setDecorations(entityDecorations.entityPassed, []);
+      currControledDoc?.setDecorations(entityDecorations.entityRemoved, []);
+      currControledDoc?.setDecorations(entityDecorations.entityModified, []);
+      currControledDoc?.setDecorations(entityDecorations.entityInserted, []);
+      currControledDoc?.setDecorations(entityDecorations.entityUnreviewed, []);
+    }
   },
 
   'highlight-entity': (loc) => {
@@ -329,22 +367,15 @@ export const msgHandler:
         new vscode.Position(from.start.line, from.start.column),
         new vscode.Position(from.end.line, from.end.column)
       );
-      currControledDoc?.setDecorations(entityDecorations.entityHighlighted,
-        [range0]
-      );
+      currControledDoc ? (currControledDoc.selection = new vscode.Selection(range0.start, range0.end)) : undefined;
       currControledDoc?.revealRange(range0, vscode.TextEditorRevealType.InCenter);
 
       const range1 = new vscode.Range(
         new vscode.Position(to.start.line, to.start.column),
         new vscode.Position(to.end.line, to.end.column)
       );
-      currControledDocTo?.setDecorations(entityDecorations.entityHighlighted,
-        [range1]
-      );
+      currControledDocTo ? (currControledDocTo.selection = new vscode.Selection(range1.start, range1.end)) : undefined;
       currControledDocTo?.revealRange(range1, vscode.TextEditorRevealType.InCenter);
-    } else {
-      currControledDoc?.setDecorations(entityDecorations.entityHighlighted, []);
-      currControledDocTo?.setDecorations(entityDecorations.entityHighlighted, []);
     }
   },
 };

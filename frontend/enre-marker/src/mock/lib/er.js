@@ -55,11 +55,11 @@ module.exports = {
           name: 'var name from',
           loc: {
             start: {
-              line: 1,
+              line: 29,
               column: 2
             },
             end: {
-              line: 1,
+              line: 29,
               column: 5
             }
           },
@@ -118,7 +118,7 @@ module.exports = {
             }
           }
         },
-        'toFid': 1,
+        'toFid': 2,
         'rType': 0,
         'isManually|1': true,
         status: {

@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import path from 'path';
 import { htmlAdapter } from './webPanel/htmlAdapter';
-import { getSelApproved, localMsgType, msgHandler } from './core/msgHandler';
+import { localMsgType, msgHandler } from './core/msgHandler';
 import { ENREMarkerSerializer } from './webPanel/serializer';
 
 export const activate = (context: vscode.ExtensionContext) => {
@@ -14,7 +14,7 @@ export const activate = (context: vscode.ExtensionContext) => {
       panel = vscode.window.createWebviewPanel(
         'ENREMarker',
         'ENRE-marker',
-        vscode.ViewColumn.Three,
+        vscode.ViewColumn.Two,
         {
           enableScripts: true,
           retainContextWhenHidden: true
@@ -51,18 +51,16 @@ export const activate = (context: vscode.ExtensionContext) => {
         context.subscriptions
       );
 
-      const callbackMessage = ({ command, payload }: { command: string, payload?: any }) =>
-        panel?.webview.postMessage({
-          command,
-          payload,
-        });
-
       const setState = (state: any) => {
         context.globalState.update('webviewState', state);
       };
 
-      const getState = () => {
-        return context.globalState.get('webviewState');
+      const setLayout = (layout: vscode.ViewColumn) => {
+        panel?.reveal(layout);
+      };
+
+      const callbackMessage = ({ command, payload }: { command: string, payload?: any }) => {
+        panel?.webview.postMessage({ command, payload });
       };
 
       panel.webview.onDidReceiveMessage(
@@ -72,12 +70,16 @@ export const activate = (context: vscode.ExtensionContext) => {
             return;
           }
 
-          const anything = msgHandler[command](payload, callbackMessage, setState, getState);
+          const anything = msgHandler[command](payload, { setState, callbackMessage, setLayout });
 
-          if (typeof anything === 'function') {
-            // TODO: handle return type is a function
-          } else if (typeof anything !== 'undefined') {
-            panel?.webview.postMessage({ command: `return-${command}`, payload: anything });
+          if (typeof anything !== 'undefined') {
+            Promise.resolve(anything)
+              .then((payload) => {
+                panel?.webview.postMessage({ command: `return-${command}`, payload });
+              })
+              .catch((payload) => {
+                panel?.webview.postMessage({ command: `return-${command}`, payload });
+              });
           }
         },
         undefined,
@@ -94,26 +96,24 @@ export const activate = (context: vscode.ExtensionContext) => {
       });
 
       vscode.window.onDidChangeTextEditorSelection(e => {
-        if (getSelApproved()) {
-          const sel = e.selections[0];
-          if ((e.kind === 2) && (sel.start.line === sel.end.line) && (sel.start.character !== sel.end.character)) {
-            panel?.webview.postMessage({
-              command: 'selection-change',
-              payload: {
-                name: e.textEditor.document.getText(sel),
-                loc: {
-                  start: {
-                    line: sel.start.line,
-                    column: sel.start.character
-                  },
-                  end: {
-                    line: sel.end.line,
-                    column: sel.end.character
-                  }
+        const sel = e.selections[0];
+        if ((e.kind === 2) && (sel.start.line === sel.end.line) && (sel.start.character !== sel.end.character)) {
+          panel?.webview.postMessage({
+            command: 'selection-change',
+            payload: {
+              name: e.textEditor.document.getText(sel),
+              loc: {
+                start: {
+                  line: sel.start.line,
+                  column: sel.start.character
+                },
+                end: {
+                  line: sel.end.line,
+                  column: sel.end.character
                 }
               }
-            });
-          }
+            }
+          });
         }
       });
     }

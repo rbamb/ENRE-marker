@@ -392,31 +392,36 @@ const columns = [
         title: 'Code Name',
         dataIndex: ['eTo', 'name'],
         key: 'tn',
-        render: (name: string, record: remote.relation) => (
-          <Button
-            type="link"
-            style={{ paddingLeft: 0 }}
-            onClick={() => {
-              getApi.postMessage({
-                command: 'open-file',
-                payload: {
-                  fpath: (gmap.find((i) => i.fid === record.toFid) as fid2Path).path,
-                  mode: 'relation-to',
-                  base: gfsPath,
-                },
-              });
-              getApi.postMessage({
-                command: 'highlight-relation',
-                payload: {
-                  from: record.eFrom.loc,
-                  to: record.eTo.loc,
-                },
-              });
-            }}
-          >
-            {name}
-          </Button>
-        ),
+        render: (name: string, record: remote.relation) => {
+          const fpath = (gmap.find((i) => i.fid === record.toFid) as fid2Path).path;
+          return (
+            <Tooltip title={fpath}>
+              <Button
+                type="link"
+                style={{ paddingLeft: 0 }}
+                onClick={() => {
+                  getApi.postMessage({
+                    command: 'open-file',
+                    payload: {
+                      fpath,
+                      mode: 'relation-to',
+                      base: gfsPath,
+                    },
+                  });
+                  getApi.postMessage({
+                    command: 'highlight-relation',
+                    payload: {
+                      from: record.eFrom.loc,
+                      to: record.eTo.loc,
+                    },
+                  });
+                }}
+              >
+                {name}
+              </Button>
+            </Tooltip>
+          );
+        },
       },
       {
         title: 'Entity Type',
@@ -451,8 +456,6 @@ export const RelationViewer: React.FC = () => {
   gfsPath = fsPath;
   gfid = fid;
   gmap = map;
-
-  console.log('so map is ', map);
 
   const {
     tableProps, pagination, mutate, refresh,
@@ -491,7 +494,10 @@ export const RelationViewer: React.FC = () => {
 
   useEffect(() => {
     if (data) {
+      getApi.postMessage({ command: 'change-layout', payload: 'relation' });
       getApi.postMessage({ command: 'open-file', payload: { fpath: path, mode: 'relation-from', base: fsPath } });
+      /** this will clear decorations if user jump from entity to relation page */
+      getApi.postMessage({ command: 'show-entity', payload: undefined });
     }
   }, [loading]);
 
@@ -521,6 +527,7 @@ export const RelationViewer: React.FC = () => {
           // only one line can expand in a single time
           onExpandedRowsChange: (rows) => {
             if (rows.length === 0) {
+              setExpandRow(-1);
               getApi.postMessage({
                 command: 'highlight-relation',
                 payload: undefined,
