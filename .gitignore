@@ -5,3 +5,4 @@ frontend/enre-marker/publish
 .DS_Store
 
 # backend
+backend/enre/.idea
