@@ -1,7 +1,7 @@
 import json
 import jwt
 from django.conf import settings
-from django.shortcuts import render
+from exrex import getone
 
 # Create your views here.
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
@@ -12,9 +12,7 @@ from project import models
 
 def get_token():
     # 'exp': datetime.utcnow() + timedelta(days=1),
-    return jwt.encode({
-        'exp': datetime.utcnow() + timedelta(days=1),
-    }, settings.SECRET_KEY, algorithm='HS256')
+    return getone('([a-z]|[A-Z]|[0-9]){64}')
 
 
 def register(request):
@@ -66,19 +64,29 @@ def login(request):
             'message': 'not match',
         }
         return JsonResponse(res, safe=False)
-    if Login.objects.filter(uid=User.objects.get(uid=userid, pswd=userpw)).exists():
-        # print(jwt.decode(Login.objects.get(uid=userId).token, settings.SECRET_KEY, algorithms='HS256'))
-        return HttpResponse("Already On!")
+
+    # if user re-login during a previous token is valid, then just override it with a new one
+    previous = Login.objects.get(uid=userid)
+    res = None
+    if previous:
+        previous.token = get_token()
+        previous.gen_time = datetime.now()
+        previous.save()
+        res = {
+            'code': 200,
+            'message': 'success',
+            'token': previous.token,
+            'name': user.name
+        }
     else:
         user_login = Login.objects.create(uid=User.objects.get(uid=userid, pswd=userpw), gen_time=datetime.now())
         user_login.token = get_token()
         user_login.save()
-        username = user.name
         res = {
             'code': 200,
             'message': 'success',
             'token': user_login.token,
-            'name': username
+            'name': user.name
         }
-        return JsonResponse(res, safe=False)
 
+    return JsonResponse(res, safe=False)

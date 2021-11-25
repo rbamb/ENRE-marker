@@ -14,7 +14,7 @@ class User(models.Model):
 
 class Login(models.Model):
     uid = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True)
-    token = models.CharField(max_length=256)
+    token = models.CharField(max_length=64)
     gen_time = models.DateTimeField()
 
     def __str__(self):
