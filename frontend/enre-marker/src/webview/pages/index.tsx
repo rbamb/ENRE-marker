@@ -96,6 +96,13 @@ export const App: React.FC = () => {
     }
   });
 
+  let fname: string | undefined = workingState?.file?.path.split('/').pop();
+  if (fname) {
+    if (fname.length > 15) {
+      fname = `${fname.substring(0, 11)}...`;
+    }
+  }
+
   return (
     <>
       <LoginContext.Provider value={{ state: loginState, dispatcher: loginDispatcher }}>
@@ -137,7 +144,7 @@ export const App: React.FC = () => {
                     tabIndex={0}
                   >
                     <NavLink to={`/project/${workingState.project.pid}/file/${workingState.file.fid}/${workingState.file.workingOn}`}>
-                      {`${workingState.file.path.split('/').pop()}: ${workingState.file.workingOn === 'entity' ? 'Entity' : 'Relation'}`}
+                      {`${fname}: ${workingState.file.workingOn === 'entity' ? 'Entity' : 'Relation'}`}
                     </NavLink>
                   </Menu.Item>
                 ) : undefined}

@@ -1,7 +1,7 @@
 import React, { useContext, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Table, Progress, Button } from 'antd';
-import { useRequest } from 'ahooks';
+import { useAntdTable } from 'ahooks';
 import { request } from '../../compatible/httpAdapter';
 import { WorkingContext, NavContext } from '../../context';
 import { getApi } from '../../compatible/apiAdapter';
@@ -28,7 +28,7 @@ const RenderAction = (record: remote.file, type: 'entity' | 'relation', fsPath: 
   );
 };
 
-const columns = (fsPath: string) => ([
+const columns = [
   {
     title: 'File Path',
     dataIndex: 'path',
@@ -36,7 +36,7 @@ const columns = (fsPath: string) => ([
     render: (fpath: string) => (
       <a
         onClick={() => {
-          getApi.postMessage({ command: 'open-file', payload: { fpath, mode: 'entity', base: fsPath } });
+          getApi.postMessage({ command: 'open-file', payload: { fpath, mode: 'entity', base: gfsPath } });
         }}
       >
         {fpath}
@@ -63,7 +63,7 @@ const columns = (fsPath: string) => ([
         title: 'Action',
         key: 'eaction',
         align: 'center',
-        render: (_: undefined, record: remote.file) => RenderAction(record, 'entity', fsPath),
+        render: (_: undefined, record: remote.file) => RenderAction(record, 'entity', gfsPath),
       },
     ],
   },
@@ -87,11 +87,13 @@ const columns = (fsPath: string) => ([
         title: 'Action',
         key: 'raction',
         align: 'center',
-        render: (_: undefined, record: remote.file) => RenderAction(record, 'relation', fsPath),
+        render: (_: undefined, record: remote.file) => RenderAction(record, 'relation', gfsPath),
       },
     ],
   },
-]);
+];
+
+let gfsPath: string;
 
 /** to support view mode (only view files rather than claim the project and do mark things),
  * the component should fetch pid from the url,
@@ -106,18 +108,39 @@ export const FileViewer: React.FC = () => {
     state: {
       project: {
         pid:
-        statePid, fsPath,
+        statePid,
+        fsPath,
       },
     }, dispatcher,
   } = useContext(WorkingContext);
 
-  const { data, loading } = useRequest(
-    () => request(`GET project/${urlPid}`).then(({ file }: remote.resFiles) => file),
-    IS_PRODUCTION ? {
-      cacheKey: 'files',
-      staleTime: 30000,
-    } : undefined,
+  gfsPath = fsPath;
+
+  const {
+    tableProps, pagination,
+  } = useAntdTable(
+    /** since fid2path mapping demands a full set of data,
+     * so get project will always aqruire all data,
+     * and do a local pagination
+     *
+     * in production env, cache will be enabled,
+     * which will works fine with paging functionality
+     */
+    () => request(`GET project/${urlPid}`)
+      .then(({ file }: remote.resFiles) => ({ total: file.length, list: file })),
+    {
+      ...(IS_PRODUCTION ? {
+        cacheKey: 'files',
+        staleTime: 30000,
+      } : {}),
+      defaultPageSize: 100,
+    },
   );
+
+  const {
+    dataSource: data,
+    loading,
+  } = tableProps;
 
   // in mark mode
   useEffect(() => {
@@ -134,12 +157,18 @@ export const FileViewer: React.FC = () => {
   return (
     <Table
       sticky
-      dataSource={data}
-      loading={loading}
+      {...tableProps}
+      pagination={{
+        ...pagination as any,
+        position: ['topLeft', 'bottomLeft'],
+        showSizeChanger: false,
+        showQuickJumper: true,
+        showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} records`,
+        size: 'default',
+      }}
       rowKey={(record) => record.fid}
       // @ts-ignore
-      columns={columns(fsPath)}
-      pagination={false}
+      columns={columns}
     />
   );
 };

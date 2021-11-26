@@ -275,60 +275,56 @@ export const msgHandler:
   },
 
   'show-entity': (data: Array<any>) => {
-    let passed: Array<vscode.Range> = [];
-    let removed: Array<vscode.Range> = [];
-    let modified: Array<vscode.Range> = [];
-    let inserted: Array<vscode.Range> = [];
-    let unreviewed: Array<vscode.Range> = [];
-
     if (data) {
+      let passed: Array<vscode.Range> = [];
+      let removed: Array<vscode.Range> = [];
+      let modified: Array<vscode.Range> = [];
+      let inserted: Array<vscode.Range> = [];
+      let unreviewed: Array<vscode.Range> = [];
+
       data.forEach((e) => {
-        if (e.status.hasBeenReviewed && e.status.operation === 0) {
-          passed.push(
-            new vscode.Range(
-              new vscode.Position(e.loc.start.line, e.loc.start.column),
-              new vscode.Position(e.loc.end.line, e.loc.end.column))
-          );
+        if (e.loc.start.line === -1) {
+          return;
         }
 
-        if (e.status.hasBeenReviewed && e.status.operation === 1) {
-          removed.push(
-            new vscode.Range(
-              new vscode.Position(e.loc.start.line, e.loc.start.column),
-              new vscode.Position(e.loc.end.line, e.loc.end.column))
-          );
+        let opto: Array<vscode.Range>;
+        if (e.status.hasBeenReviewed) {
+          switch (e.status.operation) {
+            case 0:
+              opto = passed;
+              break;
+            case 1:
+              opto = removed;
+              break;
+            case 2:
+              opto = modified;
+              break;
+            case 3:
+              opto = inserted;
+              break;
+            default:
+              opto = [];
+          }
+        } else {
+          opto = unreviewed;
         }
 
-        if (e.status.hasBeenReviewed && e.status.operation === 2) {
-          modified.push(
-            new vscode.Range(
-              new vscode.Position(e.loc.start.line, e.loc.start.column),
-              new vscode.Position(e.loc.end.line, e.loc.end.column))
-          );
-        }
-
-        if (e.status.hasBeenReviewed && e.status.operation === 3) {
-          inserted.push(
-            new vscode.Range(
-              new vscode.Position(e.loc.start.line, e.loc.start.column),
-              new vscode.Position(e.loc.end.line, e.loc.end.column))
-          );
-        }
-
-        if (!e.status.hasBeenReviewed) {
-          unreviewed.push(
-            new vscode.Range(
-              new vscode.Position(e.loc.start.line, e.loc.start.column),
-              new vscode.Position(e.loc.end.line, e.loc.end.column))
-          );
-        }
-
-        currControledDoc?.setDecorations(entityDecorations.entityPassed, passed);
-        currControledDoc?.setDecorations(entityDecorations.entityRemoved, removed);
-        currControledDoc?.setDecorations(entityDecorations.entityModified, modified);
-        currControledDoc?.setDecorations(entityDecorations.entityInserted, inserted);
-        currControledDoc?.setDecorations(entityDecorations.entityUnreviewed, unreviewed);
+        opto.push(
+          new vscode.Range(
+            new vscode.Position(e.loc.start.line - 1, e.loc.start.column - 1),
+            new vscode.Position(
+              e.loc.end.line !== -1 ? e.loc.end.line - 1 : e.loc.start.line - 1,
+              e.loc.end.column !== -1 ? e.loc.end.column - 1 : e.loc.start.column,
+            )
+          )
+        );
       });
+
+      currControledDoc?.setDecorations(entityDecorations.entityPassed, passed);
+      currControledDoc?.setDecorations(entityDecorations.entityRemoved, removed);
+      currControledDoc?.setDecorations(entityDecorations.entityModified, modified);
+      currControledDoc?.setDecorations(entityDecorations.entityInserted, inserted);
+      currControledDoc?.setDecorations(entityDecorations.entityUnreviewed, unreviewed);
     } else {
       currControledDoc?.setDecorations(entityDecorations.entityPassed, []);
       currControledDoc?.setDecorations(entityDecorations.entityRemoved, []);
@@ -340,9 +336,16 @@ export const msgHandler:
 
   'highlight-entity': (loc) => {
     if (loc) {
+      if (loc.start.line === -1) {
+        return;
+      }
+
       const range = new vscode.Range(
-        new vscode.Position(loc.start.line, loc.start.column),
-        new vscode.Position(loc.end.line, loc.end.column)
+        new vscode.Position(loc.start.line - 1, loc.start.column - 1),
+        new vscode.Position(
+          loc.end.line !== -1 ? loc.end.line - 1 : loc.start.line - 1,
+          loc.end.column !== -1 ? loc.end.column - 1 : loc.start.column,
+        )
       );
       currControledDoc?.setDecorations(entityDecorations.entityHighlighted,
         [range]
@@ -361,9 +364,16 @@ export const msgHandler:
         .then(doc => {
           vscode.window.showTextDocument(doc, 3)
             .then(editor => {
+              if (from.start.line === -1 || to.start.line === -1) {
+                return;
+              }
+
               const range0 = new vscode.Range(
-                new vscode.Position(from.start.line, from.start.column),
-                new vscode.Position(from.end.line, from.end.column)
+                new vscode.Position(from.start.line - 1, from.start.column - 1),
+                new vscode.Position(
+                  from.end.line !== -1 ? from.end.line - 1 : from.start.line - 1,
+                  from.end.column !== -1 ? from.end.column - 1 : from.start.column,
+                )
               );
               currControledDoc?.setDecorations(entityDecorations.entityHighlighted, [range0]);
               currControledDoc?.revealRange(range0, vscode.TextEditorRevealType.InCenter);
@@ -371,8 +381,11 @@ export const msgHandler:
               currControledDocTo = editor;
 
               const range1 = new vscode.Range(
-                new vscode.Position(to.start.line, to.start.column),
-                new vscode.Position(to.end.line, to.end.column)
+                new vscode.Position(to.start.line - 1, to.start.column - 1),
+                new vscode.Position(
+                  to.end.line !== -1 ? to.end.line - 1 : to.start.line - 1,
+                  to.end.column !== -1 ? to.end.column - 1 : to.start.column,
+                )
               );
               editor.setDecorations(entityDecorations.entityHighlighted, [range1]);
               currControledDocTo?.revealRange(range1, vscode.TextEditorRevealType.InCenter);

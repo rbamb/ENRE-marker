@@ -1,14 +1,15 @@
 import React, { useContext } from 'react';
 import {
-  List, Button, Space, Typography,
+  List, Button, Space, Typography, message,
 } from 'antd';
 import { GithubOutlined } from '@ant-design/icons';
-import { LoginContext } from '../../context';
+import { LoginContext, WorkingContext } from '../../context';
 import pkg from '../../../../package.json';
 import { getApi } from '../../compatible/apiAdapter';
 
 export const Settings: React.FC = () => {
-  const { state, dispatcher } = useContext(LoginContext);
+  const { state, dispatcher: loginDispatcher } = useContext(LoginContext);
+  const { dispatcher: workingDispatcher } = useContext(WorkingContext);
 
   return (
     <Space direction="vertical" style={{ width: '100%' }}>
@@ -21,13 +22,20 @@ export const Settings: React.FC = () => {
         >
           <List.Item.Meta
             title="User ID"
+          />
+        </List.Item>
+        <List.Item
+          actions={[<span key={0}>{state.name}</span>]}
+        >
+          <List.Item.Meta
+            title="User name"
             description="Currently we don't offer any account related operations, please contact us if you have any questions."
           />
         </List.Item>
         <List.Item
           actions={[
             <Button
-              onClick={() => dispatcher({ payload: { token: undefined } })}
+              onClick={() => loginDispatcher({ payload: { token: undefined } })}
               danger
               key={0}
             >
@@ -37,6 +45,35 @@ export const Settings: React.FC = () => {
         >
           <List.Item.Meta
             title="Log out"
+          />
+        </List.Item>
+      </List>
+      <Typography.Title level={5}>
+        Settings
+      </Typography.Title>
+      <List style={{ marginLeft: '1em' }}>
+        <List.Item
+          actions={[
+            <Button
+              onClick={() => {
+                workingDispatcher({
+                  payload: {
+                    project: undefined,
+                    file: undefined,
+                  },
+                });
+                message.success('Clear succeeded');
+              }}
+              danger
+              key={0}
+            >
+              Clear
+            </Button>,
+          ]}
+        >
+          <List.Item.Meta
+            title="Clear caches"
+            description="This will clear all cached data and reset ENRE-marker to a init state, which would be helpful if you have encountered with some data conflict issues."
           />
         </List.Item>
       </List>

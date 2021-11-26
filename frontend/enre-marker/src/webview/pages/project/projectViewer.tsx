@@ -2,7 +2,7 @@ import React, { useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useRequest } from 'ahooks';
 import {
-  Table, Progress, Button, Tag, Tooltip, Divider, Space, Typography, message, notification,
+  Table, Progress, Button, Tag, Tooltip, Divider, Space, Typography, message,
 } from 'antd';
 import { LockOutlined } from '@ant-design/icons';
 import { request } from '../../compatible/httpAdapter';
@@ -17,15 +17,22 @@ const RenderAction = (claimed: boolean, {
   const { dispatcher: navDispatcher } = useContext(NavContext);
   const navigate = useNavigate();
 
-  const handleClaimClicked = async () => {
-    message.loading({
-      content: 'Claiming...',
-      key: 'claim',
-      duration: 0,
-    });
+  const handleClaimClicked = async (mode: 'claim' | 'restore') => {
+    if (mode === 'claim') {
+      message.loading({
+        content: 'Claiming...',
+        key: 'claim',
+        duration: 0,
+      });
+    }
 
     try {
-      const { collaborator }: remote.resClaim = await request(`POST project/${pid}/claim`);
+      let collaborator;
+
+      if (mode === 'claim') {
+        const res: remote.resClaim = await request(`POST project/${pid}/claim`);
+        collaborator = res.collaborator;
+      }
 
       // clean up
       workingDispatcher({
@@ -66,6 +73,16 @@ const RenderAction = (claimed: boolean, {
         >
           Claimed
         </Button>
+        {!gfsPath ? (
+          <Button
+            style={{ paddingLeft: 0, paddingRight: 0 }}
+            type="link"
+            onClick={() => handleClaimClicked('restore')}
+            disabled={state === 1}
+          >
+            Restore
+          </Button>
+        ) : undefined}
         <Link to={`/project/${pid}/file`}>
           <Button
             style={{ paddingLeft: 0 }}
@@ -83,7 +100,7 @@ const RenderAction = (claimed: boolean, {
       <Button
         style={{ paddingRight: 0 }}
         type="link"
-        onClick={handleClaimClicked}
+        onClick={() => handleClaimClicked('claim')}
         disabled={state === 1}
       >
         Claim
@@ -189,7 +206,13 @@ const columns = [
   },
 ];
 
+let gfsPath: string | undefined;
+
 export const ProjectViewer: React.FC = () => {
+  const { state: { project: stateProject } } = useContext(WorkingContext);
+
+  gfsPath = stateProject?.fsPath;
+
   const { data, loading } = useRequest(
     () => request('GET project')
       .then(

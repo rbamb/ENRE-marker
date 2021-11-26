@@ -8,38 +8,25 @@ import { langTableIndex } from '../.static/config';
 const onlySingleCopy = typeof acquireVsCodeApi === 'undefined' ? undefined : acquireVsCodeApi();
 
 // FIXME: only for debug purpose
-// const mockState = {
-//   login: {
-//     uid: 100,
-//     token: 'sometoken',
-//   },
-//   working: {
-//     project: {
-//       pid: 100,
-//       name: 'ENRE.js',
-//       fsPath: 'd://test/ENRE.js',
-//       version: 'abcdefg',
-//       lang: 'java',
-//       map: [
-//         {
-//           fid: 0,
-//           path: 'package.json',
-//         },
-//         {
-//           fid: 1,
-//           path: 'tsconfig.json',
-//         },
-//       ],
-//     },
-//     file: {
-//       fid: 0,
-//       path: '/some/to/path/a.js',
-//       workingOn: 'entity',
-//     },
-//   },
-// };
+const mockState = {
+  login: {
+    uid: 10000,
+    token: 'QeknjyVd0BX5iH46gpbiTwV9NyWC1md4Ek6UyUvvXxPnXe77xkJ67tv1wlOH0GGu',
+    name: 'ThisRabbit',
+  },
+  working: {
+    project: {
+      pid: 3,
+      name: 'oozie',
+      fsPath: 'd://test/ENRE.js',
+      version: '8dfdb35',
+      lang: 'java',
+      githbUrl: 'apache/oozie',
+    },
+  },
+};
 
-const mockState = {};
+// const mockState = {};
 
 export const getApi = onlySingleCopy ? {
   ...onlySingleCopy,
@@ -69,6 +56,7 @@ export interface stateModule {
 export interface loginState {
   uid?: number,
   token?: string,
+  name?: string,
 }
 
 export interface workingState {

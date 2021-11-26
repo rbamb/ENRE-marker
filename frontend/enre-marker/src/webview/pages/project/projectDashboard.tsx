@@ -61,7 +61,6 @@ export const ProjectDashboard: React.FC<{
         // eslint-disable-next-line consistent-return
       ) => {
         if (command === 'return-git-clone') {
-          console.log('returned msg git-clone');
           setExecuting(false);
           message.destroy('clone');
 
@@ -91,7 +90,6 @@ export const ProjectDashboard: React.FC<{
 
           // TODO: save fsPath and send message 'ready-open-folder',
           // and refactor index page to loading before restore message is received
-          // FIXME: state module seems to be incorrect
 
           if (success) {
             window.removeEventListener('message', listener);

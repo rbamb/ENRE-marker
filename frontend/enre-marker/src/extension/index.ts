@@ -104,12 +104,12 @@ export const activate = (context: vscode.ExtensionContext) => {
               name: e.textEditor.document.getText(sel),
               loc: {
                 start: {
-                  line: sel.start.line,
-                  column: sel.start.character
+                  line: sel.start.line + 1,
+                  column: sel.start.character + 1,
                 },
                 end: {
-                  line: sel.end.line,
-                  column: sel.end.character
+                  line: sel.end.line + 1,
+                  column: sel.end.character + 1,
                 }
               }
             }
