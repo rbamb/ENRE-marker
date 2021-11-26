@@ -4,15 +4,6 @@
 
 
 class Project:
-    pid = 0
-    name = ""
-    githubUrl = ""
-    version = ""
-    lang = ""
-    progress = 0
-    claimed = False
-    state = 0
-
     def __init__(self, pid, name, git_url, version, lang, progress, claimed, state):
         self.pid = pid
         self.name = name
@@ -24,44 +15,35 @@ class Project:
         self.state = state
 
     def to_dict(self):
-        return {
-            "pid": self.pid,
-            "name": self.name,
-            'githubUrl': self.githubUrl,
-            'version': self.version,
-            'lang': self.lang,
-            'progress': self.progress,
-            'claimed': self.claimed,
-            'state': self.state
-        }
+        return \
+            {
+                "pid": self.pid,
+                "name": self.name,
+                'githubUrl': self.githubUrl,
+                'version': self.version,
+                'lang': self.lang,
+                'progress': self.progress,
+                'claimed': self.claimed,
+                'state': self.state,
+            }
 
 
 class User:
-    uid = 0
-    name = ""
-
     def __init__(self, uid, name):
         self.name = name
         self.uid = uid
 
     def to_dict(self):
-        return {
-            'uid': self.uid,
-            'name': self.name
-        }
+        return \
+            {
+                'uid': self.uid,
+                'name': self.name,
+            }
 
 
 class File:
-    fid = 0
-    path = ""
-    entity = {
-        'count': 0,
-        'progress': 0
-    }
-    relation = {
-        'count': 0,
-        'progress': 0
-    }
+    entity = {}
+    relation = {}
 
     def __init__(self, fid, path, e_count, e_progress, r_count, r_progress):
         self.fid = fid
@@ -77,7 +59,7 @@ class File:
                 'fid': self.fid,
                 'path': self.path,
                 'entity': self.entity,
-                'relation': self.relation
+                'relation': self.relation,
             }
 
 
@@ -100,17 +82,17 @@ class ManuallyEntity:
             {
                 "name": self.name,
                 "loc": self.loc,
-                'eType': self.type
+                'eType': self.type,
             }
 
 
 class EntityStatus:
-    def __init__(self, reviewed, operation=None, m_entity=None):
+    def __init__(self, reviewed, operation=None, new_entity=None):
         self.hasBeenReviewed = reviewed
         if operation is not None:
             self.operation = operation
-        if m_entity is not None:
-            self.manually_entity = m_entity
+        if new_entity is not None:
+            self.manually_entity = new_entity
 
     def to_dict(self):
         obj = {
@@ -153,38 +135,52 @@ class Entity:
                 "name": self.name,
                 'loc': self.loc,
                 'eType': self.type,
-                'status': self.status.to_dict()
+                'status': self.status.to_dict(),
             }
 
 
-class Manually_relation:
-
+class ManuallyRelation:
     def __init__(self, e_from, e_to, r_type):
         self.e_from = e_from
         self.e_to = e_to
         self.r_type = r_type
 
     def to_dict(self):
-        return {"eFrom": self.e_from,
-                "eTo": self.e_to,
-                'rType': self.r_type}
+        return \
+            {
+                'eFrom': self.e_from,
+                'eTo': self.e_to,
+                'rType': self.r_type,
+            }
 
 
-class Relation_status:
-
-    def __init__(self, has_been_reviewed, operation, new_relation):
+class RelationStatus:
+    def __init__(self, has_been_reviewed, operation=None, new_relation=None):
         self.hasBeenReviewed = has_been_reviewed
-        self.operation = operation
-        self.newRelation = new_relation
+        if operation is not None:
+            self.operation = operation
+        if new_relation is not None:
+            self.manually_relation = new_relation
 
     def to_dict(self):
-        return {"hasBeenReviewed": self.hasBeenReviewed,
-                "operation": self.operation,
-                'newRelation': self.newRelation.to_dict()}
+        obj = {
+            'hasBeenReviewed': self.hasBeenReviewed
+        }
+
+        try:
+            obj['operation'] = self.operation
+        except AttributeError:
+            pass
+
+        try:
+            obj['newRelation'] = self.manually_relation.to_dict()
+        except AttributeError:
+            pass
+
+        return obj
 
 
 class Relation:
-
     def __init__(self, rid, e_from, e_to, to_fid, r_type, r_status):
         self.rid = rid
         self.e_from = e_from
@@ -194,9 +190,12 @@ class Relation:
         self.status = r_status
 
     def to_dict(self):
-        return {"rid": self.rid,
+        return \
+            {
+                "rid": self.rid,
                 "eFrom": self.e_from,
                 'eTo': self.e_to,
                 'toFid': self.toFid,
                 'rType': self.type,
-                'status': self.status.to_dict()}
+                'status': self.status.to_dict()
+            }

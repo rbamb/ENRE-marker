@@ -7,24 +7,9 @@ from django.views.decorators.http import require_POST, require_GET
 
 from user.models import User, Login, Log
 from . import formats
-from .formats import ManuallyEntity, EntityStatus, Manually_relation, Relation_status
+from .formats import ManuallyEntity, EntityStatus, ManuallyRelation, RelationStatus
 from .models import Project, File, Entity, Relation
 from .tools import json_to_python, create_project, extract_file_data, process_und
-
-
-def check_user_login(gen_time):
-    # user_expire_time = jwt.decode(token, settings.SECRET_KEY, algorithms='HS256').get('exp')
-    # print(datetime.now(tz=timezone.utc) + timedelta(hours=8))
-    # print(gen_time + timedelta(days=1))
-    if datetime.now(tz=timezone.utc) > (gen_time + timedelta(days=1)):
-        # res = {
-        #     'code': 500,
-        #     'message': 'expired user'
-        # }
-        # return JsonResponse(res, safe=False)
-        return False
-    else:
-        return True
 
 
 def login_required(func):
@@ -51,7 +36,7 @@ def login_required(func):
                 'message': 'login expired',
             })
 
-        return func(request, record.uid.uid, *args, **kwargs)
+        return func(request, uid=record.uid.uid, *args, **kwargs)
 
     return inner
 
@@ -212,23 +197,33 @@ def claim_a_project(request, uid, pid):
         return JsonResponse(res, safe=False)
 
 
-@login_required
-def entity_operation(request, uid, pid, fid):
-    try:
-        Project.objects.get(pid=pid)
-    except Project.DoesNotExist:
-        return JsonResponse({
-            'code': 4001,
-            'message': 'no such pid'
-        })
-    try:
-        f = File.objects.get(fid=fid)
-    except File.DoesNotExist:
-        return JsonResponse({
-            'code': 4002,
-            'message': 'no such fid'
-        })
+def valid_id(func):
+    def inner(request, *args, **kwargs):
+        try:
+            Project.objects.get(pid=kwargs['pid'])
+        except Project.DoesNotExist:
+            return JsonResponse({
+                'code': 4001,
+                'message': 'no such pid'
+            })
 
+        try:
+            File.objects.get(fid=kwargs['fid'])
+        except File.DoesNotExist:
+            return JsonResponse({
+                'code': 4002,
+                'message': 'no such fid'
+            })
+
+        return func(request, *args, **kwargs)
+
+    return inner
+
+
+@login_required
+@valid_id
+def entity_operation(request, uid, pid, fid):
+    f = File.objects.get(fid=fid)
     current_user = User.objects.get(uid=uid)
 
     if request.method == 'POST':
@@ -304,13 +299,12 @@ def entity_operation(request, uid, pid, fid):
 
     # get all entities in fid in pid
     elif request.method == 'GET':
-        entity_list = Entity.objects.filter(fid=f, shallow=False)
         e_list = []
-        for entity in entity_list:
+        for entity in Entity.objects.filter(fid=f, shallow=False):
             if entity.reviewed > -1:
                 operation = entity.reviewed
                 if operation == 2:
-                    to_id = Log.objects.filter(element_id=entity.eid).latest('time').to_id
+                    to_id = Log.objects.filter(op_to=0, element_id=entity.eid).latest('time').to_id
                     to_entity = Entity.objects.get(eid=to_id)
                     m_entity = ManuallyEntity(
                         to_entity.code_name,
@@ -351,116 +345,99 @@ def entity_operation(request, uid, pid, fid):
         return JsonResponse(res, safe=False)
 
 
-def relation_operation(request, pid, fid):
-    token = request.META.get("HTTP_TOKEN")
-    current_user = Login.objects.get(token=token)
-    if check_user_login(current_user.gen_time):
-        # user on
-        pass
-    else:
-        current_user.delete()
-        res = {
-            'code': 401,
-            'message': 'unauthorized'
-        }
-        return JsonResponse(res, safe=False)
-    try:
-        p = Project.objects.get(pid=pid)
-    except:
-        res = {
-            'code': 4001,
-            'message': 'no such pid'
-        }
-        return JsonResponse(res, safe=False)
-    try:
-        f = File.objects.get(fid=fid)
-    except:
-        res = {
-            'code': 4002,
-            'message': 'no such fid'
-        }
-        return JsonResponse(res, safe=False)
-    try:
-        # post user label relation
-        if request.method == 'POST':
-            if current_user.uid.claim.pid != pid:
-                res = {
-                    'code': 403,
-                    'message': 'not your business'
-                }
-                return JsonResponse(res, safe=False)
-            # data
-            data = json.loads(request.body.decode()).get('data')
-            for relation_user_result in data:
-                to_id = 0
-                if relation_user_result.get('isManually'):
-                    # insert
-                    operation = 3
-                    manually_relation = relation_user_result.get('relation')
-                    from_entity = Entity.objects.get(eid=manually_relation.get('eFrom'))
-                    m_relation = Relation.objects.create(from_entity=from_entity, to_entity=manually_relation.get('eTo')
-                                                         , relation_typr=manually_relation.get('rType'), inserted=True)
-                    rid = m_relation.rid
-                else:
-                    rid = relation_user_result.get('rid')
-                    if relation_user_result.get('isCorrect'):
-                        # reviewPassed
-                        operation = 0
-                        Relation.objects.filter(rid=rid).update(reviewed=0)
-                    else:
-                        operation = relation_user_result.get('fix').get('shouldBe')
-                        if operation == 2:
-                            # modify
-                            manually_relation = relation_user_result.get('fix').get('newly')
-                            from_entity = Entity.objects.get(eid=manually_relation.get('eFrom'))
-                            m_relation = Relation.objects.create(from_entity=from_entity,
-                                                                 to_entity=manually_relation.get('eTo'),
-                                                                 relation_type=manually_relation.get('rType'),
-                                                                 inserted=True, reviewed=2)
-                            to_id = m_relation.rid
-                            Relation.objects.filter(rid=rid).update(reviewed=2, shallow=True)
-                        else:
-                            # remove
-                            Relation.objects.filter(rid=rid).update(reviewed=1)
-                Log.objects.create(uid=current_user.uid, op_to=1, operation=operation, element_id=rid,
-                                   to_id=to_id)
-            res = {
-                'code': 200,
-                'message': 'success'
-            }
-            return JsonResponse(res, safe=False)
+@login_required
+@valid_id
+def relation_operation(request, uid, pid, fid):
+    f = File.objects.get(fid=fid)
+    current_user = User.objects.get(uid=uid)
 
-        # get all relations in fid in pid
-        elif request.method == 'GET':
-            r_list = []
-            for relation in Relation.objects.all():
-                if relation.from_entity.fid == f:
-                    # relation from certain file
-                    if relation.reviewed > -1:
-                        operation = relation.reviewed
-                        if operation == 2:
-                            to_id = Log.objects.get(uid=current_user, element_id=relation.rid).to_id
-                            to_relation = Relation.objects.get(rid=to_id)
-                            m_relation = Manually_relation(to_relation.from_entity, to_relation.to_entity,
-                                                           to_relation.relation_type)
-                            status = Relation_status(True, operation, m_relation)
-                        else:
-                            status = Relation_status(True, operation, Manually_relation(0, 0, ""))
-                    else:
-                        status = Relation_status(False, relation.reviewed, Manually_relation(0, 0, ""))
-                    to_fid = Entity.objects.get(eid=relation.to_entity).get_fid().fid
-                    r = formats.Relation(relation.rid, relation.from_entity.eid, relation.to_entity, to_fid,
-                                         relation.relation_type, status)
-                    r_list.append(copy.deepcopy(r.to_dict()))
+    # post user label relation
+    if request.method == 'POST':
+        if current_user.uid.claim.pid != pid:
             res = {
-                'code': 200,
-                'message': 'succeeded',
-                'relation': r_list
+                'code': 403,
+                'message': 'not your business'
             }
             return JsonResponse(res, safe=False)
-    except:
+        # data
+        data = json.loads(request.body.decode()).get('data')
+        for relation_user_result in data:
+            to_id = 0
+            if relation_user_result.get('isManually'):
+                # insert
+                operation = 3
+                manually_relation = relation_user_result.get('relation')
+                from_entity = Entity.objects.get(eid=manually_relation.get('eFrom'))
+                m_relation = Relation.objects.create(from_entity=from_entity, to_entity=manually_relation.get('eTo')
+                                                     , relation_typr=manually_relation.get('rType'), inserted=True)
+                rid = m_relation.rid
+            else:
+                rid = relation_user_result.get('rid')
+                if relation_user_result.get('isCorrect'):
+                    # reviewPassed
+                    operation = 0
+                    Relation.objects.filter(rid=rid).update(reviewed=0)
+                else:
+                    operation = relation_user_result.get('fix').get('shouldBe')
+                    if operation == 2:
+                        # modify
+                        manually_relation = relation_user_result.get('fix').get('newly')
+                        from_entity = Entity.objects.get(eid=manually_relation.get('eFrom'))
+                        m_relation = Relation.objects.create(from_entity=from_entity,
+                                                             to_entity=manually_relation.get('eTo'),
+                                                             relation_type=manually_relation.get('rType'),
+                                                             inserted=True, reviewed=2)
+                        to_id = m_relation.rid
+                        Relation.objects.filter(rid=rid).update(reviewed=2, shallow=True)
+                    else:
+                        # remove
+                        Relation.objects.filter(rid=rid).update(reviewed=1)
+            Log.objects.create(uid=current_user.uid, op_to=1, operation=operation, element_id=rid,
+                               to_id=to_id)
         res = {
-            'code': 500,
-            'message': 'error'
+            'code': 200,
+            'message': 'success'
+        }
+        return JsonResponse(res, safe=False)
+
+    # get all relations in fid in pid
+    elif request.method == 'GET':
+        r_list = []
+        for relation in Relation.objects.filter(from_entity__fid=f, shallow=False):
+            if relation.reviewed > -1:
+                operation = relation.reviewed
+                if operation == 2:
+                    to_id = Log.objects.get(op_to=1, element_id=relation.rid).to_id
+                    to_relation = Relation.objects.get(rid=to_id)
+                    m_relation = ManuallyRelation(
+                        to_relation.from_entity,
+                        to_relation.to_entity,
+                        to_relation.relation_type
+                    )
+                    status = RelationStatus(True, operation, m_relation)
+                else:
+                    status = RelationStatus(True, operation)
+            elif relation.reviewed == -1:
+                status = RelationStatus(False)
+            else:
+                status = RelationStatus(True, 3)
+
+            to_fid = Entity.objects.get(eid=relation.to_entity).get_fid().fid
+            r = formats.Relation(
+                relation.rid,
+                # TODO: Extract entity get function and apply it here to generate entity
+                relation.from_entity.eid,
+                relation.to_entity,
+                to_fid,
+                relation.relation_type,
+                status
+            )
+            r_list.append(r.to_dict())
+
+        res = {
+            'code': 200,
+            'message': 'success',
+            'relation': r_list,
+            'total': len(r_list),
         }
         return JsonResponse(res, safe=False)
