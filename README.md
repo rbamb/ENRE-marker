@@ -484,6 +484,8 @@ create table if not exists `entity`
   code_name varchar(256) not null,
   loc_start_line integer not null,
   loc_start_column integer not null,
+  loc_end_line integer not null,
+  loc_end_column integer not null,
   entity_type tinyint not null,
 
   shallow boolean not null default false,
