@@ -113,10 +113,10 @@ export const FileViewer: React.FC = () => {
 
   const { data, loading } = useRequest(
     () => request(`GET project/${urlPid}`).then(({ file }: remote.resFiles) => file),
-    {
+    IS_PRODUCTION ? {
       cacheKey: 'files',
       staleTime: 30000,
-    },
+    } : undefined,
   );
 
   // in mark mode

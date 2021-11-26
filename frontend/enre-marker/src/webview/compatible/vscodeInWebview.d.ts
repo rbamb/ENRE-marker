@@ -14,4 +14,6 @@ declare global {
   const IN_BROWSER: boolean;
 
   const IN_EXTENSION: boolean;
+
+  const IS_PRODUCTION: boolean;
 }

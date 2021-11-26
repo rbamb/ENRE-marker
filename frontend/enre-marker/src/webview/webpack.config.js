@@ -51,6 +51,8 @@ const webviewConfig = (env) => ({
         NODE_ENV === 'production'
           ? JSON.stringify('http://localhost:3000/api/v1/')
           : JSON.stringify('http://localhost:3000/api/v1/'),
+      IS_PRODUCTION:
+        NODE_ENV === 'production',
       IN_BROWSER:
         env.browser === true,
       IN_EXTENSION:

@@ -2,7 +2,7 @@ import React, { useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useRequest } from 'ahooks';
 import {
-  Table, Progress, Button, Tag, Tooltip, Divider, Space, Typography, message,
+  Table, Progress, Button, Tag, Tooltip, Divider, Space, Typography, message, notification,
 } from 'antd';
 import { LockOutlined } from '@ant-design/icons';
 import { request } from '../../compatible/httpAdapter';
@@ -217,11 +217,11 @@ export const ProjectViewer: React.FC = () => {
           },
         ),
       ),
-    {
+    IS_PRODUCTION ? {
       // for cold data, enabling cache mechanism
       cacheKey: 'projects',
       staleTime: 60000,
-    },
+    } : undefined,
   );
 
   return (

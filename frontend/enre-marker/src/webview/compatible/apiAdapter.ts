@@ -8,38 +8,38 @@ import { langTableIndex } from '../.static/config';
 const onlySingleCopy = typeof acquireVsCodeApi === 'undefined' ? undefined : acquireVsCodeApi();
 
 // FIXME: only for debug purpose
-const mockState = {
-  login: {
-    uid: 100,
-    token: 'sometoken',
-  },
-  working: {
-    project: {
-      pid: 100,
-      name: 'ENRE.js',
-      fsPath: 'd://test/ENRE.js',
-      version: 'abcdefg',
-      lang: 'java',
-      map: [
-        {
-          fid: 0,
-          path: 'package.json',
-        },
-        {
-          fid: 1,
-          path: 'tsconfig.json',
-        },
-      ],
-    },
-    file: {
-      fid: 0,
-      path: '/some/to/path/a.js',
-      workingOn: 'entity',
-    },
-  },
-};
+// const mockState = {
+//   login: {
+//     uid: 100,
+//     token: 'sometoken',
+//   },
+//   working: {
+//     project: {
+//       pid: 100,
+//       name: 'ENRE.js',
+//       fsPath: 'd://test/ENRE.js',
+//       version: 'abcdefg',
+//       lang: 'java',
+//       map: [
+//         {
+//           fid: 0,
+//           path: 'package.json',
+//         },
+//         {
+//           fid: 1,
+//           path: 'tsconfig.json',
+//         },
+//       ],
+//     },
+//     file: {
+//       fid: 0,
+//       path: '/some/to/path/a.js',
+//       workingOn: 'entity',
+//     },
+//   },
+// };
 
-// const mockState = {};
+const mockState = {};
 
 export const getApi = onlySingleCopy ? {
   ...onlySingleCopy,

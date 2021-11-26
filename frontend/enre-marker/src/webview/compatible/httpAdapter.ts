@@ -14,8 +14,8 @@ export const request = (methodUrl: string, body?: any): Promise<any> => {
   return new Promise((resolve, reject) => {
     fetch(url(seg[1]), {
       method: seg[0],
-      headers: getApi.getState()?.token ? {
-        Token: getApi.getState().token,
+      headers: getApi.getState()?.login?.token ? {
+        Token: getApi.getState().login.token,
       } : undefined,
       body: JSON.stringify(body),
     })
@@ -42,10 +42,10 @@ export const request = (methodUrl: string, body?: any): Promise<any> => {
           reject();
         }
       })
-      .catch((err) => {
+      .catch((err: Error) => {
         notification.error({
           message: 'Error in http request',
-          description: err,
+          description: err.message,
         });
         reject();
       });
