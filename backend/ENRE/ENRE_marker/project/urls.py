@@ -11,5 +11,4 @@ urlpatterns = [
     path('<int:pid>/claim', views.claim_a_project, name='claim a project'),
     path('<int:pid>/file/<int:fid>/entity', views.entity_operation, name='get or post entity operations'),
     path('<int:pid>/file/<int:fid>/relation', views.relation_operation, name='get or post relation operations'),
-
 ]

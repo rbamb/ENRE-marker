@@ -66,27 +66,24 @@ def login(request):
         return JsonResponse(res, safe=False)
 
     # if user re-login during a previous token is valid, then just override it with a new one
-    previous = Login.objects.get(uid=userid)
-    res = None
-    if previous:
+    try:
+        previous = Login.objects.get(uid=userid)
         previous.token = get_token()
         previous.gen_time = datetime.now()
         previous.save()
-        res = {
+        return JsonResponse({
             'code': 200,
             'message': 'success',
             'token': previous.token,
             'name': user.name
-        }
-    else:
+        })
+    except:
         user_login = Login.objects.create(uid=User.objects.get(uid=userid, pswd=userpw), gen_time=datetime.now())
         user_login.token = get_token()
         user_login.save()
-        res = {
+        return JsonResponse({
             'code': 200,
             'message': 'success',
             'token': user_login.token,
             'name': user.name
-        }
-
-    return JsonResponse(res, safe=False)
+        })

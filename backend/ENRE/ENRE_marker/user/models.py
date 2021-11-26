@@ -1,15 +1,19 @@
 from django.db import models
-import jwt
 
-from datetime import datetime, timedelta
+from datetime import datetime
 
 
 # Create your models here.
 class User(models.Model):
     uid = models.AutoField(primary_key=True)
     name = models.CharField(max_length=32, default="")
-    pswd = models.CharField(max_length=256)
-    claim = models.ForeignKey('project.Project', on_delete=models.CASCADE)
+    pswd = models.CharField(max_length=64)
+    claim = models.ForeignKey(
+        'project.Project',
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True
+    )
 
 
 class Login(models.Model):
@@ -33,9 +37,9 @@ class Log(models.Model):
         INSERT = 3, 'insert'
 
     lid = models.AutoField(primary_key=True)
-    uid = models.ForeignKey(User, on_delete=models.CASCADE)
+    uid = models.ForeignKey(User, on_delete=models.DO_NOTHING)
     time = models.TimeField(default=datetime.utcnow)
     op_to = models.SmallIntegerField(choices=op_to.choices)
     operation = models.SmallIntegerField(choices=operation.choices)
     element_id = models.IntegerField()
-    to_id = models.IntegerField()
+    to_id = models.IntegerField(null=True)

@@ -1,6 +1,3 @@
-from enum import Enum
-
-
 # class project_state(Enum):
 #     active = 0
 #     locked = 1
@@ -27,14 +24,16 @@ class Project:
         self.state = state
 
     def to_dict(self):
-        return {"pid": self.pid,
-                "name": self.name,
-                'githubUrl': self.githubUrl,
-                'version': self.version,
-                'lang': self.lang,
-                'progress': self.progress,
-                'claimed': self.claimed,
-                'state': self.state}
+        return {
+            "pid": self.pid,
+            "name": self.name,
+            'githubUrl': self.githubUrl,
+            'version': self.version,
+            'lang': self.lang,
+            'progress': self.progress,
+            'claimed': self.claimed,
+            'state': self.state
+        }
 
 
 class User:
@@ -73,27 +72,20 @@ class File:
         self.relation['progress'] = r_progress
 
     def to_dict(self):
-        return {
-            'fid': self.fid,
-            'path': self.path,
-            'entity': self.entity,
-            'relation': self.relation
-        }
+        return \
+            {
+                'fid': self.fid,
+                'path': self.path,
+                'entity': self.entity,
+                'relation': self.relation
+            }
 
 
-class Manually_entity:
-    name = ""
+class ManuallyEntity:
     loc = {
-        'start': {
-            'line': 0,
-            'column': 0
-        },
-        'end': {
-            'line': 0,
-            'column': 0
-        }
+        'start': {},
+        'end': {}
     }
-    type = 0
 
     def __init__(self, name, s_l, s_c, e_l, e_c, e_type):
         self.name = name
@@ -104,39 +96,45 @@ class Manually_entity:
         self.loc['end']['column'] = e_c
 
     def to_dict(self):
-        return {"name": self.name,
+        return \
+            {
+                "name": self.name,
                 "loc": self.loc,
-                'eType': self.type}
+                'eType': self.type
+            }
 
 
-class Entity_status:
-
-    def __init__(self, reviewed, operation, m_entity):
+class EntityStatus:
+    def __init__(self, reviewed, operation=None, m_entity=None):
         self.hasBeenReviewed = reviewed
-        self.operation = operation
-        self.manually_entity = m_entity
+        if operation is not None:
+            self.operation = operation
+        if m_entity is not None:
+            self.manually_entity = m_entity
 
     def to_dict(self):
-        return {"hasBeenReviewed": self.hasBeenReviewed,
-                "operation": self.operation,
-                'newEntity': self.manually_entity.to_dict()}
+        obj = {
+            'hasBeenReviewed': self.hasBeenReviewed
+        }
+
+        try:
+            obj['operation'] = self.operation
+        except AttributeError:
+            pass
+
+        try:
+            obj['newEntity'] = self.manually_entity.to_dict()
+        except AttributeError:
+            pass
+
+        return obj
 
 
 class Entity:
-    eid = 0
-    name = ""
     loc = {
-        'start': {
-            'line': 0,
-            'column': 0
-        },
-        'end': {
-            'line': 0,
-            'column': 0
-        }
+        'start': {},
+        'end': {},
     }
-    type = 0
-    status = Entity_status(False, -1, Manually_entity("", 0, 0, 0, 0, 0))
 
     def __init__(self, eid, name, s_l, s_c, e_l, e_c, e_type, status):
         self.eid = eid
@@ -149,11 +147,14 @@ class Entity:
         self.status = status
 
     def to_dict(self):
-        return {"eid": self.eid,
+        return \
+            {
+                "eid": self.eid,
                 "name": self.name,
                 'loc': self.loc,
-                'type': self.type,
-                'status': self.status.to_dict()}
+                'eType': self.type,
+                'status': self.status.to_dict()
+            }
 
 
 class Manually_relation:
@@ -166,7 +167,7 @@ class Manually_relation:
     def to_dict(self):
         return {"eFrom": self.e_from,
                 "eTo": self.e_to,
-                'eType': self.r_type}
+                'rType': self.r_type}
 
 
 class Relation_status:
