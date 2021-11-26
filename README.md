@@ -418,7 +418,7 @@ create table if not exists `user`
 (
   uid integer(6) not null auto_increment = 1000,
   name char(32) not null,
-  pswd char(256) not null,
+  pswd char(64) not null,
   claim integer(3) not null,
 
   primary key (uid),
@@ -432,7 +432,7 @@ create table if not exists `user`
 create table if not exists `login`
 (
   uid integer(6) not null,
-  token char(256) not null,
+  token char(64) not null,
   gen_time timestamp not null,
 
   primary key (uid),
