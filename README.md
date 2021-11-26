@@ -14,50 +14,6 @@ All http RESTful interfaces should add the prefix ```/api/v1``` , which is omitt
 
 ### User System
 
-#### `POST /user/register/`
-
-To register a user.
-
-```ts
-{
-  uid: 6-digits-number,
-  pswd: 64-chars,
-  claim: pid, 
-  name: 256-chars
-}
-```
-
-##### Should return
-
-###### if succeeded
-
-```ts
-{
-  code: 200,
-  message: 'success'
-}
-```
-
-###### if failed
-
-if the payload data has error: 
-
-```ts
-{
-  code: 401,
-  message: 'data error'
-}
-```
-
-Any other error : 
-
-```ts
-{
-  code: 500,
-  message: 'error'
-}
-```
-
 #### `POST /user/login`
 
 To login a user.
@@ -271,7 +227,7 @@ declare type manuallyEntity {
 }
 ```
 
-* **`line` and `column` in `location` are started from 0.**
+* **`line` and `column` in `location` are started from 1.**
 
 > Server should always return the **original** entity in `Array<entity>`, any modification should be held in `manuallyEntity`
 
