@@ -148,10 +148,14 @@ const handleOperationClicked = (
             return compound;
           });
         }).catch((json) => {
-          message.error({
-            content: json.message,
-            key,
-          });
+          if (json) {
+            message.error({
+              content: json.message,
+              key,
+            });
+          } else {
+            message.destroy(key);
+          }
         }).finally(() => { lock = false; });
         break;
       case 'remove':
@@ -174,10 +178,14 @@ const handleOperationClicked = (
             return compound;
           });
         }).catch((json) => {
-          message.error({
-            content: json.message,
-            key,
-          });
+          if (json) {
+            message.error({
+              content: json.message,
+              key,
+            });
+          } else {
+            message.destroy(key);
+          }
         }).finally(() => { lock = false; });
         break;
       case 'modify':
@@ -207,10 +215,14 @@ const handleOperationClicked = (
             return compound;
           });
         }).catch((json) => {
-          message.error({
-            content: json.message,
-            key,
-          });
+          if (json) {
+            message.error({
+              content: json.message,
+              key,
+            });
+          } else {
+            message.destroy(key);
+          }
         }).finally(() => { lock = false; });
         break;
       case 'insert':
@@ -231,10 +243,14 @@ const handleOperationClicked = (
            */
           grefresh();
         }).catch((json) => {
-          message.error({
-            content: json.message,
-            key,
-          });
+          if (json) {
+            message.error({
+              content: json.message,
+              key,
+            });
+          } else {
+            message.destroy(key);
+          }
         }).finally(() => { lock = false; });
         break;
       default:
