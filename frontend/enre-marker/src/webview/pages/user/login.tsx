@@ -20,8 +20,10 @@ export const Login: React.FC<{ uid?: string }> = ({ uid }) => {
     onSuccess: (res, param) => {
       dispatcher({ payload: { uid: param[0].uid, token: res.token, name: res.name } });
     },
-    onError: () => {
-      message.error('User ID or password does not match');
+    onError: (json) => {
+      if (json) {
+        message.error('User ID or password does not match');
+      }
     },
   });
 
