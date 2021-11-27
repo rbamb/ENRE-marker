@@ -103,7 +103,7 @@ export const Settings: React.FC = () => {
               key={0}
             >
               <GithubOutlined />
-              Start an issue
+              Open an issue
             </Button>,
           ]}
         >

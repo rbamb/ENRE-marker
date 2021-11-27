@@ -24,6 +24,9 @@
     "type": "git",
     "url": "https://github.com/xjtu-enre/ENRE-marker"
   },
+  "publishConfig": {
+    "registry": "http://202.117.43.245:8001"
+  },
   "contributes": {
     "commands": [
       {
@@ -41,7 +44,8 @@
     "compile:ext-only": "cd src/extension && npm run compile:dev",
     "compile:prod": "concurrently \"cd src/extension && npm run compile:prod\" \"cd src/webview && npm run compile:prod\"",
     "start:mock": "cd src/mock && npm start",
-    "vscode:prepublish": "npm run compile:prod"
+    "vscode:prepublish": "npm run compile:prod",
+    "publish": "node scripts/publish.js"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^5.4.0",
