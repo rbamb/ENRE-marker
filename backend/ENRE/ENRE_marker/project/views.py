@@ -16,7 +16,7 @@ def login_required(func):
     def inner(request, *args, **kwargs):
         try:
             token = request.META['HTTP_TOKEN']
-        except AttributeError:
+        except KeyError:
             return JsonResponse({
                 'code': 401,
                 'message': 'no token',
