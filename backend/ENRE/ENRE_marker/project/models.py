@@ -1,14 +1,13 @@
 from django.db import models
 
 
-# Create your models here.
 class Project(models.Model):
     pid = models.AutoField(primary_key=True)
-    p_name = models.CharField(max_length=256, default='null')
-    github_url = models.URLField(max_length=256)
+    p_name = models.CharField(max_length=64)
+    github_url = models.URLField(max_length=128)
     git_branch = models.CharField(max_length=16, default='main')
     git_commit_hash = models.CharField(max_length=7)
-    lang = models.CharField(max_length=16)
+    lang = models.CharField(max_length=8)
 
     state = models.SmallIntegerField(default=0)
 
@@ -36,8 +35,7 @@ class File(models.Model):
 
 
 class Entity(models.Model):
-    class entity_type(models.IntegerChoices):
-        # value = display name
+    class EntityType(models.IntegerChoices):
         UNKNOWN = 0, 'unknown'
         VARIABLE = 1, 'variable'
         METHOD = 2, 'method'
@@ -49,7 +47,7 @@ class Entity(models.Model):
         PACKAGE = 8, 'package'
         MODULE = 9, 'module'
 
-    class reviewed(models.IntegerChoices):
+    class ReviewedOption(models.IntegerChoices):
         inapplicable = -2, 'inapplicable'
         notYet = -1, 'notYet'
         reviewPassed = 0, 'reviewPassed'
@@ -57,16 +55,16 @@ class Entity(models.Model):
         modify = 2, 'modify'
 
     eid = models.AutoField(primary_key=True)
-    fid = models.ForeignKey(File, on_delete=models.CASCADE, default=0)
+    fid = models.ForeignKey(File, on_delete=models.CASCADE)
     code_name = models.CharField(max_length=256)
-    loc_start_line = models.IntegerField(default=0)
-    loc_start_column = models.IntegerField(default=0)
-    loc_end_line = models.IntegerField(default=0)
-    loc_end_column = models.IntegerField(default=0)
+    loc_start_line = models.IntegerField(default=-1)
+    loc_start_column = models.IntegerField(default=-1)
+    loc_end_line = models.IntegerField(default=-1)
+    loc_end_column = models.IntegerField(default=-1)
 
-    entity_type = models.SmallIntegerField(choices=entity_type.choices)
+    entity_type = models.SmallIntegerField(choices=EntityType.choices)
 
-    reviewed = models.SmallIntegerField(choices=reviewed.choices, default=-1)
+    reviewed = models.SmallIntegerField(choices=ReviewedOption.choices, default=-1)
 
     # whether this entity is modified
     shallow = models.BooleanField(default=False)
@@ -78,7 +76,7 @@ class Entity(models.Model):
 
 
 class Relation(models.Model):
-    class relation_type(models.IntegerChoices):
+    class RelationType(models.IntegerChoices):
         UNKNOWN = 0, 'unknown'
         IMPORT = 1, 'import'
         INHERIT = 2, 'inherit'
@@ -91,7 +89,7 @@ class Relation(models.Model):
         CREATE = 9, 'create'
         TYPED = 10, 'typed'
 
-    class reviewed(models.IntegerChoices):
+    class ReviewedOption(models.IntegerChoices):
         inapplicable = -2, 'inapplicable'
         notYet = -1, 'notYet'
         reviewPassed = 0, 'reviewPassed'
@@ -99,10 +97,10 @@ class Relation(models.Model):
         modify = 2, 'modify'
 
     rid = models.AutoField(primary_key=True)
-    from_entity = models.ForeignKey(Entity, on_delete=models.CASCADE)
-    to_entity = models.IntegerField()
-    relation_type = models.SmallIntegerField(choices=relation_type.choices)
-    reviewed = models.SmallIntegerField(choices=reviewed.choices, default=-1)
+    from_entity = models.ForeignKey(Entity, on_delete=models.CASCADE, related_name='from_entity')
+    to_entity = models.ForeignKey(Entity, on_delete=models.CASCADE, related_name='to_entity')
+    relation_type = models.SmallIntegerField(choices=RelationType.choices)
+    reviewed = models.SmallIntegerField(choices=ReviewedOption.choices, default=-1)
 
     # whether this relation is modified
     shallow = models.BooleanField(default=False)

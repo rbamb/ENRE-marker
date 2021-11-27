@@ -64,14 +64,13 @@ class File:
 
 
 class ManuallyEntity:
-    loc = {
-        'start': {},
-        'end': {}
-    }
-
     def __init__(self, name, s_l, s_c, e_l, e_c, e_type):
         self.name = name
         self.type = e_type
+        self.loc = {
+            'start': {},
+            'end': {},
+        }
         self.loc['start']['line'] = s_l
         self.loc['start']['column'] = s_c
         self.loc['end']['line'] = e_l
@@ -113,14 +112,13 @@ class EntityStatus:
 
 
 class Entity:
-    loc = {
-        'start': {},
-        'end': {},
-    }
-
     def __init__(self, eid, name, s_l, s_c, e_l, e_c, e_type, status):
         self.eid = eid
         self.name = name
+        self.loc = {
+            'start': {},
+            'end': {},
+        }
         self.loc['start']['line'] = s_l
         self.loc['start']['column'] = s_c
         self.loc['end']['line'] = e_l
@@ -140,16 +138,12 @@ class Entity:
 
 
 class ManuallyRelation:
-    def __init__(self, e_from, e_to, r_type):
-        self.e_from = e_from
-        self.e_to = e_to
+    def __init__(self, r_type):
         self.r_type = r_type
 
     def to_dict(self):
         return \
             {
-                'eFrom': self.e_from,
-                'eTo': self.e_to,
                 'rType': self.r_type,
             }
 
@@ -193,8 +187,8 @@ class Relation:
         return \
             {
                 "rid": self.rid,
-                "eFrom": self.e_from,
-                'eTo': self.e_to,
+                "eFrom": self.e_from.to_dict(),
+                'eTo': self.e_to.to_dict(),
                 'toFid': self.toFid,
                 'rType': self.type,
                 'status': self.status.to_dict()

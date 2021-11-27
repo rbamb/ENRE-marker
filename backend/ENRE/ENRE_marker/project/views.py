@@ -229,8 +229,8 @@ def entity_operation(request, uid, pid, fid):
     if request.method == 'POST':
         if current_user.claim.pid != pid:
             return JsonResponse({
-                'code': 403,
-                'message': 'not claimed'
+                'code': 4000,
+                'message': 'Can not contribute to a non-claimed project'
             })
 
         data = json.loads(request.body.decode()).get('data')
@@ -248,7 +248,8 @@ def entity_operation(request, uid, pid, fid):
                     loc_end_line=manually_entity.loc.get('end').get('line'),
                     loc_end_column=manually_entity.loc.get('end').get('column'),
                     fid=f,
-                    inserted=True
+                    inserted=True,
+                    reviewed=-2,
                 )
                 eid = obj.eid
             else:
@@ -275,7 +276,7 @@ def entity_operation(request, uid, pid, fid):
                                 'column'),
                             fid=f,
                             shallow=True,
-                            reviewed=2
+                            reviewed=-2
                         )
                         to_id = obj.eid
                         Entity.objects.filter(eid=eid).update(reviewed=2)
@@ -301,40 +302,7 @@ def entity_operation(request, uid, pid, fid):
     elif request.method == 'GET':
         e_list = []
         for entity in Entity.objects.filter(fid=f, shallow=False):
-            if entity.reviewed > -1:
-                operation = entity.reviewed
-                if operation == 2:
-                    to_id = Log.objects.filter(op_to=0, element_id=entity.eid).latest('time').to_id
-                    to_entity = Entity.objects.get(eid=to_id)
-                    m_entity = ManuallyEntity(
-                        to_entity.code_name,
-                        to_entity.loc_start_line,
-                        to_entity.loc_start_column,
-                        to_entity.loc_end_line,
-                        to_entity.loc_end_column,
-                        to_entity.entity_type
-                    )
-                    status = EntityStatus(True, operation, m_entity)
-                else:
-                    status = EntityStatus(True, operation)
-            elif entity.reviewed == -1:
-                status = EntityStatus(False)
-            # That is entity.reviewed == -2 (inapplicable), which means inserted
-            else:
-                status = EntityStatus(True, 3)
-
-            e = formats.Entity(
-                entity.eid,
-                entity.code_name,
-                entity.loc_start_line,
-                # FIXME: temp fix measure, should audit in db to let all loc indexed from 1
-                entity.loc_start_column + 1,
-                entity.loc_end_line,
-                entity.loc_end_column + 2,
-                entity.entity_type,
-                status
-            )
-            e_list.append(copy.deepcopy(e.to_dict()))
+            e_list.append(build_entity(entity).to_dict())
 
         res = {
             'code': 200,
@@ -345,6 +313,42 @@ def entity_operation(request, uid, pid, fid):
         return JsonResponse(res, safe=False)
 
 
+def build_entity(entity):
+    if entity.reviewed > -1:
+        operation = entity.reviewed
+        if operation == 2:
+            to_id = Log.objects.filter(op_to=0, element_id=entity.eid).latest('time').to_id
+            to_entity = Entity.objects.get(eid=to_id)
+            m_entity = ManuallyEntity(
+                to_entity.code_name,
+                to_entity.loc_start_line,
+                to_entity.loc_start_column,
+                to_entity.loc_end_line,
+                to_entity.loc_end_column,
+                to_entity.entity_type
+            )
+            status = EntityStatus(True, operation, m_entity)
+        else:
+            status = EntityStatus(True, operation)
+    elif entity.reviewed == -1:
+        status = EntityStatus(False)
+    # That is entity.reviewed == -2 (inapplicable), which means inserted
+    else:
+        status = EntityStatus(True, 3)
+
+    return formats.Entity(
+        entity.eid,
+        entity.code_name,
+        entity.loc_start_line,
+        # FIXME: temp fix measure, should audit in db to let all loc indexed from 1
+        entity.loc_start_column + 1,
+        entity.loc_end_line,
+        entity.loc_end_column + 2,
+        entity.entity_type,
+        status
+    )
+
+
 @login_required
 @valid_id
 def relation_operation(request, uid, pid, fid):
@@ -353,26 +357,36 @@ def relation_operation(request, uid, pid, fid):
 
     # post user label relation
     if request.method == 'POST':
-        if current_user.uid.claim.pid != pid:
-            res = {
-                'code': 403,
-                'message': 'not your business'
-            }
-            return JsonResponse(res, safe=False)
+        if current_user.claim.pid != pid:
+            return JsonResponse({
+                'code': 4000,
+                'message': 'Can not contribute to a non-claimed project'
+            })
         # data
         data = json.loads(request.body.decode()).get('data')
         for relation_user_result in data:
-            to_id = 0
+            to_id = None
             if relation_user_result.get('isManually'):
+                return JsonResponse({
+                    'code': 4000,
+                    'message': 'Insert is currently disabled'
+                })
                 # insert
-                operation = 3
-                manually_relation = relation_user_result.get('relation')
-                from_entity = Entity.objects.get(eid=manually_relation.get('eFrom'))
-                m_relation = Relation.objects.create(from_entity=from_entity, to_entity=manually_relation.get('eTo')
-                                                     , relation_typr=manually_relation.get('rType'), inserted=True)
-                rid = m_relation.rid
+                # operation = 3
+                # manually_relation = relation_user_result.get('relation')
+                # from_entity = Entity.objects.get(eid=manually_relation.get('eFrom'))
+                # to_entity = Entity.objects.get(eid=manually_relation.get('eTo'))
+                # m_relation = Relation.objects.create(
+                #     from_entity=from_entity,
+                #     to_entity=to_entity,
+                #     relation_type=manually_relation.get('rType'),
+                #     inserted=True,
+                #     reviewed=-2,
+                # )
+                # rid = m_relation.rid
             else:
                 rid = relation_user_result.get('rid')
+                relation = Relation.objects.get(rid=rid)
                 if relation_user_result.get('isCorrect'):
                     # reviewPassed
                     operation = 0
@@ -382,21 +396,28 @@ def relation_operation(request, uid, pid, fid):
                     if operation == 2:
                         # modify
                         manually_relation = relation_user_result.get('fix').get('newly')
-                        from_entity = Entity.objects.get(eid=manually_relation.get('eFrom'))
-                        m_relation = Relation.objects.create(from_entity=from_entity,
-                                                             to_entity=manually_relation.get('eTo'),
-                                                             relation_type=manually_relation.get('rType'),
-                                                             inserted=True, reviewed=2)
+                        m_relation = Relation.objects.create(
+                            from_entity=relation.from_entity,
+                            to_entity=relation.to_entity,
+                            relation_type=manually_relation.get('rType'),
+                            shallow=True,
+                            reviewed=-2,
+                        )
                         to_id = m_relation.rid
-                        Relation.objects.filter(rid=rid).update(reviewed=2, shallow=True)
+                        Relation.objects.filter(rid=rid).update(reviewed=2)
                     else:
                         # remove
                         Relation.objects.filter(rid=rid).update(reviewed=1)
-            Log.objects.create(uid=current_user.uid, op_to=1, operation=operation, element_id=rid,
-                               to_id=to_id)
+            Log.objects.create(
+                uid=current_user,
+                op_to=1,
+                operation=operation,
+                element_id=rid,
+                to_id=to_id,
+            )
         res = {
             'code': 200,
-            'message': 'success'
+            # 'message': 'success',
         }
         return JsonResponse(res, safe=False)
 
@@ -407,11 +428,9 @@ def relation_operation(request, uid, pid, fid):
             if relation.reviewed > -1:
                 operation = relation.reviewed
                 if operation == 2:
-                    to_id = Log.objects.get(op_to=1, element_id=relation.rid).to_id
+                    to_id = Log.objects.filter(op_to=1, element_id=relation.rid).latest('time').to_id
                     to_relation = Relation.objects.get(rid=to_id)
                     m_relation = ManuallyRelation(
-                        to_relation.from_entity,
-                        to_relation.to_entity,
                         to_relation.relation_type
                     )
                     status = RelationStatus(True, operation, m_relation)
@@ -422,12 +441,11 @@ def relation_operation(request, uid, pid, fid):
             else:
                 status = RelationStatus(True, 3)
 
-            to_fid = Entity.objects.get(eid=relation.to_entity).get_fid().fid
+            to_fid = Entity.objects.get(eid=relation.to_entity.eid).get_fid().fid
             r = formats.Relation(
                 relation.rid,
-                # TODO: Extract entity get function and apply it here to generate entity
-                relation.from_entity.eid,
-                relation.to_entity,
+                build_entity(relation.from_entity),
+                build_entity(relation.to_entity),
                 to_fid,
                 relation.relation_type,
                 status
