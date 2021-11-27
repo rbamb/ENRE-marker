@@ -269,10 +269,12 @@ declare type status {
   // Below properties only appear if hasBeenReviewed is true
   operation: operation,
   // Below properties only appear if operation is 2
-  newRelation: manuallyRelation
+  newRelation: Required<manuallyRelation>
 }
 
 declare type manuallyRelation {
+  eFrom?: number
+  eTo?: number,
   rType: number
 }
 ```
@@ -373,13 +375,7 @@ declare type relationUserResult {
 declare type relationFixPatch {
   shouldBe: fixOption,
   // Below properties only appear if shouldBe is 2 (modified)
-  newly: onlyEid
-}
-
-declare type onlyEid {
-  eFrom?: number,
-  eTo?: number,
-  rType: number
+  newly: Pick<manuallyRelation, 'rType'>
 }
 ```
 
