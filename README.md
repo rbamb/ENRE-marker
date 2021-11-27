@@ -273,7 +273,7 @@ declare type status {
 }
 
 declare type manuallyRelation {
-  eFrom?: number
+  eFrom?: number,
   eTo?: number,
   rType: number
 }
