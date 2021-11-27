@@ -61,7 +61,7 @@ def login(request):
     except:
         res = {
             'code': 4000,
-            'message': 'not match',
+            'message': 'User ID or password does not match',
         }
         return JsonResponse(res, safe=False)
 
