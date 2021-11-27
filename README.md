@@ -269,7 +269,7 @@ declare type status {
   // Below properties only appear if hasBeenReviewed is true
   operation: operation,
   // Below properties only appear if operation is 2
-  newRelation: Required<manuallyRelation>
+  newRelation: Pick<manuallyRelation, 'rType'>
 }
 
 declare type manuallyRelation {
