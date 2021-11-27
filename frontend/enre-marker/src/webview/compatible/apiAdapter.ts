@@ -11,7 +11,7 @@ const onlySingleCopy = typeof acquireVsCodeApi === 'undefined' ? undefined : acq
 const mockState = {
   login: {
     uid: 10000,
-    token: 'QeknjyVd0BX5iH46gpbiTwV9NyWC1md4Ek6UyUvvXxPnXe77xkJ67tv1wlOH0GGu',
+    token: 'V3FnMNqPkmYudEnCEb1i5GWW1bXKCUC3z9H6AiavLaPCFAt1lylRcDgMjn3LPJgE',
     name: 'ThisRabbit',
   },
   working: {

@@ -22,7 +22,7 @@ import { WorkingContext } from '../../context';
 import { langTableIndex, typeTable } from '../../.static/config';
 import { getApi } from '../../compatible/apiAdapter';
 import { isLocEqual } from '../../utils/compare';
-import { revealEntity } from '../../utils/reveal';
+import { locNotApplicable, revealEntity } from '../../utils/reveal';
 
 const { Option } = Select;
 
@@ -209,6 +209,12 @@ const handleOperationClicked = (
           gmutate((compound: any) => {
             const data = compound.list as Array<remote.entity>;
             const it = data.find((e) => e.eid === eid) as remote.entity;
+            /** manually modify local data, since mutation will not been revealed,
+             * entities' primary properties should be set to modified data manually
+             */
+            it.name = (entity as remote.manuallyEntity).name;
+            it.loc = (entity as remote.manuallyEntity).loc;
+            it.eType = (entity as remote.manuallyEntity).eType;
             it.status.hasBeenReviewed = true;
             it.status.operation = 2;
             it.status.newEntity = entity;
@@ -389,12 +395,33 @@ const columns = [
             dataIndex: ['loc', 'start', 'line'],
             key: 'sl',
             align: 'center',
+            render: (value: number, row: remote.entity) => {
+              if (locNotApplicable(row)) {
+                return {
+                  children: 'Not applicable',
+                  props: {
+                    colSpan: 4,
+                  },
+                };
+              }
+              return value;
+            },
           },
           {
             title: 'Column',
             dataIndex: ['loc', 'start', 'column'],
             key: 'sc',
             align: 'center',
+            render: (value: number, row: remote.entity) => {
+              if (locNotApplicable(row)) {
+                return {
+                  props: {
+                    colSpan: 0,
+                  },
+                };
+              }
+              return value;
+            },
           },
         ],
       },
@@ -406,12 +433,32 @@ const columns = [
             dataIndex: ['loc', 'end', 'line'],
             key: 'el',
             align: 'center',
+            render: (value: number, row: remote.entity) => {
+              if (locNotApplicable(row)) {
+                return {
+                  props: {
+                    colSpan: 0,
+                  },
+                };
+              }
+              return value;
+            },
           },
           {
             title: 'Column',
             dataIndex: ['loc', 'end', 'column'],
             key: 'ec',
             align: 'center',
+            render: (value: number, row: remote.entity) => {
+              if (locNotApplicable(row)) {
+                return {
+                  props: {
+                    colSpan: 0,
+                  },
+                };
+              }
+              return value;
+            },
           },
         ],
       },

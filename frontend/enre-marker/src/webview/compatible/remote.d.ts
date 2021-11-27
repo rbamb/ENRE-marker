@@ -80,7 +80,7 @@ declare namespace remote {
     hasBeenReviewed: boolean,
     operation?: operation,
     newEntity?: manuallyEntity,
-    newRelation?: manuallyRelation,
+    newRelation?: Pick<manuallyRelation, 'rType'>,
   }
 
   interface resEntities extends resCommon {
@@ -117,8 +117,8 @@ declare namespace remote {
   }
 
   interface manuallyRelation {
-    eFrom: entity,
-    eTo: entity,
+    eFrom?: number,
+    eTo?: number,
     rType: number,
   }
 }

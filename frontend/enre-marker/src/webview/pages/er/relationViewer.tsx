@@ -23,7 +23,7 @@ import { request } from '../../compatible/httpAdapter';
 import { WorkingContext } from '../../context';
 import { langTableIndex, typeTable } from '../../.static/config';
 import { fid2Path, getApi } from '../../compatible/apiAdapter';
-import { revealEntity } from '../../utils/reveal';
+import { revealEntity, revealRelation } from '../../utils/reveal';
 
 const { Option } = Select;
 
@@ -100,8 +100,8 @@ const showModifyModal = (
         message.warning('Nothing changed comparing to the old one');
         return;
       }
-
-      handleOperationClicked(type !== undefined ? 'modify' : 'insert', rid);
+      // FIXME: fullfil manuallyRelation for operation insert
+      handleOperationClicked(type !== undefined ? 'modify' : 'insert', rid, { rType: mtype });
       close();
     },
   });
@@ -142,10 +142,14 @@ const handleOperationClicked = (
             return compound;
           });
         }).catch((json) => {
-          message.error({
-            content: json.message,
-            key,
-          });
+          if (json) {
+            message.error({
+              content: json.message,
+              key,
+            });
+          } else {
+            message.destroy(key);
+          }
         }).finally(() => { lock = false; });
         break;
       case 'remove':
@@ -168,13 +172,18 @@ const handleOperationClicked = (
             return compound;
           });
         }).catch((json) => {
-          message.error({
-            content: json.message,
-            key,
-          });
+          if (json) {
+            message.error({
+              content: json.message,
+              key,
+            });
+          } else {
+            message.destroy(key);
+          }
         }).finally(() => { lock = false; });
         break;
       case 'modify':
+        /** currently can only modify a relation's type */
         request(`POST project/${gpid}/file/${gfid}/relation`, {
           data: [
             {
@@ -195,17 +204,21 @@ const handleOperationClicked = (
           gmutate((compound: any) => {
             const data = compound.list as Array<remote.relation>;
             const it = data.find((r) => r.rid === rid) as remote.relation;
+            it.rType = (relation as remote.manuallyRelation).rType;
             it.status.hasBeenReviewed = true;
             it.status.operation = 2;
-            // FIXME: construct newRelation
             it.status.newRelation = relation;
             return compound;
           });
         }).catch((json) => {
-          message.error({
-            content: json.message,
-            key,
-          });
+          if (json) {
+            message.error({
+              content: json.message,
+              key,
+            });
+          } else {
+            message.destroy(key);
+          }
         }).finally(() => { lock = false; });
         break;
       case 'insert':
@@ -223,10 +236,14 @@ const handleOperationClicked = (
           });
           grefresh();
         }).catch((json) => {
-          message.error({
-            content: json.message,
-            key,
-          });
+          if (json) {
+            message.error({
+              content: json.message,
+              key,
+            });
+          } else {
+            message.destroy(key);
+          }
         }).finally(() => { lock = false; });
         break;
       default:
@@ -389,7 +406,7 @@ const columns = [
         render: (name: string, record: remote.relation) => {
           const fpath = (gmap.find((i) => i.fid === record.toFid) as fid2Path).path;
           return (
-            <Tooltip title={fpath}>
+            <Tooltip title={`In file ${fpath}`}>
               <Button
                 type="link"
                 style={{ paddingLeft: 0 }}
@@ -450,7 +467,7 @@ export const RelationViewer: React.FC = () => {
   } = useAntdTable(
     ({ current, pageSize }) => request(`GET project/${pid}/file/${fid}/relation?page=${current}&size=${pageSize}`)
       .then(({ relation, total }: remote.resRelations) => ({
-        list: relation.map((r) => ({
+        list: relation.map((r) => revealRelation({
           ...r,
           eFrom: revealEntity(r.eFrom),
           eTo: revealEntity(r.eTo),
