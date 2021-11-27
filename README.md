@@ -369,7 +369,7 @@ declare type relationUserResult {
     // Below property only appears if isCorrect is false
   fix: relationFixPatch,
   // Below properties only appear if isManually is true
-  relation: onlyEid
+  relation: Required<manuallyRelation>
 }
 
 declare type relationFixPatch {
