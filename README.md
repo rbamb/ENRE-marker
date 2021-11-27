@@ -273,8 +273,6 @@ declare type status {
 }
 
 declare type manuallyRelation {
-  eFrom: entity,
-  eTo: entity,
   rType: number
 }
 ```
@@ -369,7 +367,7 @@ declare type relationUserResult {
     // Below property only appears if isCorrect is false
   fix: relationFixPatch,
   // Below properties only appear if isManually is true
-  relation: manuallyRelation
+  relation: onlyEid
 }
 
 declare type relationFixPatch {
@@ -379,8 +377,8 @@ declare type relationFixPatch {
 }
 
 declare type onlyEid {
-  eFrom: number,
-  eTo: number,
+  eFrom?: number,
+  eTo?: number,
   rType: number
 }
 ```
