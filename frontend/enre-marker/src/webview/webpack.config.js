@@ -49,7 +49,7 @@ const webviewConfig = (env) => ({
     new DefinePlugin({
       REMOTE:
         NODE_ENV === 'production'
-          ? JSON.stringify('http://localhost:3000/api/v1/')
+          ? JSON.stringify('http://202.117.43.245:8000/api/v1/')
           : JSON.stringify('http://localhost:3000/api/v1/'),
       IS_PRODUCTION:
         NODE_ENV === 'production',
