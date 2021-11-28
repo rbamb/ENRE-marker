@@ -9,9 +9,27 @@ https://docs.djangoproject.com/en/3.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.2/ref/settings/
 """
-
+import os
+import sys
 from pathlib import Path
 from corsheaders.defaults import default_headers
+
+# Retrieve variables from environment
+try:
+    production = os.environ['ENV'] == 'production'
+    development = os.environ['ENV'] == 'development'
+except KeyError:
+    print('No ENV set, a \'production\' or \' development\' must be set as environment variable')
+    sys.exit(-1)
+
+try:
+    if production:
+        secret_key = os.environ['SECRET_KEY']
+    else:
+        secret_key = 'django-insecure-6bd4+f&4z6x8=&_ye8&b*v8759&m2%92y_@0h3-eiog=h5dc)('
+except KeyError:
+    print('No SECRET_KEY set, this environment variable must be set in production mode')
+    sys.exit(-1)
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -19,11 +37,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-6bd4+f&4z6x8=&_ye8&b*v8759&m2%92y_@0h3-eiog=h5dc)('
+SECRET_KEY = secret_key
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = development
 
 ALLOWED_HOSTS = ['*']
 
@@ -49,22 +65,6 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'marker.urls'
 
-# TEMPLATES = [
-#     {
-#         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-#         'DIRS': [],
-#         'APP_DIRS': True,
-#         'OPTIONS': {
-#             'context_processors': [
-#                 'django.template.context_processors.debug',
-#                 'django.template.context_processors.request',
-#                 'django.contrib.auth.context_processors.auth',
-#                 'django.contrib.messages.context_processors.messages',
-#             ],
-#         },
-#     },
-# ]
-
 WSGI_APPLICATION = 'marker.wsgi.application'
 
 # Database
@@ -73,7 +73,7 @@ WSGI_APPLICATION = 'marker.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'NAME': BASE_DIR / 'DEVELOPMENT.sqlite3' if development else 'PRODUCTION.sqlite3',
     }
 }
 
@@ -83,10 +83,6 @@ DATABASES = {
 LANGUAGE_CODE = 'en-us'
 
 TIME_ZONE = 'Asia/Shanghai'
-
-USE_I18N = True
-
-USE_L10N = True
 
 USE_TZ = True
 
