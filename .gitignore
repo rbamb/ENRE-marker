@@ -7,3 +7,4 @@ frontend/enre-marker/publish
 # backend
 backend/enre/.idea
 backend/enre/**/__pycache__
+backend/enre/**/**.sqlite3
