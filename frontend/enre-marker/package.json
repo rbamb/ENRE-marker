@@ -25,9 +25,6 @@
     "type": "git",
     "url": "https://github.com/xjtu-enre/ENRE-marker"
   },
-  "publishConfig": {
-    "registry": "http://202.117.43.245:8001"
-  },
   "contributes": {
     "commands": [
       {

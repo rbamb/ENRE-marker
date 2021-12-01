@@ -4,6 +4,20 @@
  * (this behavior has been blocked by setting `private` to true in package.json)
 */
 
+const remoteRegistry = process.env['REMOTE_REGISTRY'];
+
+if (remoteRegistry === undefined) {
+  console.error('No REMOTE_REGISTRY set, this must be set to indicate the registry server\'s address.');
+  return -1;
+}
+
+if (process.env['REMOTE_ADDRESS'] === undefined) {
+  console.error('No REMOTE_ADDRESS set, this must be set in production build.');
+  return -1;
+}
+
+console.log(`Using REMOTE_REGISTRY=${remoteRegistry}`);
+
 const path = require('path');
 const fs = require('fs');
 const { execSync } = require('child_process');
@@ -14,7 +28,7 @@ const mainPath = path.resolve(__dirname, '..');
 try {
   fs.rmSync(publishPath, { recursive: true, force: true });
 } catch (e) {
-  console.log(e);
+  console.error(e);
   return -1;
 }
 
@@ -22,6 +36,10 @@ fs.mkdirSync(publishPath);
 
 
 const pkg = require('../package.json');
+
+pkg.publishConfig = {
+  registry: remoteRegistry,
+}
 
 pkg.files = [
   'extension.vsix',
@@ -47,12 +65,17 @@ fs.copyFileSync(
 );
 
 console.log('Using vsce to package extension...')
-execSync(
-  `npx vsce package -o ${path.resolve(publishPath, 'extension.vsix')}`,
-  {
-    cwd: mainPath,
-  },
-)
+try {
+  execSync(
+    `npx vsce package -o ${path.resolve(publishPath, 'extension.vsix')}`,
+    {
+      cwd: mainPath,
+    },
+  )
+} catch (e) {
+  return -1;
+}
+
 
 console.log('Publishing to remote registry...')
 try {
@@ -64,8 +87,8 @@ try {
     },
   )
 } catch (e) {
-  console.log('Unable to publish, maybe a network connectivity issue');
+  console.error('Unable to publish.');
   return -1;
 }
 
-console.log('Done');
+console.log('Done.');

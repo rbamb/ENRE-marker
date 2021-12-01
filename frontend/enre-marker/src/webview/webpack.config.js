@@ -11,6 +11,15 @@ const { getThemeVariables } = require('antd/dist/theme');
 
 const { NODE_ENV } = process.env;
 
+const remoteAddress = process.env.REMOTE_ADDRESS;
+
+if (NODE_ENV === 'production' && remoteAddress === undefined) {
+  console.error('No REMOTE_ADDRESS set, this must be set in production build.');
+  process.exit(-1);
+}
+
+console.log(`Using REMOTE_ADDRESS=${remoteAddress}`);
+
 /** @type env: { browser?: boolean, extension?: boolean } => WebpackConfig */
 const webviewConfig = (env) => ({
   target: 'web',
@@ -49,7 +58,7 @@ const webviewConfig = (env) => ({
     new DefinePlugin({
       REMOTE:
         NODE_ENV === 'production'
-          ? JSON.stringify('http://202.117.43.245:8000/api/v1/')
+          ? JSON.stringify(`http://${remoteAddress}/api/v1/`)
           : JSON.stringify('http://localhost:3000/api/v1/'),
       IS_PRODUCTION:
         NODE_ENV === 'production',
