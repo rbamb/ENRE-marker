@@ -27,7 +27,7 @@ Appending configuration listed below to the settings file:
 "privateExtensions.registries": [
     {
         "name": "ENRE Team",
-        "registry": "http://202.117.43.245:8001",
+        "registry": "[[HIDDEN]]",
         "query": "ENRE"
     }
 ]
@@ -36,12 +36,6 @@ Appending configuration listed below to the settings file:
 Save and closed the settings file.
 
 4. Open `PRIVATE EXTENSIONS` tab, and an item named `ENRE-marker` should be displayed, click and in newly opened window click `Install` button, then `ENRE-marker` should be installed to your VSCode.
-
-> NOTICE
-> 
-> You can only download ENRE-marker and use it's features **under the campus network**.
-> 
-> To use it outside the campus network, please change your WiFi AP to `XJTU_STU` or try to use university's [SSL VPN service](http://vpn.xjtu.edu.cn)
 
 ## Usage
 
