@@ -5,6 +5,6 @@ frontend/enre-marker/publish
 .DS_Store
 
 # backend
-backend/enre/.idea
-backend/enre/**/__pycache__
-backend/enre/**/**.sqlite3
+backend/enre-marker/.idea
+backend/enre-marker/**/__pycache__
+backend/enre-marker/**/**.sqlite3
