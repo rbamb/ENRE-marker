@@ -11,12 +11,15 @@ if (remoteRegistry === undefined) {
   return -1;
 }
 
-if (process.env['REMOTE_ADDRESS'] === undefined) {
+const remoteAddress = process.env['REMOTE_ADDRESS'];
+
+if (remoteAddress === undefined) {
   console.error('No REMOTE_ADDRESS set, this must be set in production build.');
   return -1;
 }
 
 console.log(`Using REMOTE_REGISTRY=${remoteRegistry}`);
+console.log(`USing REMOTE_ADDRESS=http://${remoteAddress}/api/v1`)
 
 const path = require('path');
 const fs = require('fs');

@@ -13,12 +13,14 @@ const { NODE_ENV } = process.env;
 
 const remoteAddress = process.env.REMOTE_ADDRESS;
 
-if (NODE_ENV === 'production' && remoteAddress === undefined) {
-  console.error('No REMOTE_ADDRESS set, this must be set in production build.');
-  process.exit(-1);
-}
+if (NODE_ENV === 'production') {
+  if (remoteAddress === undefined) {
+    console.error('No REMOTE_ADDRESS set, this must be set in production build.');
+    process.exit(-1);
+  }
 
-console.log(`Using REMOTE_ADDRESS=${remoteAddress}`);
+  console.log(`Using REMOTE_ADDRESS=${remoteAddress}`);
+}
 
 /** @type env: { browser?: boolean, extension?: boolean } => WebpackConfig */
 const webviewConfig = (env) => ({
