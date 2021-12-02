@@ -3,13 +3,21 @@ from datetime import datetime
 
 
 class User(models.Model):
+    class UserState(models.IntegerChoices):
+        ACTIVE = 0, 'active'
+        LOCKED = 1, 'locked'
+        REMOVED = 2, 'removed'
+
     uid = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=32, default="")
+    name = models.CharField(max_length=32)
     pswd = models.CharField(max_length=64)
+    salt = models.CharField(max_length=16)
+
+    state = models.SmallIntegerField(default=UserState.ACTIVE)
+    
     claim = models.ForeignKey(
         'project.Project',
         on_delete=models.SET_NULL,
-        blank=True,
         null=True
     )
 

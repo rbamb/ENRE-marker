@@ -2,6 +2,11 @@ from django.db import models
 
 
 class Project(models.Model):
+    class ProjectState(models.IntegerChoices):
+        ACTIVE = 0, 'active'
+        LOCKED = 1, 'locked'
+        REMOVED = 2, 'removed'
+
     pid = models.AutoField(primary_key=True)
     p_name = models.CharField(max_length=64)
     github_url = models.URLField(max_length=128)
@@ -9,7 +14,7 @@ class Project(models.Model):
     git_commit_hash = models.CharField(max_length=7)
     lang = models.CharField(max_length=8)
 
-    state = models.SmallIntegerField(default=0)
+    state = models.SmallIntegerField(default=ProjectState.ACTIVE)
 
     def __str__(self):
         return self.p_name

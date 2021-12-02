@@ -1,9 +1,14 @@
+import hashlib
 import json
 from exrex import getone
 
 from django.http import JsonResponse
 from datetime import datetime
 from .models import User, Login
+
+
+def hashing(content):
+    return hashlib.sha256(content.encode('utf-8')).hexdigest()
 
 
 def get_token():
@@ -22,8 +27,10 @@ def login(request):
         })
 
     try:
-        user = User.objects.get(uid=userid, pswd=userpw)
-    except KeyError:
+        user = User.objects.get(uid=userid)
+        if user.pswd != hashing(userpw + user.salt):
+            raise User.DoesNotExist
+    except User.DoesNotExist:
         return JsonResponse({
             'code': 4000,
             'message': 'User ID or password does not match',
@@ -41,8 +48,8 @@ def login(request):
             'token': previous.token,
             'name': user.name
         })
-    except KeyError:
-        user_login = Login.objects.create(uid=User.objects.get(uid=userid, pswd=userpw))
+    except Login.DoesNotExist:
+        user_login = Login.objects.create(uid=user)
         user_login.token = get_token()
         user_login.save()
         return JsonResponse({
