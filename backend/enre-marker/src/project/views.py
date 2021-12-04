@@ -9,7 +9,6 @@ from user.models import User, Login, Log
 from . import formats
 from .formats import ManuallyEntity, EntityStatus, ManuallyRelation, RelationStatus
 from .models import Project, File, Entity, Relation
-from .tools import json_to_python, create_project, extract_file_data, process_und
 
 
 def login_required(func):
@@ -39,29 +38,6 @@ def login_required(func):
         return func(request, uid=record.uid.uid, *args, **kwargs)
 
     return inner
-
-
-def load_file(requset):
-    project_name = 'pig-0.17.0-src'
-    relation_data = json_to_python('D:\pl_output\pig_refs.json')
-    entity_data = json_to_python('D:\pl_output\pig_entities.json')
-    github_url = 'apache/pig'
-    lang = 'java'
-    # create project
-    p = create_project(github_url, project_name, lang)
-    p.git_commit_hash = '59ec4a3'
-    p.save()
-    # add file
-    extract_file_data(p, relation_data)
-    # add entity and relation
-    process_und(relation_data, entity_data, p, project_name)
-    return HttpResponse(project_name + ' upload successfully!')
-
-
-def show_files(request):
-    file_list = File.objects.all()
-    output = ', '.join([q.file_path for q in file_list])
-    return HttpResponse(output)
 
 
 def calculate_p_entity(pid):
@@ -341,9 +317,9 @@ def build_entity(entity):
         entity.code_name,
         entity.loc_start_line,
         # FIXME: temp fix measure, should audit in db to let all loc indexed from 1
-        entity.loc_start_column + 1,
+        entity.loc_start_column,
         entity.loc_end_line,
-        entity.loc_end_column + 2,
+        entity.loc_end_column,
         entity.entity_type,
         status
     )

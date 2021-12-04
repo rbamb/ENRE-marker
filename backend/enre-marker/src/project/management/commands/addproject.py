@@ -20,9 +20,11 @@ class Command(BaseCommand):
         branch = options['branch']
 
         if len(version) != 7:
-            raise CommandError(f'Commit hash ${version} is not a valid 7 chars string')
-        if ['js', 'java', 'cpp', 'go', 'python'].index(lang) == -1:
-            raise CommandError(f'Lang ${lang} is not a valid lang code')
+            raise CommandError(f'Commit hash {version} is not a valid 7 chars string')
+        try:
+            ['js', 'java', 'cpp', 'go', 'python'].index(lang)
+        except ValueError:
+            raise CommandError(f'Lang {lang} is not a valid lang code')
 
         try:
             """
