@@ -1,9 +1,15 @@
 # Change Log
 
-All notable changes to the "enre-marker" extension will be documented in this file.
+## 1.0.2
 
-Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
+- Add `langRelative`, where different languages is now having different ways to display code names and other stuffs
 
-## [Unreleased]
+- Disable `Insert an entity`
 
-- Initial release
+## 1.0.1
+
+- Bug fix
+
+## 1.0.0
+
+- Disable `Insert a relation`

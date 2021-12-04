@@ -9,7 +9,3 @@ ENRE-marker is a tool for visually validating the correctness of entities and re
 * View progress for validating;
 
 * Mark entities and relations.
-
-## Known Issues
-
-Currently unavailable.
