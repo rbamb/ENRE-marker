@@ -23,6 +23,7 @@ import { langTableIndex, typeTable } from '../../.static/config';
 import { getApi } from '../../compatible/apiAdapter';
 import { isLocEqual } from '../../utils/compare';
 import { locNotApplicable, revealEntity } from '../../utils/reveal';
+import langRelative from '../../utils/langRelative';
 
 const { Option } = Select;
 
@@ -47,7 +48,7 @@ const ControlledEntityInfo: React.FC<{ name?: string, loc?: remote.location, typ
 
   useEventListener('message', ({ data: { command, payload } }) => {
     if (command === 'selection-change') {
-      setName(payload.name);
+      setName(langRelative[glang].updateCodeName(payload.name, name));
       setLoc(payload.loc);
     }
   });
@@ -306,9 +307,13 @@ const RenderExpandedRow = ({
       <Button
         type="link"
         icon={<EditOutlined />}
-        style={{ height: '72px', color: 'darkorange' }}
+        style={{
+          height: '72px',
+          color: langRelative[glang].canBeModified(eType) ? 'darkorange' : undefined,
+        }}
         block
         onClick={() => showModifyModal(eid, name, loc, eType)}
+        disabled={!langRelative[glang].canBeModified(eType)}
       >
         Modify
       </Button>
@@ -364,18 +369,18 @@ const columns = [
     dataIndex: 'name',
     key: 'name',
     render: (name: string, record: remote.entity) => (
-      <Button
-        type="link"
-        style={{ paddingLeft: 0 }}
-        onClick={() => {
-          getApi.postMessage({
-            command: 'highlight-entity',
-            payload: record.loc,
-          });
-        }}
-      >
-        {name}
-      </Button>
+      <Tooltip title={`Qualified name:\n${name}`}>
+        <a
+          onClick={() => {
+            getApi.postMessage({
+              command: 'highlight-entity',
+              payload: record.loc,
+            });
+          }}
+        >
+          {langRelative[glang].displayCodeName(record)}
+        </a>
+      </Tooltip>
     ),
   },
   {
@@ -579,7 +584,7 @@ export const EntityViewer: React.FC = () => {
           },
         }}
       />
-      <Tooltip
+      {/* <Tooltip
         title="Manually insert an entity"
         placement="left"
       >
@@ -594,7 +599,7 @@ export const EntityViewer: React.FC = () => {
         >
           <PlusOutlined />
         </Button>
-      </Tooltip>
+      </Tooltip> */}
     </>
   );
 };

@@ -24,6 +24,7 @@ import { WorkingContext } from '../../context';
 import { langTableIndex, typeTable } from '../../.static/config';
 import { fid2Path, getApi } from '../../compatible/apiAdapter';
 import { revealEntity, revealRelation } from '../../utils/reveal';
+import langRelative from '../../utils/langRelative';
 
 const { Option } = Select;
 
@@ -362,23 +363,23 @@ const columns = [
         dataIndex: ['eFrom', 'name'],
         key: 'fn',
         render: (name: string, record: remote.relation) => (
-          <Button
-            type="link"
-            style={{ paddingLeft: 0 }}
-            onClick={() => {
-              getApi.postMessage({
-                command: 'highlight-relation',
-                payload: {
-                  fpath: (gmap.find((i) => i.fid === record.toFid) as fid2Path).path,
-                  base: gfsPath,
-                  from: record.eFrom.loc,
-                  to: record.eTo.loc,
-                },
-              });
-            }}
-          >
-            {name}
-          </Button>
+          <Tooltip title={`Qualified name:\n${name}`}>
+            <a
+              onClick={() => {
+                getApi.postMessage({
+                  command: 'highlight-relation',
+                  payload: {
+                    fpath: (gmap.find((i) => i.fid === record.toFid) as fid2Path).path,
+                    base: gfsPath,
+                    from: record.eFrom.loc,
+                    to: record.eTo.loc,
+                  },
+                });
+              }}
+            >
+              {langRelative[glang].displayCodeName(record.eFrom)}
+            </a>
+          </Tooltip>
         ),
       },
       {
@@ -406,10 +407,8 @@ const columns = [
         render: (name: string, record: remote.relation) => {
           const fpath = (gmap.find((i) => i.fid === record.toFid) as fid2Path).path;
           return (
-            <Tooltip title={`In file ${fpath}`}>
-              <Button
-                type="link"
-                style={{ paddingLeft: 0 }}
+            <Tooltip title={`In file:\n${fpath}\nQualified name: ${name}`}>
+              <a
                 onClick={() => {
                   getApi.postMessage({
                     command: 'highlight-relation',
@@ -422,8 +421,8 @@ const columns = [
                   });
                 }}
               >
-                {name}
-              </Button>
+                {langRelative[glang].displayCodeName(record.eTo)}
+              </a>
             </Tooltip>
           );
         },
