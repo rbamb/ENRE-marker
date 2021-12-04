@@ -1,5 +1,21 @@
 # ENRE-marker Spec
 
+## Import File Format
+
+To import data to database, ENRE-marker expects 2 files:
+
+* `ProjectName_entities.json`
+
+* `ProjectName_refs.json`
+
+Files basically share the format which perl scripts output, only with some pre-processes that should be handled BEFORE import:
+
+* All `FilePath` or relative file path filed should be relative path from project's root, **not** an absolute path in your computer;
+
+* Make sure code locations are correct, especially the column number;
+
+* Type relative field like `entityType` and `relationType` should be a number which meaning is defined in ENRE-marker's issue page.
+
 ## InterOP API definitions
 
 Backend server should implement and expose web http RESTful interfaces listed below.
