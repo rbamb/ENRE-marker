@@ -22,7 +22,7 @@ export const Login: React.FC<{ uid?: string }> = ({ uid }) => {
     },
     onError: (json) => {
       if (json) {
-        message.error('User ID or password does not match');
+        message.error(json.message);
       }
     },
   });
@@ -37,13 +37,23 @@ export const Login: React.FC<{ uid?: string }> = ({ uid }) => {
     >
       <Form.Item
         name="uid"
-        rules={[{ required: true }]}
+        rules={[
+          {
+            required: true,
+            message: 'User ID is required',
+          },
+        ]}
       >
         <Input prefix={<UserOutlined style={{ color: 'rgba(0,0,0,0.25)' }} />} placeholder="User ID" readOnly={loading} />
       </Form.Item>
       <Form.Item
         name="pswd"
-        rules={[{ required: true }]}
+        rules={[
+          {
+            required: true,
+            message: 'Password is required',
+          },
+        ]}
       >
         <Input.Password prefix={<LockOutlined style={{ color: 'rgba(0,0,0,0.25)' }} />} placeholder="Password" readOnly={loading} />
       </Form.Item>

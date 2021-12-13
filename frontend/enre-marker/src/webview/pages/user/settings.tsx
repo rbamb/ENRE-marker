@@ -1,15 +1,41 @@
 import React, { useContext, useState } from 'react';
 import {
-  List, Button, Space, Typography, message, Modal, Form, Input,
+  List, Button, Space, Typography, message, Modal, Form, Input, notification,
 } from 'antd';
 import { GithubOutlined } from '@ant-design/icons';
+import { useForm } from 'antd/lib/form/Form';
+import { useRequest } from 'ahooks';
+// @ts-ignore
+import sha256 from 'sha256-es';
 import { LoginContext, WorkingContext } from '../../context';
 import pkg from '../../../../package.json';
 import { getApi } from '../../compatible/apiAdapter';
+import { request } from '../../compatible/httpAdapter';
 
 export const Settings: React.FC = () => {
   const { state, dispatcher: loginDispatcher } = useContext(LoginContext);
   const { dispatcher: workingDispatcher } = useContext(WorkingContext);
+
+  const { loading, run } = useRequest(async ({ oldPswd, newPswd }: any) => request('POST user/password', {
+    oldPswd: sha256.hash(oldPswd),
+    newPswd: sha256.hash(newPswd),
+  }), {
+    manual: true,
+    onSuccess: () => {
+      notification.success({
+        message: 'Change password succeeded',
+        description: 'Now redirecting you to the login page.',
+      });
+      loginDispatcher({ payload: { token: undefined } });
+    },
+    onError: (json) => {
+      if (json) {
+        message.error(json.message);
+      }
+    },
+  });
+
+  const [form] = useForm();
 
   const [pswdVisible, setPswdVisible] = useState(false);
 
@@ -51,9 +77,19 @@ export const Settings: React.FC = () => {
             visible={pswdVisible}
             title="Change password"
             okText="Submit"
-            onCancel={() => setPswdVisible(false)}
+            okButtonProps={{ loading }}
+            cancelButtonProps={{ disabled: loading }}
+            onCancel={() => (loading ? undefined : (form.resetFields(), setPswdVisible(false)))}
+            onOk={() => {
+              form
+                .validateFields()
+                .then(({ oldPswd, newPswd }) => {
+                  run({ oldPswd, newPswd });
+                });
+            }}
           >
             <Form
+              form={form}
               name="changePswd"
               layout="vertical"
               requiredMark={false}
@@ -61,23 +97,58 @@ export const Settings: React.FC = () => {
               <Form.Item
                 name="oldPswd"
                 label="Old password"
-                rules={[{ required: true }]}
+                rules={[
+                  {
+                    required: true,
+                    message: 'Old password is required',
+                  },
+                ]}
               >
-                <Input.Password />
+                <Input.Password readOnly={loading} />
               </Form.Item>
               <Form.Item
                 name="newPswd"
                 label="New password"
-                rules={[{ required: true }]}
+                extra="For a better security concern, new password should be longer than 8 chars and contains both letters and numbers"
+                rules={[
+                  {
+                    required: true,
+                    message: 'New password is required',
+                  },
+                  {
+                    type: 'string',
+                    min: 8,
+                    max: 32,
+                    message: 'Length of the new password should be in the range of 8~32',
+                  },
+                  {
+                    pattern: /^(?![0-9]+$)(?![a-zA-Z]+$)/,
+                    message: 'New password should contains both letters and numbers',
+                  },
+                ]}
               >
-                <Input.Password />
+                <Input.Password readOnly={loading} />
               </Form.Item>
               <Form.Item
                 name="newPswd2"
                 label="Confirm new password"
-                rules={[{ required: true }]}
+                dependencies={['newPswd']}
+                rules={[
+                  {
+                    required: true,
+                    message: 'Confirmed password is required',
+                  },
+                  ({ getFieldValue }) => ({
+                    validator(_, value) {
+                      if (getFieldValue('newPswd') !== value) {
+                        return Promise.reject(new Error('Confirmed password does not match the new password'));
+                      }
+                      return Promise.resolve();
+                    },
+                  }),
+                ]}
               >
-                <Input.Password />
+                <Input.Password readOnly={loading} />
               </Form.Item>
             </Form>
           </Modal>

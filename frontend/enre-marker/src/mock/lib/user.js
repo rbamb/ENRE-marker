@@ -9,5 +9,12 @@ module.exports = {
       token: sha256,
       name: 'ThisRabbit'
     }));
+  },
+
+  'POST user/password': (req, res) => {
+    res.json({
+      code: 200,
+      message: 'success',
+    })
   }
 }
