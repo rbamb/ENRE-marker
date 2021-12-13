@@ -1,6 +1,6 @@
-import React, { useContext } from 'react';
+import React, { useContext, useState } from 'react';
 import {
-  List, Button, Space, Typography, message,
+  List, Button, Space, Typography, message, Modal, Form, Input,
 } from 'antd';
 import { GithubOutlined } from '@ant-design/icons';
 import { LoginContext, WorkingContext } from '../../context';
@@ -10,6 +10,8 @@ import { getApi } from '../../compatible/apiAdapter';
 export const Settings: React.FC = () => {
   const { state, dispatcher: loginDispatcher } = useContext(LoginContext);
   const { dispatcher: workingDispatcher } = useContext(WorkingContext);
+
+  const [pswdVisible, setPswdVisible] = useState(false);
 
   return (
     <Space direction="vertical" style={{ width: '100%' }}>
@@ -31,6 +33,54 @@ export const Settings: React.FC = () => {
             title="User name"
             description="Currently we don't offer any account related operations, please contact us if you have any questions."
           />
+        </List.Item>
+        <List.Item
+          actions={[
+            <Button
+              key={0}
+              onClick={() => setPswdVisible(true)}
+            >
+              Change
+            </Button>,
+          ]}
+        >
+          <List.Item.Meta
+            title="Change password"
+          />
+          <Modal
+            visible={pswdVisible}
+            title="Change password"
+            okText="Submit"
+            onCancel={() => setPswdVisible(false)}
+          >
+            <Form
+              name="changePswd"
+              layout="vertical"
+              requiredMark={false}
+            >
+              <Form.Item
+                name="oldPswd"
+                label="Old password"
+                rules={[{ required: true }]}
+              >
+                <Input.Password />
+              </Form.Item>
+              <Form.Item
+                name="newPswd"
+                label="New password"
+                rules={[{ required: true }]}
+              >
+                <Input.Password />
+              </Form.Item>
+              <Form.Item
+                name="newPswd2"
+                label="Confirm new password"
+                rules={[{ required: true }]}
+              >
+                <Input.Password />
+              </Form.Item>
+            </Form>
+          </Modal>
         </List.Item>
         <List.Item
           actions={[
@@ -83,7 +133,11 @@ export const Settings: React.FC = () => {
       </Typography.Title>
       <List style={{ marginLeft: '1em' }}>
         <List.Item
-          actions={[<span key={0}>{pkg.version}</span>]}
+          actions={[
+            <span key={0}>
+              {`${pkg.version.toString()}${!IS_PRODUCTION ? '-dev' : ''}`}
+            </span>,
+          ]}
         >
           <List.Item.Meta
             title="Version"
