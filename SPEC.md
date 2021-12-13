@@ -65,6 +65,35 @@ Once the `token` has been sent to client, any further requests will contain this
 
 > Code `401` should always be returned if `token` is wrong or expired **in APIs below**, which is omitted in latter error code table.
 
+#### `POST /user/password`
+
+Change a user's password.
+
+##### Payload body
+```ts
+{
+  old: 64-chars,
+  new: 64-chars
+}
+```
+
+##### Should return
+
+###### If succeeded
+
+```ts
+{
+  code: 200,
+  message: 'success'
+}
+```
+
+###### If failed
+
+| case | code | message | other |
+| --- | --- | --- | --- |
+| any login issues | 401 | unauthorized |
+| wrong pswd | 4000 | wrong old password |
 
 ### Project System
 
