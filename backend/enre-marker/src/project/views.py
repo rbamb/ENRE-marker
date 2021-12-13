@@ -2,7 +2,7 @@ import copy
 import json
 from datetime import timedelta, datetime, timezone
 
-from django.http import HttpResponse, JsonResponse
+from django.http import JsonResponse
 from django.views.decorators.http import require_POST, require_GET
 
 from user.models import User, Login, Log
