@@ -109,6 +109,7 @@ export const Settings: React.FC = () => {
               <Form.Item
                 name="newPswd"
                 label="New password"
+                dependencies={['oldPswd']}
                 extra="For a better security concern, new password should be longer than 8 chars and contains both letters and numbers"
                 rules={[
                   {
@@ -121,6 +122,14 @@ export const Settings: React.FC = () => {
                     max: 32,
                     message: 'Length of the new password should be in the range of 8~32',
                   },
+                  ({ getFieldValue }) => ({
+                    validator(_, value) {
+                      if (getFieldValue('oldPswd') === value) {
+                        return Promise.reject(new Error('New password can not be the same as the old one'));
+                      }
+                      return Promise.resolve();
+                    },
+                  }),
                   {
                     pattern: /^(?![0-9]+$)(?![a-zA-Z]+$)/,
                     message: 'New password should contains both letters and numbers',
@@ -194,7 +203,7 @@ export const Settings: React.FC = () => {
         >
           <List.Item.Meta
             title="Clear caches"
-            description="This will clear all cached data and reset ENRE-marker to a init state, which would be helpful if you have encountered with some data conflict issues."
+            description={`This will clear all cached data and reset ${pkg.displayName} to a init state, which would be helpful if you have encountered with some data conflict issues.`}
           />
         </List.Item>
       </List>
