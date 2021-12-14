@@ -10,7 +10,7 @@ class Project:
         self.githubUrl = git_url
         self.version = version
         self.lang = lang
-        self.progress = progress
+        self.progress = int(progress)
         self.claimed = claimed
         self.state = state
 
@@ -49,9 +49,9 @@ class File:
         self.fid = fid
         self.path = path
         self.entity['count'] = e_count
-        self.entity['progress'] = e_progress
+        self.entity['progress'] = int(e_progress)
         self.relation['count'] = r_count
-        self.relation['progress'] = r_progress
+        self.relation['progress'] = int(r_progress)
 
     def to_dict(self):
         return \

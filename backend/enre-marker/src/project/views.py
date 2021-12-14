@@ -4,6 +4,8 @@ from datetime import timedelta, datetime, timezone
 
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST, require_GET
+from django.db import connection
+from django.db.models import Count
 
 from user.models import User, Login, Log
 from . import formats
@@ -40,54 +42,6 @@ def login_required(func):
     return inner
 
 
-def calculate_p_entity(pid):
-    p_entity = Entity.objects.select_related("fid__pid")
-    count = 0
-    reviewed = 0
-    for e in p_entity:
-        if e.fid.pid.pid == pid:
-            count = count + 1
-            if e.reviewed > -1:
-                reviewed = reviewed + 1
-    return count, reviewed
-
-
-def calculate_p_relation(pid):
-    p_relation = Relation.objects.select_related("from_entity__fid__pid")
-    count = 0
-    reviewed = 0
-    for r in p_relation:
-        if r.from_entity.fid.pid.pid == pid:
-            count = count + 1
-            if r.reviewed > -1:
-                reviewed = reviewed + 1
-    return count, reviewed
-
-
-def calculate_entity(fid):
-    f_entity = Entity.objects.select_related("fid")
-    count = 0
-    reviewed = 0
-    for e in f_entity:
-        if e.fid.fid == fid:
-            count = count + 1
-            if e.reviewed > -1:
-                reviewed = reviewed + 1
-    return count, reviewed
-
-
-def calculate_relation(fid):
-    f_relation = Relation.objects.select_related("from_entity__fid")
-    count = 0
-    reviewed = 0
-    for r in f_relation:
-        if r.from_entity.fid.fid == fid:
-            count = count + 1
-            if r.reviewed > -1:
-                reviewed = reviewed + 1
-    return count, reviewed
-
-
 @require_GET
 @login_required
 def get_all_projects(request, uid):
@@ -95,10 +49,50 @@ def get_all_projects(request, uid):
     claimed = User.objects.get(uid=uid).claim_id
     p_list = []
     for project in project_list:
-        # e_count, e_progress = calculate_p_entity(project.pid)
-        # r_count, r_progress = calculate_relation(project.pid)
-        # progress = (e_progress + r_progress) / (e_count + r_count) * 100
-        progress = 0
+        progress_done = 0
+        progress_total = 0
+
+        with connection.cursor() as cursor:
+            cursor.execute(
+                '''select reviewed, count(*) as count
+from project_entity
+where
+      fid_id in
+      (
+          select fid
+          from project_file
+          where pid_id = %s
+          )
+and shallow = false
+group by reviewed''', [project.pid])
+            entity_progress = cursor.fetchall()
+            for item in entity_progress:
+                progress_total += item[1]
+                if item[0] >= 0:
+                    progress_done += item[1]
+
+            cursor.execute(
+                '''select reviewed, count(*) as count
+from project_relation
+where
+      from_entity_id in (
+          select eid
+          from project_entity
+          where fid_id in (
+              select fid
+              from project_file
+              where pid_id = %s
+              )
+        )
+and shallow = false
+group by reviewed''', [project.pid])
+            relation_progress = cursor.fetchall()
+            for item in relation_progress:
+                progress_total += item[1]
+                if item[0] >= 0:
+                    progress_done += item[1]
+
+        progress = 100 if progress_total == 0 else progress_done / progress_total * 100
         p = formats.Project(
             project.pid,
             project.p_name,
@@ -125,16 +119,58 @@ def view_a_project(request, uid, pid):
     try:
         file_list = File.objects.filter(pid=pid)
         f_list = []
+
         for f in file_list:
-            # e_count, e_progress = calculate_entity(f.fid)
-            # r_count, r_progress = calculate_relation(f.fid)
-            # file = formats.File(f.fid, f.file_path, e_count, e_progress, r_count, r_progress)
-            file = formats.File(f.fid, f.file_path, 0, 0, 0, 0)
+            entity_progress_done = 0
+            entity_progress_total = 0
+            relation_progress_done = 0
+            relation_progress_total = 0
+
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    '''select reviewed, count(*) as count
+                    from project_entity
+                    where fid_id = %s and shallow = false
+                    group by reviewed
+                    ''', [f.fid])
+                for item in cursor.fetchall():
+                    entity_progress_total += item[1]
+                    if item[0] >= 0:
+                        entity_progress_done += item[1]
+
+                cursor.execute(
+                    '''select reviewed, count(*) as count
+                    from project_relation
+                    where from_entity_id in
+                        (
+                            select eid
+                            from project_entity
+                            where fid_id = %s
+                        ) and shallow = false
+                    group by reviewed
+                    ''', [f.fid])
+                for item in cursor.fetchall():
+                    relation_progress_total += item[1]
+                    if item[0] >= 0:
+                        relation_progress_done += item[1]
+
+            entity_progress = 100 if entity_progress_total == 0 else entity_progress_done / entity_progress_total * 100
+            relation_progress = 100 if relation_progress_total == 0 else relation_progress_done / relation_progress_total * 100
+
+            file = formats.File(
+                f.fid,
+                f.file_path,
+                entity_progress_total,
+                entity_progress,
+                relation_progress_total,
+                relation_progress,
+            )
             f_list.append(copy.deepcopy(file.to_dict()))
+
         res = {
             'code': 200,
             'message': 'success',
-            'file': f_list
+            'file': f_list,
         }
         return JsonResponse(res, safe=False)
     except Project.DoesNotExist:
@@ -316,7 +352,6 @@ def build_entity(entity):
         entity.eid,
         entity.code_name,
         entity.loc_start_line,
-        # FIXME: temp fix measure, should audit in db to let all loc indexed from 1
         entity.loc_start_column,
         entity.loc_end_line,
         entity.loc_end_column,

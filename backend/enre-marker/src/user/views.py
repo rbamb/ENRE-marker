@@ -20,8 +20,8 @@ def get_token():
 
 @require_POST
 def login(request):
-    data = json.loads(request.body.decode())
     try:
+        data = json.loads(request.body.decode())
         user_id = data.get('uid')
         user_pswd = data.get('pswd')
     except:
@@ -38,6 +38,11 @@ def login(request):
         return JsonResponse({
             'code': 4000,
             'message': 'User ID or password does not match',
+        })
+    except ValueError:
+        return JsonResponse({
+            'code': 4000,
+            'message': 'User ID is invalid',
         })
 
     # if user re-login during a previous token is valid, then just override it with a new one
@@ -64,11 +69,11 @@ def login(request):
         })
 
 
-@login_required
 @require_POST
+@login_required
 def change_pswd(request, uid):
-    data = json.loads(request.body.decode())
     try:
+        data = json.loads(request.body.decode())
         old_pswd = data.get('oldPswd')
         new_pswd = data.get('newPswd')
     except:
