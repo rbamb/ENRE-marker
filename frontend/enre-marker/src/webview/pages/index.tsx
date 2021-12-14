@@ -108,7 +108,14 @@ export const App: React.FC = () => {
         <WorkingContext.Provider value={{ state: workingState, dispatcher: workingDispatcher }}>
           <NavContext.Provider value={{ state: navState, dispatcher: navDispatcher }}>
             <BrowserRouter>
-              <Menu mode="horizontal" selectedKeys={[navState]} onClick={({ key }) => navDispatcher({ payload: key })}>
+              <Menu
+                mode="horizontal"
+                selectedKeys={[navState]}
+                onClick={({ key }) => {
+                  workingDispatcher({ payload: { viewProject: undefined } });
+                  navDispatcher({ payload: key });
+                }}
+              >
                 <Menu.Item key="index" icon={<UserOutlined />} tabIndex={0}>
                   <NavLink to="/">
                     My
@@ -161,7 +168,10 @@ export const App: React.FC = () => {
               </Menu>
 
               {/** height should minus 38 which is the navbar's height */}
-              <div style={{ padding: '1em 1em 0 1em', height: 'calc(100% - 38px)', overflowY: 'auto' }}>
+              <div style={{
+                marginTop: '1em', padding: '0 1em', height: 'calc(100% - 38px)', overflowY: 'auto',
+              }}
+              >
                 <Routes>
                   <Route
                     path="/"

@@ -13,12 +13,14 @@ import {
   Space,
   Radio,
   message,
+  notification,
 } from 'antd';
 import {
   CheckOutlined, CloseOutlined, EditOutlined, PlusOutlined,
 } from '@ant-design/icons';
 import React, { useContext, useEffect, useState } from 'react';
 import { useAntdTable } from 'ahooks';
+import { useNavigate, useParams } from 'react-router-dom';
 import { request } from '../../compatible/httpAdapter';
 import { WorkingContext } from '../../context';
 import { langTableIndex, typeTable } from '../../.static/config';
@@ -366,15 +368,17 @@ const columns = [
           <Tooltip title={`Qualified name:\n${name}`}>
             <a
               onClick={() => {
-                getApi.postMessage({
-                  command: 'highlight-relation',
-                  payload: {
-                    fpath: (gmap.find((i) => i.fid === record.toFid) as fid2Path).path,
-                    base: gfsPath,
-                    from: record.eFrom.loc,
-                    to: record.eTo.loc,
-                  },
-                });
+                if (!inViewMode) {
+                  getApi.postMessage({
+                    command: 'highlight-relation',
+                    payload: {
+                      fpath: (gmap.find((i) => i.fid === record.toFid) as fid2Path).path,
+                      base: gfsPath,
+                      from: record.eFrom.loc,
+                      to: record.eTo.loc,
+                    },
+                  });
+                }
               }}
             >
               {langRelative[glang].displayCodeName(record.eFrom)}
@@ -405,20 +409,24 @@ const columns = [
         dataIndex: ['eTo', 'name'],
         key: 'tn',
         render: (name: string, record: remote.relation) => {
-          const fpath = (gmap.find((i) => i.fid === record.toFid) as fid2Path).path;
+          const fpath = inViewMode
+            ? undefined
+            : (gmap.find((i) => i.fid === record.toFid) as fid2Path).path;
           return (
-            <Tooltip title={`In file:\n${fpath}\nQualified name: ${name}`}>
+            <Tooltip title={`${inViewMode ? '' : `In file:\n${fpath}`}\nQualified name: ${name}`}>
               <a
                 onClick={() => {
-                  getApi.postMessage({
-                    command: 'highlight-relation',
-                    payload: {
-                      fpath,
-                      base: gfsPath,
-                      from: record.eFrom.loc,
-                      to: record.eTo.loc,
-                    },
-                  });
+                  if (!inViewMode) {
+                    getApi.postMessage({
+                      command: 'highlight-relation',
+                      payload: {
+                        fpath,
+                        base: gfsPath,
+                        from: record.eFrom.loc,
+                        to: record.eTo.loc,
+                      },
+                    });
+                  }
                 }}
               >
                 {langRelative[glang].displayCodeName(record.eTo)}
@@ -444,27 +452,56 @@ let gpid: number;
 let gfsPath: string;
 let gfid: number;
 let gmap: Array<fid2Path>;
+let inViewMode: boolean;
 
 export const RelationViewer: React.FC = () => {
+  const { pid: urlPid, fid: urlFid } = useParams();
+
+  gpid = parseInt(urlPid as string, 10);
+  gfid = parseInt(urlFid as string, 10);
+
   const {
     state: {
       project: {
-        pid, lang, fsPath, map,
-      }, file: { fid, path },
+        pid,
+        lang,
+        fsPath,
+        map,
+      } = {
+        pid: undefined, lang: undefined, fsPath: undefined, map: undefined,
+      },
+      file: { path } = { path: undefined },
+      viewProject: { pid: viewPid, lang: viewLang } = { pid: undefined, lang: undefined },
+    } = {
+      project: {
+        pid: undefined, lang: undefined, fsPath: undefined, map: undefined,
+      },
+      file: { fid: undefined, path: undefined },
+      viewProject: { pid: undefined, lang: undefined },
     },
   } = useContext(WorkingContext);
 
+  const navigate = useNavigate();
+
+  if (gpid !== viewPid) {
+    notification.warn({
+      message: 'Url direct jumping is not supported',
+      description: 'Now redirecting you to the project page. Please go into project\'s details from this page.',
+    });
+    navigate('/project');
+  }
+
+  inViewMode = gpid !== pid;
+
   /** set some global variables to avoid pass them as function's params */
-  glang = lang;
-  gpid = pid;
-  gfsPath = fsPath;
-  gfid = fid;
-  gmap = map;
+  glang = (lang || viewLang) as langTableIndex;
+  gfsPath = fsPath as string;
+  gmap = map as Array<fid2Path>;
 
   const {
     tableProps, pagination, mutate, refresh,
   } = useAntdTable(
-    ({ current, pageSize }) => request(`GET project/${pid}/file/${fid}/relation?page=${current}&size=${pageSize}`)
+    ({ current, pageSize }) => request(`GET project/${gpid}/file/${gfid}/relation?page=${current}&size=${pageSize}`)
       .then(({ relation, total }: remote.resRelations) => ({
         list: relation.map((r) => revealRelation({
           ...r,
@@ -521,7 +558,7 @@ export const RelationViewer: React.FC = () => {
         rowKey={(record) => record.rid}
         // @ts-ignore
         columns={columns}
-        expandable={{
+        expandable={inViewMode ? undefined : {
           expandRowByClick: true,
           expandedRowKeys: [expandRow],
           rowExpandable: (record) => !record.status.hasBeenReviewed,
@@ -543,7 +580,8 @@ export const RelationViewer: React.FC = () => {
               getApi.postMessage({
                 command: 'highlight-relation',
                 payload: {
-                  fpath: (map.find((i) => i.fid === selectedRecord.toFid) as fid2Path).path,
+                  fpath: ((map as Array<fid2Path>)
+                    .find((i) => i.fid === selectedRecord.toFid) as fid2Path).path,
                   base: fsPath,
                   from: selectedRecord.eFrom.loc,
                   to: selectedRecord.eTo.loc,
@@ -554,22 +592,24 @@ export const RelationViewer: React.FC = () => {
 
         }}
       />
-      {/* <Tooltip
-        title="Manually insert a relation"
-        placement="left"
-      >
-        <Button
-          style={{
-            position: 'absolute', right: '2.5em', bottom: '2.5em', zIndex: 999,
-          }}
-          type="primary"
-          shape="circle"
-          size="large"
-          onClick={() => { showModifyModal(lang as langTableIndex); }}
+      {inViewMode ? undefined : (
+        <Tooltip
+          title="Manually insert a relation"
+          placement="left"
         >
-          <PlusOutlined />
-        </Button>
-      </Tooltip> */}
+          <Button
+            style={{
+              position: 'absolute', right: '2.5em', bottom: '2.5em', zIndex: 999,
+            }}
+            type="primary"
+            shape="circle"
+            size="large"
+            onClick={() => { notification.warn({ message: 'Not support yet' }); }}
+          >
+            <PlusOutlined />
+          </Button>
+        </Tooltip>
+      )}
     </>
   );
 };

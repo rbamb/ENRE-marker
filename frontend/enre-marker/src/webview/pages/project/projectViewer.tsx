@@ -67,7 +67,7 @@ const RenderAction = (claimed: boolean, {
     return (
       <Space split={<Divider type="vertical" />}>
         <Button
-          style={{ paddingRight: 0 }}
+          style={{ paddingLeft: 0, paddingRight: 0 }}
           type="link"
           disabled
         >
@@ -83,22 +83,26 @@ const RenderAction = (claimed: boolean, {
             Restore
           </Button>
         ) : undefined}
-        <Link to={`/project/${pid}/file`}>
-          <Button
-            style={{ paddingLeft: 0 }}
-            type="link"
-            disabled
-          >
-            View
-          </Button>
-        </Link>
+        {gfsPath ? (
+          <Link to={`/project/${pid}/file`}>
+            <Button
+              style={{ paddingLeft: 0, paddingRight: 0 }}
+              type="link"
+              onClick={() => {
+                navDispatcher({ payload: 'file' });
+              }}
+            >
+              View
+            </Button>
+          </Link>
+        ) : undefined}
       </Space>
     );
   }
   return (
     <Space split={<Divider type="vertical" />}>
       <Button
-        style={{ paddingRight: 0 }}
+        style={{ paddingLeft: 0, paddingRight: 0 }}
         type="link"
         onClick={() => handleClaimClicked('claim')}
         disabled={state === 1}
@@ -107,9 +111,23 @@ const RenderAction = (claimed: boolean, {
       </Button>
       <Link to={`/project/${pid}/file`}>
         <Button
-          style={{ paddingLeft: 0 }}
+          style={{ paddingLeft: 0, paddingRight: 0 }}
           type="link"
-          disabled
+          onClick={() => {
+            workingDispatcher({
+              payload: {
+                /** since lang is needed for displaying entity table,
+                 * when user is in view mode by clicking view button,
+                 * save that project's meta infos to storage.
+                 * (this storage will be removed whenever user click a botton in menubar)
+                 */
+                viewProject: {
+                  pid, name, githubUrl, version, lang,
+                },
+              },
+            });
+            navDispatcher({ payload: undefined });
+          }}
         >
           View
         </Button>
@@ -125,7 +143,6 @@ const columns = [
     key: 'pname',
     render: (name: string, data: remote.project) => (
       <>
-        {/** <Link to={`/project/${data.pid}`}>{name}</Link>* */}
         {name}
         {data.state === 1
           ? (
@@ -209,7 +226,11 @@ const columns = [
 let gfsPath: string | undefined;
 
 export const ProjectViewer: React.FC = () => {
-  const { state: { project: stateProject } } = useContext(WorkingContext);
+  const {
+    state: {
+      project: stateProject,
+    } = { project: undefined },
+  } = useContext(WorkingContext);
 
   gfsPath = stateProject?.fsPath;
 

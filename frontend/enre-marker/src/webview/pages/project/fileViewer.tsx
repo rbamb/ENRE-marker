@@ -5,24 +5,29 @@ import { useAntdTable } from 'ahooks';
 import { request } from '../../compatible/httpAdapter';
 import { WorkingContext, NavContext } from '../../context';
 import { getApi } from '../../compatible/apiAdapter';
+import { ViewHelper } from '../../components/viewHelper';
 
-const RenderAction = (record: remote.file, type: 'entity' | 'relation', fsPath: string) => {
+const RenderAction = (record: remote.file, type: 'entity' | 'relation', fsPath: string | undefined) => {
   const { fid, path } = record;
 
-  const { state, dispatcher: workingDispatcher } = useContext(WorkingContext);
+  const { dispatcher: workingDispatcher } = useContext(WorkingContext);
   const { dispatcher: navDiapatcher } = useContext(NavContext);
 
   return (
-    <Link to={`/project/${state.project.pid}/file/${fid}/${type}`}>
+    <Link to={`/project/${gpid}/file/${fid}/${type}`}>
       <Button
         onClick={() => {
-          workingDispatcher({ payload: { file: undefined } });
-          workingDispatcher({ payload: { file: { fid, path, workingOn: type } } });
-          navDiapatcher({ payload: type });
-          getApi.postMessage({ command: 'open-file', payload: { fpath: path, mode: type, base: fsPath } });
+          if (inViewMode) {
+            workingDispatcher({ payload: { viewProject: { path, mode: type } } });
+          } else {
+            workingDispatcher({ payload: { file: undefined } });
+            workingDispatcher({ payload: { file: { fid, path, workingOn: type } } });
+            navDiapatcher({ payload: type });
+            getApi.postMessage({ command: 'open-file', payload: { fpath: path, mode: type, base: fsPath as string } });
+          }
         }}
       >
-        Mark
+        {inViewMode ? 'View' : 'Mark'}
       </Button>
     </Link>
   );
@@ -33,7 +38,7 @@ const columns = [
     title: 'File Path',
     dataIndex: 'path',
     key: 'fpath',
-    render: (fpath: string) => (
+    render: (fpath: string) => (inViewMode ? fpath : (
       <a
         onClick={() => {
           getApi.postMessage({ command: 'open-file', payload: { fpath, mode: 'entity', base: gfsPath } });
@@ -41,7 +46,7 @@ const columns = [
       >
         {fpath}
       </a>
-    ),
+    )),
   },
   {
     title: 'Entity',
@@ -93,7 +98,9 @@ const columns = [
   },
 ];
 
-let gfsPath: string;
+let gpid: number;
+let gfsPath: string | undefined;
+let inViewMode: boolean;
 
 /** to support view mode (only view files rather than claim the project and do mark things),
  * the component should fetch pid from the url,
@@ -103,16 +110,18 @@ let gfsPath: string;
 export const FileViewer: React.FC = () => {
   const { pid: urlPid } = useParams();
 
-  // TODO: view mode
+  gpid = parseInt(urlPid as string, 10);
+
   const {
     state: {
       project: {
-        pid:
-        statePid,
+        pid: statePid,
         fsPath,
-      },
-    }, dispatcher,
+      } = { pid: undefined, fsPath: undefined },
+    } = { project: { pid: undefined, fsPath: undefined } }, dispatcher,
   } = useContext(WorkingContext);
+
+  inViewMode = gpid !== statePid;
 
   gfsPath = fsPath;
 
@@ -144,7 +153,7 @@ export const FileViewer: React.FC = () => {
 
   // in mark mode
   useEffect(() => {
-    if (parseInt(urlPid as string, 10) === statePid && data) {
+    if (!inViewMode && data) {
       const c = data.map((i) => ({
         fid: i.fid,
         path: i.path,
@@ -155,20 +164,23 @@ export const FileViewer: React.FC = () => {
   }, [loading]);
 
   return (
-    <Table
-      sticky
-      {...tableProps}
-      pagination={{
-        ...pagination as any,
-        position: ['topLeft', 'bottomLeft'],
-        showSizeChanger: false,
-        showQuickJumper: true,
-        showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} records`,
-        size: 'default',
-      }}
-      rowKey={(record) => record.fid}
-      // @ts-ignore
-      columns={columns}
-    />
+    <>
+      <Table
+        sticky
+        {...tableProps}
+        pagination={{
+          ...pagination as any,
+          position: ['topLeft', 'bottomLeft'],
+          showSizeChanger: false,
+          showQuickJumper: true,
+          showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} records`,
+          size: 'default',
+        }}
+        rowKey={(record) => record.fid}
+        // @ts-ignore
+        columns={columns}
+      />
+      {inViewMode ? <ViewHelper /> : undefined}
+    </>
   );
 };

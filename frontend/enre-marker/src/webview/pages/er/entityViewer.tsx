@@ -12,11 +12,13 @@ import {
   Divider,
   Select,
   message,
+  notification,
 } from 'antd';
 import {
   CheckOutlined, CloseOutlined, EditOutlined, PlusOutlined,
 } from '@ant-design/icons';
 import React, { useContext, useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { request } from '../../compatible/httpAdapter';
 import { WorkingContext } from '../../context';
 import { langTableIndex, typeTable } from '../../.static/config';
@@ -477,27 +479,48 @@ let glang: langTableIndex;
 let gpid: number;
 let gfid: number;
 let gdata: Array<remote.entity>;
+let inViewMode: boolean;
 
 export const EntityViewer: React.FC = () => {
+  const { pid: urlPid, fid: urlFid } = useParams();
+
+  gpid = parseInt(urlPid as string, 10);
+  gfid = parseInt(urlFid as string, 10);
+
   const {
     state: {
       project: {
         pid,
         lang,
         fsPath,
-      },
-      file: { fid, path },
+      } = { pid: undefined, lang: undefined, fsPath: undefined },
+      file: { path } = { path: undefined },
+      viewProject: { pid: viewPid, lang: viewLang } = { pid: undefined, lang: undefined },
+    } = {
+      project: { pid: undefined, lang: undefined, fsPath: undefined },
+      file: { path: undefined },
+      viewProject: { pid: undefined, lang: undefined },
     },
   } = useContext(WorkingContext);
 
-  glang = lang;
-  gpid = pid;
-  gfid = fid;
+  const navigate = useNavigate();
+
+  if (gpid !== viewPid) {
+    notification.warn({
+      message: 'Url direct jumping is not supported',
+      description: 'Now redirecting you to the project page. Please go into project\'s details from this page.',
+    });
+    navigate('/project');
+  }
+
+  inViewMode = gpid !== pid;
+
+  glang = (lang || viewLang) as langTableIndex;
 
   const {
     tableProps, pagination, mutate, refresh,
   } = useAntdTable(
-    ({ current, pageSize }) => request(`GET project/${pid}/file/${fid}/entity?page=${current}&size=${pageSize}`)
+    ({ current, pageSize }) => request(`GET project/${gpid}/file/${gfid}/entity?page=${current}&size=${pageSize}`)
       .then(({ entity, total }: remote.resEntities) => ({
         /** let modified entity display it's true value */
         list: entity.map((e) => revealEntity(e)),
@@ -559,7 +582,7 @@ export const EntityViewer: React.FC = () => {
         rowKey={(record) => record.eid}
         // @ts-ignore
         columns={columns}
-        expandable={{
+        expandable={inViewMode ? undefined : {
           expandRowByClick: true,
           expandedRowKeys: [expandRow],
           rowExpandable: (record) => !record.status.hasBeenReviewed,
@@ -584,22 +607,24 @@ export const EntityViewer: React.FC = () => {
           },
         }}
       />
-      {/* <Tooltip
-        title="Manually insert an entity"
-        placement="left"
-      >
-        <Button
-          style={{
-            position: 'absolute', right: '2.5em', bottom: '2.5em', zIndex: 999,
-          }}
-          type="primary"
-          shape="circle"
-          size="large"
-          onClick={() => showModifyModal()}
+      {inViewMode ? undefined : (
+        <Tooltip
+          title="Manually insert an entity"
+          placement="left"
         >
-          <PlusOutlined />
-        </Button>
-      </Tooltip> */}
+          <Button
+            style={{
+              position: 'absolute', right: '2.5em', bottom: '2.5em', zIndex: 999,
+            }}
+            type="primary"
+            shape="circle"
+            size="large"
+            onClick={() => showModifyModal()}
+          >
+            <PlusOutlined />
+          </Button>
+        </Tooltip>
+      )}
     </>
   );
 };
