@@ -367,23 +367,25 @@ const columns = [
         key: 'fn',
         render: (name: string, record: remote.relation) => (
           <Tooltip title={`Qualified name:\n${name}`}>
-            <a
-              onClick={() => {
-                if (!inViewMode) {
-                  getApi.postMessage({
-                    command: 'highlight-relation',
-                    payload: {
-                      fpath: (gmap.find((i) => i.fid === record.toFid) as fid2Path).path,
-                      base: gfsPath,
-                      from: record.eFrom.loc,
-                      to: record.eTo.loc,
-                    },
-                  });
-                }
-              }}
-            >
-              {langRelative[glang].displayCodeName(record.eFrom)}
-            </a>
+            {inViewMode ? langRelative[glang].displayCodeName(record.eFrom) : (
+              <a
+                onClick={() => {
+                  if (!inViewMode) {
+                    getApi.postMessage({
+                      command: 'highlight-relation',
+                      payload: {
+                        fpath: (gmap.find((i) => i.fid === record.toFid) as fid2Path).path,
+                        base: gfsPath,
+                        from: record.eFrom.loc,
+                        to: record.eTo.loc,
+                      },
+                    });
+                  }
+                }}
+              >
+                {langRelative[glang].displayCodeName(record.eFrom)}
+              </a>
+            )}
           </Tooltip>
         ),
       },
@@ -414,24 +416,29 @@ const columns = [
             ? undefined
             : (gmap.find((i) => i.fid === record.toFid) as fid2Path).path;
           return (
-            <Tooltip title={`${inViewMode ? '' : `In file:\n${fpath}`}\nQualified name: ${name}`}>
-              <a
-                onClick={() => {
-                  if (!inViewMode) {
-                    getApi.postMessage({
-                      command: 'highlight-relation',
-                      payload: {
-                        fpath,
-                        base: gfsPath,
-                        from: record.eFrom.loc,
-                        to: record.eTo.loc,
-                      },
-                    });
-                  }
-                }}
-              >
-                {langRelative[glang].displayCodeName(record.eTo)}
-              </a>
+            <Tooltip
+              // eslint-disable-next-line react/jsx-key
+              title={[...(inViewMode ? [] : [`In file: ${fpath}`, <br />]), `Qualified name: ${name}`]}
+            >
+              {inViewMode ? langRelative[glang].displayCodeName(record.eTo) : (
+                <a
+                  onClick={() => {
+                    if (!inViewMode) {
+                      getApi.postMessage({
+                        command: 'highlight-relation',
+                        payload: {
+                          fpath,
+                          base: gfsPath,
+                          from: record.eFrom.loc,
+                          to: record.eTo.loc,
+                        },
+                      });
+                    }
+                  }}
+                >
+                  {langRelative[glang].displayCodeName(record.eTo)}
+                </a>
+              )}
             </Tooltip>
           );
         },
@@ -484,7 +491,7 @@ export const RelationViewer: React.FC = () => {
 
   const navigate = useNavigate();
 
-  if (gpid !== viewPid) {
+  if (gpid !== pid && gpid !== viewPid) {
     notification.warn({
       message: 'Url direct jumping is not supported',
       description: 'Now redirecting you to the project page. Please go into project\'s details from this page.',

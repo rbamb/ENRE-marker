@@ -60,10 +60,22 @@ const ControlledEntityInfo: React.FC<{ name?: string, loc?: remote.location, typ
     <>
       <Alert
         type="info"
-        message="Select new range of the wanted entity name directly in the code editor left, and infos will be synced to here."
+        message="Select new range of the wanted entity name directly in the code editor left, and infos will be synced to here. Modify code name is also allowed in case auto complete is wrong."
       />
       <Descriptions column={1} style={{ marginTop: '1em' }}>
-        <Descriptions.Item label="Code name">{trackedName || '-'}</Descriptions.Item>
+        <Descriptions.Item label="Code name">
+          {/** FIXME: An antd style issue, waiting antd to fix it */}
+          <Typography.Paragraph
+            style={{ width: '100%', marginBottom: 0 }}
+            editable={{
+              onChange: setName,
+              tooltip: name ? 'Modify' : 'Add prefix',
+              maxLength: 256,
+            }}
+          >
+            {trackedName || '-'}
+          </Typography.Paragraph>
+        </Descriptions.Item>
         <Descriptions.Item label="Starts at">{trackedLoc ? `line ${trackedLoc?.start.line}, column ${trackedLoc?.start.column}` : '-'}</Descriptions.Item>
         <Descriptions.Item label="Ends at">{trackedLoc ? `line ${trackedLoc?.end.line}, column ${trackedLoc?.end.column}` : '-'}</Descriptions.Item>
       </Descriptions>
@@ -373,16 +385,18 @@ const columns = [
     key: 'name',
     render: (name: string, record: remote.entity) => (
       <Tooltip title={`Qualified name:\n${name}`}>
-        <a
-          onClick={() => {
-            getApi.postMessage({
-              command: 'highlight-entity',
-              payload: record.loc,
-            });
-          }}
-        >
-          {langRelative[glang].displayCodeName(record)}
-        </a>
+        {inViewMode ? langRelative[glang].displayCodeName(record) : (
+          <a
+            onClick={() => {
+              getApi.postMessage({
+                command: 'highlight-entity',
+                payload: record.loc,
+              });
+            }}
+          >
+            {langRelative[glang].displayCodeName(record)}
+          </a>
+        )}
       </Tooltip>
     ),
   },
@@ -506,7 +520,7 @@ export const EntityViewer: React.FC = () => {
 
   const navigate = useNavigate();
 
-  if (gpid !== viewPid) {
+  if (gpid !== pid && gpid !== viewPid) {
     notification.warn({
       message: 'Url direct jumping is not supported',
       description: 'Now redirecting you to the project page. Please go into project\'s details from this page.',

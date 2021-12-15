@@ -4,6 +4,7 @@ import open from 'open';
 import { statSync, mkdirSync } from 'fs';
 import { exec } from 'child_process';
 import { entityDecorations } from './decorations';
+import { isValidLoc } from '../utils/loc';
 
 export type localCommands =
   'set-state'
@@ -78,15 +79,13 @@ export const msgHandler:
   },
 
   'open-file': (({ fpath, base }: { fpath: string, base: string }) => {
-    try {
-      vscode.workspace.openTextDocument(path.join(base, fpath))
-        .then(doc => {
-          vscode.window.showTextDocument(doc, 1)
-            .then(editor => currControledDoc = editor);
-        });
-    } catch (e: any) {
-      showErrorMessage(e.message);
-    }
+    // console.log(`open-file command received with fpath=${fpath} and base=${base}, composed path=${path.join(base, fpath)}`);
+    vscode.workspace.openTextDocument(path.join(base, fpath))
+      .then(doc => {
+        // console.log('openTextDocument succeeded');
+        vscode.window.showTextDocument(doc, 1)
+          .then(editor => (/*console.log('showTextDocument succeeded'),*/ currControledDoc = editor));
+      });
   }),
 
   'validate-path': ({ value, pname }: { value: string, pname: string }) => {
@@ -357,31 +356,35 @@ export const msgHandler:
         .then(doc => {
           vscode.window.showTextDocument(doc, 3)
             .then(editor => {
-              if (from.start.line === -1 || to.start.line === -1) {
-                return;
+              if (isValidLoc(from)) {
+                const range0 = new vscode.Range(
+                  new vscode.Position(from.start.line - 1, from.start.column - 1),
+                  new vscode.Position(
+                    from.end.line !== -1 ? from.end.line - 1 : from.start.line - 1,
+                    from.end.column !== -1 ? from.end.column - 1 : from.start.column,
+                  )
+                );
+                currControledDoc?.setDecorations(entityDecorations.entityHighlighted, [range0]);
+                currControledDoc?.revealRange(range0, vscode.TextEditorRevealType.InCenter);
+              } else {
+                showWarningMessage('From entity\'s location has not been properly configured, you may want to review entities in this file before relations.');
               }
-
-              const range0 = new vscode.Range(
-                new vscode.Position(from.start.line - 1, from.start.column - 1),
-                new vscode.Position(
-                  from.end.line !== -1 ? from.end.line - 1 : from.start.line - 1,
-                  from.end.column !== -1 ? from.end.column - 1 : from.start.column,
-                )
-              );
-              currControledDoc?.setDecorations(entityDecorations.entityHighlighted, [range0]);
-              currControledDoc?.revealRange(range0, vscode.TextEditorRevealType.InCenter);
 
               currControledDocTo = editor;
 
-              const range1 = new vscode.Range(
-                new vscode.Position(to.start.line - 1, to.start.column - 1),
-                new vscode.Position(
-                  to.end.line !== -1 ? to.end.line - 1 : to.start.line - 1,
-                  to.end.column !== -1 ? to.end.column - 1 : to.start.column,
-                )
-              );
-              editor.setDecorations(entityDecorations.entityHighlighted, [range1]);
-              currControledDocTo?.revealRange(range1, vscode.TextEditorRevealType.InCenter);
+              if (isValidLoc(to)) {
+                const range1 = new vscode.Range(
+                  new vscode.Position(to.start.line - 1, to.start.column - 1),
+                  new vscode.Position(
+                    to.end.line !== -1 ? to.end.line - 1 : to.start.line - 1,
+                    to.end.column !== -1 ? to.end.column - 1 : to.start.column,
+                  )
+                );
+                currControledDocTo.setDecorations(entityDecorations.entityHighlighted, [range1]);
+                currControledDocTo.revealRange(range1, vscode.TextEditorRevealType.InCenter);
+              } else {
+                showWarningMessage('To entity\'s location has not been properly configured, you may want to review entities in that file before relations.');
+              }
             });
         });
     } else {

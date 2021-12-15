@@ -83,7 +83,7 @@ const RenderAction = (claimed: boolean, {
             Restore
           </Button>
         ) : undefined}
-        {gfsPath ? (
+        {/* {gfsPath ? (
           <Link to={`/project/${pid}/file`}>
             <Button
               style={{ paddingLeft: 0, paddingRight: 0 }}
@@ -95,7 +95,7 @@ const RenderAction = (claimed: boolean, {
               View
             </Button>
           </Link>
-        ) : undefined}
+        ) : undefined} */}
       </Space>
     );
   }

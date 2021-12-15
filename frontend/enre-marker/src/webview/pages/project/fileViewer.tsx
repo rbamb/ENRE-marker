@@ -23,7 +23,7 @@ const RenderAction = (record: remote.file, type: 'entity' | 'relation', fsPath: 
             workingDispatcher({ payload: { file: undefined } });
             workingDispatcher({ payload: { file: { fid, path, workingOn: type } } });
             navDiapatcher({ payload: type });
-            getApi.postMessage({ command: 'open-file', payload: { fpath: path, mode: type, base: fsPath as string } });
+            getApi.postMessage({ command: 'open-file', payload: { fpath: path, base: fsPath as string } });
           }
         }}
       >

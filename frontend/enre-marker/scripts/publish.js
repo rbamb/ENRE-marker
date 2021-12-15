@@ -38,6 +38,7 @@ try {
 fs.mkdirSync(publishPath);
 
 
+// modify pkg for publish
 const pkg = require('../package.json');
 
 pkg.publishConfig = {
