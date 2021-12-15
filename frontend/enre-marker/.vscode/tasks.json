@@ -1,14 +1,14 @@
 // See https://go.microsoft.com/fwlink/?LinkId=733558
 // for the documentation about the tasks.json format
 {
-	"version": "2.0.0",
-	"tasks": [
-		{
-			"type": "npm",
-			"script": "compile:dev-no-mock",
-			"isBackground": true,
-			"group": "build",
-			"problemMatcher": [
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "type": "npm",
+      "script": "compile:dev-no-mock",
+      "isBackground": true,
+      "group": "build",
+      "problemMatcher": [
         {
           "pattern": [
             {
@@ -21,18 +21,18 @@
           "background": {
             "activeOnStart": true,
             "beginsPattern": "> enre-marker@\\d*\\.\\d*\\.\\d* compile:dev-no-mock",
-            "endsPattern": "\\s* exited with code 0"
+            "endsPattern": "[1] cd src/webview && npm run compile:dev exited with code 0"
           }
         }
       ],
-			"label": "compile-all"
-		},
+      "label": "compile-all"
+    },
     {
-			"type": "npm",
-			"script": "compile:ext-only",
-			"isBackground": true,
-			"group": "build",
-			"problemMatcher": [
+      "type": "npm",
+      "script": "compile:ext-only",
+      "isBackground": true,
+      "group": "build",
+      "problemMatcher": [
         {
           "pattern": [
             {
@@ -49,7 +49,7 @@
           }
         }
       ],
-			"label": "compile-ext-only"
-		}
-	]
+      "label": "compile-ext-only"
+    }
+  ]
 }
