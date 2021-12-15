@@ -1,5 +1,7 @@
 import { FileTextOutlined, Loading3QuartersOutlined, NodeIndexOutlined } from '@ant-design/icons';
-import { Menu, notification, Tag } from 'antd';
+import {
+  Menu, notification, Tag, Typography,
+} from 'antd';
 import React, { useContext } from 'react';
 import { NavLink, useParams } from 'react-router-dom';
 import { langTable } from '../../.static/config';
@@ -44,18 +46,27 @@ export const ViewHelper: React.FC = () => {
         borderRadius: '2.5em',
         padding: '0.2em 3em',
         backdropFilter: 'saturate(180%) blur(20px)',
+        // fix previous property in browser preview env at safari
+        WebkitBackdropFilter: 'saturate(180%) blur(20px)',
         border: '1px solid #f0f0f0',
       }}
     >
-      <p style={{ marginBottom: 0, textAlign: 'center' }}>
+      <Typography.Text
+        style={{
+          marginBottom: 0,
+          textAlign: 'center',
+          width: '100%',
+        }}
+        ellipsis
+      >
         Viewing&nbsp;
         <Tag color={langTable[lang].color} style={{ marginRight: 0 }}>
           {langTable[lang].text}
         </Tag>
         &nbsp;project&nbsp;
         {`${name} #${version}`}
-        {urlFid !== undefined ? ` in file ${getShortFileName(file, 30)}` : undefined}
-      </p>
+        {urlFid !== undefined ? ` in file ${getShortFileName(file, false)}` : undefined}
+      </Typography.Text>
       <Menu
         mode="horizontal"
         style={{
