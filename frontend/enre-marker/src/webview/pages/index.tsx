@@ -27,6 +27,7 @@ import { getApi } from '../compatible/apiAdapter';
 import { ProjectDashboard } from './project/projectDashboard';
 import { EntityViewer } from './er/entityViewer';
 import { RelationViewer } from './er/relationViewer';
+import { getShortFileName } from '../utils/getShortFileName';
 
 const RequireAuth = ({ children }: React.PropsWithChildren<any>) => {
   const { state } = useContext(LoginContext);
@@ -95,12 +96,7 @@ export const App: React.FC = () => {
     }
   });
 
-  let fname: string | undefined = workingState?.file?.path.split('/').pop();
-  if (fname) {
-    if (fname.length > 15) {
-      fname = `${fname.substring(0, 11)}...`;
-    }
-  }
+  const fname: string | undefined = getShortFileName(workingState?.file?.path);
 
   return (
     <>

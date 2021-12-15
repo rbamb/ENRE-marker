@@ -5,7 +5,7 @@ import { useAntdTable } from 'ahooks';
 import { request } from '../../compatible/httpAdapter';
 import { WorkingContext, NavContext } from '../../context';
 import { getApi } from '../../compatible/apiAdapter';
-import { ViewHelper } from '../../components/viewHelper';
+import { ViewHelper } from '../../components/ViewHelper';
 
 const RenderAction = (record: remote.file, type: 'entity' | 'relation', fsPath: string | undefined) => {
   const { fid, path } = record;
@@ -18,7 +18,7 @@ const RenderAction = (record: remote.file, type: 'entity' | 'relation', fsPath: 
       <Button
         onClick={() => {
           if (inViewMode) {
-            workingDispatcher({ payload: { viewProject: { path, mode: type } } });
+            workingDispatcher({ payload: { viewProject: { file: path, mode: type } } });
           } else {
             workingDispatcher({ payload: { file: undefined } });
             workingDispatcher({ payload: { file: { fid, path, workingOn: type } } });

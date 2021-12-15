@@ -27,6 +27,7 @@ import { langTableIndex, typeTable } from '../../.static/config';
 import { fid2Path, getApi } from '../../compatible/apiAdapter';
 import { revealEntity, revealRelation } from '../../utils/reveal';
 import langRelative from '../../utils/langRelative';
+import { ViewHelper } from '../../components/ViewHelper';
 
 const { Option } = Select;
 
@@ -533,7 +534,7 @@ export const RelationViewer: React.FC = () => {
   };
 
   useEffect(() => {
-    if (data) {
+    if (!inViewMode && data) {
       getApi.postMessage({ command: 'open-file', payload: { fpath: path, mode: 'relation-from', base: fsPath } });
       getApi.postMessage({ command: 'change-layout', payload: 'relation' });
       /** this will clear decorations if user jump from entity to relation page */
@@ -610,6 +611,7 @@ export const RelationViewer: React.FC = () => {
           </Button>
         </Tooltip>
       )}
+      {inViewMode ? <ViewHelper /> : undefined}
     </>
   );
 };

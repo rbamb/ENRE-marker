@@ -8,25 +8,31 @@ import { langTableIndex } from '../.static/config';
 const onlySingleCopy = typeof acquireVsCodeApi === 'undefined' ? undefined : acquireVsCodeApi();
 
 // FIXME: only for debug purpose
-// const mockState = {
-//   login: {
-//     uid: 10000,
-//     token: 'V3FnMNqPkmYudEnCEb1i5GWW1bXKCUC3z9H6AiavLaPCFAt1lylRcDgMjn3LPJgE',
-//     name: 'ThisRabbit',
-//   },
-//   working: {
-//     project: {
-//       pid: 1,
-//       name: 'oozie',
-//       fsPath: 'd://test/ENRE.js',
-//       version: '8dfdb35',
-//       lang: 'java',
-//       githbUrl: 'apache/oozie',
-//     },
-//   },
-// };
+const mockState = {
+  login: {
+    uid: 10000,
+    token: 'q46BBttUiZquWAWRTMCHTq8k09oTwPENylrfHcsEl6elVeWW1IVrKz4dzRQTJOwd',
+    name: 'ThisRabbit',
+  },
+  working: {
+    // project: {
+    //   pid: 1,
+    //   name: 'oozie',
+    //   fsPath: 'd://test/ENRE.js',
+    //   version: '8dfdb35',
+    //   lang: 'java',
+    //   githbUrl: 'apache/oozie',
+    // },
+    viewProject: {
+      pid: 1,
+      name: 'EventBus',
+      version: 'abcde123',
+      lang: 'java',
+    },
+  },
+};
 
-const mockState = {};
+// const mockState = {};
 
 export const getApi = onlySingleCopy ? {
   ...onlySingleCopy,

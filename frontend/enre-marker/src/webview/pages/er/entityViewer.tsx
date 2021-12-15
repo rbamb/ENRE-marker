@@ -26,6 +26,7 @@ import { getApi } from '../../compatible/apiAdapter';
 import { isLocEqual } from '../../utils/compare';
 import { locNotApplicable, revealEntity } from '../../utils/reveal';
 import langRelative from '../../utils/langRelative';
+import { ViewHelper } from '../../components/ViewHelper';
 
 const { Option } = Select;
 
@@ -555,7 +556,7 @@ export const EntityViewer: React.FC = () => {
   };
 
   useEffect(() => {
-    if (data) {
+    if (!inViewMode && data) {
       gdata = data;
       // in case directly go to this page by click the navbar
       getApi.postMessage({ command: 'open-file', payload: { fpath: path, mode: 'entity', base: fsPath } });
@@ -625,6 +626,7 @@ export const EntityViewer: React.FC = () => {
           </Button>
         </Tooltip>
       )}
+      {inViewMode ? <ViewHelper /> : undefined}
     </>
   );
 };
