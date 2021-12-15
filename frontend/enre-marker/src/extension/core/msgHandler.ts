@@ -77,22 +77,15 @@ export const msgHandler:
     return;
   },
 
-  'open-file': (({ fpath, base, mode }: { fpath: string, base: string, mode: 'entity' | 'relation-to' | 'relation-from' }) => {
-    switch (mode) {
-      case 'entity':
-        vscode.workspace.openTextDocument(path.join(base, fpath))
-          .then(doc => {
-            vscode.window.showTextDocument(doc, 1)
-              .then(editor => currControledDoc = editor);
-          });
-        break;
-      case 'relation-from':
-        vscode.workspace.openTextDocument(path.join(base, fpath))
-          .then(doc => {
-            vscode.window.showTextDocument(doc, 1)
-              .then(editor => currControledDoc = editor);
-          });
-        break;
+  'open-file': (({ fpath, base }: { fpath: string, base: string }) => {
+    try {
+      vscode.workspace.openTextDocument(path.join(base, fpath))
+        .then(doc => {
+          vscode.window.showTextDocument(doc, 1)
+            .then(editor => currControledDoc = editor);
+        });
+    } catch (e: any) {
+      showErrorMessage(e.message);
     }
   }),
 
@@ -226,7 +219,7 @@ export const msgHandler:
             // note that the output is NOT simply '.git', but '.git' with some white chars
             if (!/^\.git/.test(stdout)) {
               showWarningMessage('A subfolder was given, which has been automatically convert to top level folder.');
-              possiblePath = path.resolve(possiblePath, '..');
+              possiblePath = stdout.substring(0, stdout.indexOf('/.git'));
             }
 
             exec(`git checkout ${version}`, { cwd: possiblePath }, (err) => {
