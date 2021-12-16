@@ -119,6 +119,10 @@ declare namespace remote {
   interface manuallyRelation {
     eFrom?: number,
     eTo?: number,
+    rLoc?: {
+      line: number,
+      column: number,
+    }
     rType: number,
   }
 }

@@ -301,6 +301,10 @@ declare type relation {
   eFrom: entity,
   eTo: entity,
   toFid: number,
+  rLoc: {
+    line: number,
+    column: number,
+  },
   rType: number,
   status: status
 }
@@ -310,19 +314,25 @@ declare type status {
   // Below properties only appear if hasBeenReviewed is true
   operation: operation,
   // Below properties only appear if operation is 2
-  newRelation: Pick<manuallyRelation, 'rType'>
+  newRelation: Pick<manuallyRelation, 'eTo', 'rLoc', 'rType'>
 }
 
 declare type manuallyRelation {
   eFrom?: number,
   eTo?: number,
-  rType: number
+  rLoc?: {
+    line: number,
+    column: number,
+  },
+  rType: number,
 }
 ```
 
 * `toFid` indicates the file which the `to` entity in this relation belongs to.
 
 > Since this API is called based on the `fid` of the `from` entity, so `fromFid` like thing can be omit, and be infered during runtime.
+
+* `rLoc` contains `line` and `column` where the `eFrom` is actually been used in `eTo`.
 
 ###### is failed
 
@@ -416,7 +426,7 @@ declare type relationUserResult {
 declare type relationFixPatch {
   shouldBe: fixOption,
   // Below properties only appear if shouldBe is 2 (modified)
-  newly: Pick<manuallyRelation, 'rType'>
+  newly: Pick<manuallyRelation, 'eTo', 'rLoc', 'rType'>
 }
 ```
 
