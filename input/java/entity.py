@@ -1,6 +1,8 @@
 import understand
 import argparse
 import json
+import sys
+import re
 
 # Usage
 parser = argparse.ArgumentParser()
@@ -9,7 +11,12 @@ parser.add_argument('out', help='specify output file\'s name and location')
 args = parser.parse_args()
 
 
+def contain(keyword, raw):
+    return bool(re.search(r'(^| )%s' % keyword, raw))
+
+
 if __name__ == '__main__':
+    print('Openning udb file...')
     db = understand.open(args.db)
 
     ent_list = []
@@ -20,8 +27,9 @@ if __name__ == '__main__':
         'name': '[[Virtual File]]',
     })
 
-    # Extract file entity first
+    # Extract file entities first
     print('Exporting File entities...')
+    file_count = 0
     for ent in db.ents('File'):
         # Filter only java files
         if ent.language() == 'Java':
@@ -30,18 +38,32 @@ if __name__ == '__main__':
                 'type': 'File',
                 'name': ent.relname(),
             })
+            file_count += 1
+    print(f'Total {file_count} files are successfully exported')
 
     print('Exporting entities other that File...')
     regular_count = 0
+
+    for ent in db.ents('Package'):
+        if ent.language() == 'Java':
+            # Package, belongs to vfile
+            ent_list.append({
+                'id': ent.id(),
+                'type': ent.kindname(),
+                'name': ent.longname(),
+                'belongs_to': 0,
+            })
+            regular_count += 1
+
     # Filter entities other than file
-    for ent in db.ents('~File ~Unknown ~Unresolved ~Implicit'):
+    for ent in db.ents('~File ~Package ~Unknown ~Unresolved ~Implicit'):
         if ent.language() == 'Java':
             # Although a suffix 's' is added, there should be only
             # one entry that matches the condition
             decls = ent.refs('Definein')
             if decls:
-              # Normal entities should have a ref definein contains location
-              # about where this entity is defined
+                # Normal entities should have a ref definein contains location
+                # about where this entity is defined
                 line = decls[0].line()
                 start_column = decls[0].column() + 1
                 end_column = start_column + len(ent.simplename())
@@ -56,24 +78,6 @@ if __name__ == '__main__':
                     'belongs_to': decls[0].file().id(),
                 })
                 regular_count += 1
-            elif ent.kindname() == 'Package':
-                # Package, which is possible to have multipul parent nodes
-                decls = ent.refs('Declarein')
-                for decl in decls:
-                    line = decl.line()
-                    start_column = decl.column() + 1
-                    end_column = start_column + len(ent.simplename())
-                    ent_list.append({
-                        'id': ent.id(),
-                        'type': ent.kindname(),
-                        'name': ent.longname(),
-                        'start_line': line,
-                        'end_line': line,
-                        'start_column': start_column,
-                        'end_column': end_column,
-                        'belongs_to': decl.file().id(),
-                    })
-                    regular_count += 1
             # elif ent.kindname() == 'Unresolved Type':
             #     # Unresolved type, however may contains refs
             #     # typeby/useby
@@ -118,14 +122,45 @@ if __name__ == '__main__':
                     all_ref_kinds.add(ref.kind().longname())
                 print('All possible ref kinds are', all_ref_kinds)
 
-                break
+                sys.exit(-1)
+
+    all_ent_kinds = set()
+    for ent in ent_list:
+        all_ent_kinds.add(ent['type'])
+
+    print('Mapping string-ed types to numbers...')
+    for ent in ent_list:
+        if contain('Variable', ent['type']) \
+                or contain('EnumConstant', ent['type']) \
+                or contain('Parameter', ent['type']):
+            ent['type'] = 1
+        elif contain('Method', ent['type']) or contain('Constructor', ent['type']):
+            ent['type'] = 2
+        elif contain('Interface', ent['type']):
+            ent['type'] = 3
+        elif contain('Annotation', ent['type']):
+            ent['type'] = 4
+        elif contain('Enum Type', ent['type']):
+            ent['type'] = 5
+        elif contain('Class', ent['type']):
+            ent['type'] = 6
+        elif contain('File', ent['type']):
+            ent['type'] = 7
+        elif contain('Package', ent['type']):
+            ent['type'] = 8
+        elif contain('TypeVariable', ent['type']):
+            # FIXME: Add a new entity type for generics
+            ent['type'] = 0
+        else:
+            print(f'Meets unhandled entity type {ent["type"]}')
+            print(
+                ent['id'],
+                ent['name'],
+            )
+            sys.exit(-1)
 
     print('Saving results to the file...')
     with open(args.out, 'w') as out:
         json.dump(ent_list, out, indent=4)
     print(f'Total {regular_count} entities are successfully exported')
-
-    all_ent_kinds = set()
-    for ent in ent_list:
-        all_ent_kinds.add(ent['type'])
-    print('All possible entity type are', sorted(all_ent_kinds))
+    print('All possible entity types are', sorted(all_ent_kinds))
