@@ -235,7 +235,8 @@ export const ProjectViewer: React.FC = () => {
   gfsPath = stateProject?.fsPath;
 
   const { data, loading } = useRequest(
-    () => request('GET project')
+    /** the slash in the end is necessary or a CORS with 302 returned will be issued */
+    () => request('GET project/')
       .then(
         ({ project }: remote.resProjects) => project.sort(
           ({ progress: pa, claimed: ca }, { progress: pb, claimed: cb }) => {
