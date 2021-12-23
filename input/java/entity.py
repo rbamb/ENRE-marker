@@ -44,9 +44,10 @@ if __name__ == '__main__':
     print('Exporting entities other that File...')
     regular_count = 0
 
+    # Package, not belonging to any real files, worth process separately
     for ent in db.ents('Package'):
         if ent.language() == 'Java':
-            # Package, belongs to vfile
+            # Assign Packages to a virtual file to fulfill db schema
             ent_list.append({
                 'id': ent.id(),
                 'type': ent.kindname(),
@@ -134,7 +135,8 @@ if __name__ == '__main__':
                 or contain('EnumConstant', ent['type']) \
                 or contain('Parameter', ent['type']):
             ent['type'] = 1
-        elif contain('Method', ent['type']) or contain('Constructor', ent['type']):
+        elif contain('Method', ent['type']) \
+                or contain('Constructor', ent['type']):
             ent['type'] = 2
         elif contain('Interface', ent['type']):
             ent['type'] = 3
