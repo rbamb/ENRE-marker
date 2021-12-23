@@ -5,7 +5,6 @@ from datetime import timedelta, datetime, timezone
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST, require_GET
 from django.db import connection
-from django.db.models import Count
 
 from user.models import User, Login, Log
 from . import formats
@@ -313,7 +312,7 @@ def entity_operation(request, uid, pid, fid):
     # get all entities in fid in pid
     elif request.method == 'GET':
         e_list = []
-        for entity in Entity.objects.filter(fid=f, shallow=False):
+        for entity in Entity.objects.filter(fid=f, shallow=False).order_by('loc_start_line', 'loc_start_column'):
             e_list.append(build_entity(entity).to_dict())
 
         res = {
@@ -435,7 +434,8 @@ def relation_operation(request, uid, pid, fid):
     # get all relations in fid in pid
     elif request.method == 'GET':
         r_list = []
-        for relation in Relation.objects.filter(from_entity__fid=f, shallow=False):
+        for relation in Relation.objects.filter(from_entity__fid=f, shallow=False)\
+                .order_by('from_entity__loc_start_line', 'from_entity__loc_start_column'):
             if relation.reviewed > -1:
                 operation = relation.reviewed
                 if operation == 2:
