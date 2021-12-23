@@ -580,6 +580,8 @@ create table if not exists `relation`
   from_entity integer not null,
   to_entity integer not null,
   relation_type tinyint not null,
+  loc_line integer not null,
+  loc_column integer not null,
 
   shallow boolean not null default false,
   inserted boolean not null default false,
