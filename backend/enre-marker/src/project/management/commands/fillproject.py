@@ -40,9 +40,12 @@ class Command(BaseCommand):
         except Project.DoesNotExist:
             raise CommandError(f'Project with pid {pid} does not exist')
 
+        self.stdout.write(f'Using project with id={proj.pid} and name={proj.p_name}')
+
         ent_data = load_json(ent_path)
         rel_data = load_json(rel_path)
 
+        self.stdout.write('Importing entities...')
         file_type_index = get_file_type_index(proj.lang)
         file_map = {}
         id_map = {}
@@ -65,7 +68,7 @@ class Command(BaseCommand):
                     file_count += 1
                     # Also create corresponding entity for each file
                     e = Entity.objects.create(
-                        fid=File.objects.get(fid_id=f.fid),
+                        fid=File.objects.get(fid=f.fid),
                         code_name=file_path.as_posix(),
                         entity_type=ent['type'],
                     )
@@ -91,6 +94,7 @@ class Command(BaseCommand):
                 id_map[ent['id']] = e.eid
                 ent_count += 1
 
+        self.stdout.write('Importing relations...')
         rel_list = []
         for rel in rel_data:
             rel_list.append(Relation(

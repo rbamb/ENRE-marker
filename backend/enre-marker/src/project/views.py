@@ -231,6 +231,9 @@ def valid_id(func):
     return inner
 
 
+# TODO: Modify with lang_relative package to handle lang relative logic
+
+
 @login_required
 @valid_id
 def entity_operation(request, uid, pid, fid):
