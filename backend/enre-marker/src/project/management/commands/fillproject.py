@@ -44,6 +44,7 @@ class Command(BaseCommand):
         rel_data = load_json(rel_path)
 
         file_type_index = get_file_type_index(proj.lang)
+        file_map = {}
         id_map = {}
         file_count = 0
         ent_count = 0
@@ -60,12 +61,20 @@ class Command(BaseCommand):
                         pid=proj,
                         file_path=file_path.as_posix(),
                     )
-                    id_map[ent['id']] = f.fid
+                    file_map[ent['id']] = f.fid
                     file_count += 1
+                    # Also create corresponding entity for each file
+                    e = Entity.objects.create(
+                        fid=File.objects.get(fid_id=f.fid),
+                        code_name=file_path.as_posix(),
+                        entity_type=ent['type'],
+                    )
+                    id_map[ent['id']] = e.eid
+                    ent_count += 1
             else:
                 try:
                     e = Entity.objects.create(
-                        fid=File.objects.get(fid=id_map[ent['belongs_to']]),
+                        fid=File.objects.get(fid=file_map[ent['belongs_to']]),
                         code_name=ent['name'],
                         entity_type=ent['type'],
                         loc_start_line=ent['start_line'],
@@ -75,7 +84,7 @@ class Command(BaseCommand):
                     )
                 except KeyError:
                     e = Entity.objects.create(
-                        fid=File.objects.get(fid=id_map[ent['belongs_to']]),
+                        fid=File.objects.get(fid=file_map[ent['belongs_to']]),
                         code_name=ent['name'],
                         entity_type=ent['type'],
                     )
