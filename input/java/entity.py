@@ -150,9 +150,10 @@ if __name__ == '__main__':
             ent['type'] = 7
         elif contain('Package', ent['type']):
             ent['type'] = 8
+        elif contain('Module', ent['type']):
+            ent['type'] = 9
         elif contain('TypeVariable', ent['type']):
-            # FIXME: Add a new entity type for generics
-            ent['type'] = 0
+            ent['type'] = 10
         else:
             print(f'Meets unhandled entity type {ent["type"]}')
             print(

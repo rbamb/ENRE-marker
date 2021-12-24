@@ -39,8 +39,8 @@ export const typeTable: Record<langTableIndex, typeTableElement> = {
     relation: [],
   },
   java: {
-    entity: ['Unknown', 'Variable', 'Method', 'Interface', 'Annotation', 'Enum', 'Class', 'File', 'Package', 'Module'],
-    relation: ['Unknown', 'Import', 'Inherit', 'Implement', 'Call', 'Set', 'Use', 'Modify', 'Cast', 'Create', 'Typed'],
+    entity: ['Unknown', 'Variable', 'Method', 'Interface', 'Annotation', 'Enum', 'Class', 'File', 'Package', 'Module', 'TypeVariable'],
+    relation: ['Unknown', 'Import', 'Inherit', 'Implement', 'Call', 'Set', 'Use', 'Modify', 'Cast', 'Create', 'Typed', 'Throw', 'Couple', 'Contain', 'DotRef', 'Override'],
   },
   cpp: {
     entity: ['Variable', 'Function'],
