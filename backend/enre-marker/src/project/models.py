@@ -40,18 +40,6 @@ class File(models.Model):
 
 
 class Entity(models.Model):
-    class EntityType(models.IntegerChoices):
-        UNKNOWN = 0, 'unknown'
-        VARIABLE = 1, 'variable'
-        METHOD = 2, 'method'
-        INTERFACE = 3, 'interface'
-        ANNOTATION = 4, 'annotation'
-        ENUM = 5, 'enum'
-        CLASS = 6, 'class'
-        FILE = 7, 'file'
-        PACKAGE = 8, 'package'
-        MODULE = 9, 'module'
-
     class ReviewedOption(models.IntegerChoices):
         inapplicable = -2, 'inapplicable'
         notYet = -1, 'notYet'
@@ -67,7 +55,7 @@ class Entity(models.Model):
     loc_end_line = models.IntegerField(default=-1)
     loc_end_column = models.IntegerField(default=-1)
 
-    entity_type = models.SmallIntegerField(choices=EntityType.choices)
+    entity_type = models.SmallIntegerField()
 
     reviewed = models.SmallIntegerField(choices=ReviewedOption.choices, default=-1)
 
@@ -81,19 +69,6 @@ class Entity(models.Model):
 
 
 class Relation(models.Model):
-    class RelationType(models.IntegerChoices):
-        UNKNOWN = 0, 'unknown'
-        IMPORT = 1, 'import'
-        INHERIT = 2, 'inherit'
-        IMPLEMENT = 3, 'implement'
-        CALL = 4, 'call'
-        SET = 5, 'set'
-        USE = 6, 'use'
-        MODIFY = 7, 'modify'
-        CAST = 8, 'cast'
-        CREATE = 9, 'create'
-        TYPED = 10, 'typed'
-
     class ReviewedOption(models.IntegerChoices):
         inapplicable = -2, 'inapplicable'
         notYet = -1, 'notYet'
@@ -104,7 +79,11 @@ class Relation(models.Model):
     rid = models.AutoField(primary_key=True)
     from_entity = models.ForeignKey(Entity, on_delete=models.CASCADE, related_name='from_entity')
     to_entity = models.ForeignKey(Entity, on_delete=models.CASCADE, related_name='to_entity')
-    relation_type = models.SmallIntegerField(choices=RelationType.choices)
+    loc_line = models.IntegerField(default=-1)
+    loc_column = models.IntegerField(default=-1)
+
+    relation_type = models.SmallIntegerField()
+
     reviewed = models.SmallIntegerField(choices=ReviewedOption.choices, default=-1)
 
     # whether this relation is modified
