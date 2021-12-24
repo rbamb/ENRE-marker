@@ -232,7 +232,7 @@ def valid_id(func):
 
 
 # TODO: Modify with lang_relative package to handle lang relative logic
-
+# TODO: Consume relation loc
 
 @login_required
 @valid_id

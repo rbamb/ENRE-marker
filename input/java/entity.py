@@ -11,6 +11,7 @@ parser.add_argument('out', help='specify output file\'s name and location')
 args = parser.parse_args()
 
 
+# TODO: Modulize
 def contain(keyword, raw):
     return bool(re.search(r'(^| )%s' % keyword, raw))
 
