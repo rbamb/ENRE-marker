@@ -1,5 +1,9 @@
 # Change Log
 
+## 1.1.1
+
+- Fix: Cache clear button `Clear` should also clear cached API data
+
 ## 1.1.0
 
 - Enable add entity
