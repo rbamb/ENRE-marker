@@ -153,8 +153,10 @@ def view_a_project(request, uid, pid):
                     if item[0] >= 0:
                         relation_progress_done += item[1]
 
-            entity_progress = 100 if entity_progress_total == 0 else entity_progress_done / entity_progress_total * 100
-            relation_progress = 100 if relation_progress_total == 0 else relation_progress_done / relation_progress_total * 100
+            entity_progress = 100 if entity_progress_total == 0 else entity_progress_done / \
+                entity_progress_total * 100
+            relation_progress = 100 if relation_progress_total == 0 else relation_progress_done / \
+                relation_progress_total * 100
 
             file = formats.File(
                 f.fid,
@@ -257,10 +259,13 @@ def entity_operation(request, uid, pid, fid):
                 obj = Entity.objects.create(
                     code_name=manually_entity.get('name'),
                     entity_type=manually_entity.get('eType'),
-                    loc_start_line=manually_entity.loc.get('start').get('line'),
-                    loc_start_column=manually_entity.loc.get('start').get('column'),
+                    loc_start_line=manually_entity.loc.get(
+                        'start').get('line'),
+                    loc_start_column=manually_entity.loc.get(
+                        'start').get('column'),
                     loc_end_line=manually_entity.loc.get('end').get('line'),
-                    loc_end_column=manually_entity.loc.get('end').get('column'),
+                    loc_end_column=manually_entity.loc.get(
+                        'end').get('column'),
                     fid=f,
                     inserted=True,
                     reviewed=-2,
@@ -276,7 +281,8 @@ def entity_operation(request, uid, pid, fid):
                     operation = entity_user_result.get('fix').get('shouldBe')
                     if operation == 2:
                         # modify
-                        manually_entity = entity_user_result.get('fix').get('newly')
+                        manually_entity = entity_user_result.get(
+                            'fix').get('newly')
                         obj = Entity.objects.create(
                             code_name=manually_entity.get('name'),
                             entity_type=manually_entity.get('eType'),
@@ -331,7 +337,8 @@ def build_entity(entity):
     if entity.reviewed > -1:
         operation = entity.reviewed
         if operation == 2:
-            to_id = Log.objects.filter(op_to=0, element_id=entity.eid).latest('time').to_id
+            to_id = Log.objects.filter(
+                op_to=0, element_id=entity.eid).latest('time').to_id
             to_entity = Entity.objects.get(eid=to_id)
             m_entity = ManuallyEntity(
                 to_entity.code_name,
@@ -408,7 +415,8 @@ def relation_operation(request, uid, pid, fid):
                     operation = relation_user_result.get('fix').get('shouldBe')
                     if operation == 2:
                         # modify
-                        manually_relation = relation_user_result.get('fix').get('newly')
+                        manually_relation = relation_user_result.get(
+                            'fix').get('newly')
                         m_relation = Relation.objects.create(
                             from_entity=relation.from_entity,
                             to_entity=relation.to_entity,
@@ -442,7 +450,8 @@ def relation_operation(request, uid, pid, fid):
             if relation.reviewed > -1:
                 operation = relation.reviewed
                 if operation == 2:
-                    to_id = Log.objects.filter(op_to=1, element_id=relation.rid).latest('time').to_id
+                    to_id = Log.objects.filter(
+                        op_to=1, element_id=relation.rid).latest('time').to_id
                     to_relation = Relation.objects.get(rid=to_id)
                     m_relation = ManuallyRelation(
                         to_relation.relation_type
@@ -455,7 +464,8 @@ def relation_operation(request, uid, pid, fid):
             else:
                 status = RelationStatus(True, 3)
 
-            to_fid = Entity.objects.get(eid=relation.to_entity.eid).get_fid().fid
+            to_fid = Entity.objects.get(
+                eid=relation.to_entity.eid).get_fid().fid
             r = formats.Relation(
                 relation.rid,
                 build_entity(relation.from_entity),
