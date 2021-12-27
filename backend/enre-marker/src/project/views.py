@@ -44,7 +44,7 @@ def login_required(func):
 @require_GET
 @login_required
 def get_all_projects(request, uid):
-    project_list = Project.objects.all()
+    project_list = Project.objects.filter(state__lt=2)
     claimed = User.objects.get(uid=uid).claim_id
     p_list = []
     for project in project_list:
