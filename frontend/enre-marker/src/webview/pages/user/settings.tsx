@@ -4,7 +4,7 @@ import {
 } from 'antd';
 import { GithubOutlined } from '@ant-design/icons';
 import { useForm } from 'antd/lib/form/Form';
-import { useRequest } from 'ahooks';
+import { useRequest, clearCache } from 'ahooks';
 // @ts-ignore
 import sha256 from 'sha256-es';
 import { LoginContext, WorkingContext } from '../../context';
@@ -186,6 +186,9 @@ export const Settings: React.FC = () => {
           actions={[
             <Button
               onClick={() => {
+                // clear cached api data
+                clearCache();
+                // clear state data
                 workingDispatcher({
                   payload: {
                     project: undefined,
