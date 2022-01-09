@@ -112,6 +112,8 @@ declare namespace remote {
     eFrom: entity,
     eTo: entity,
     toFid: number,
+    line: number,
+    column: number,
     rType: number,
     status: status,
   }

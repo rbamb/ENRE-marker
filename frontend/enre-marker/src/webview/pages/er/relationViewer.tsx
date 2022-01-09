@@ -378,6 +378,10 @@ const columns = [
                         base: gfsPath,
                         from: record.eFrom.loc,
                         to: record.eTo.loc,
+                        happens: {
+                          line: record.line,
+                          column: record.column,
+                        },
                       },
                     });
                   }
@@ -431,6 +435,10 @@ const columns = [
                           base: gfsPath,
                           from: record.eFrom.loc,
                           to: record.eTo.loc,
+                          happens: {
+                            line: record.line,
+                            column: record.column,
+                          },
                         },
                       });
                     }
@@ -593,6 +601,10 @@ export const RelationViewer: React.FC = () => {
                   base: fsPath,
                   from: selectedRecord.eFrom.loc,
                   to: selectedRecord.eTo.loc,
+                  happens: {
+                    line: selectedRecord.line,
+                    column: selectedRecord.column,
+                  },
                 },
               });
             }

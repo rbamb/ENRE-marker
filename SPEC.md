@@ -8,7 +8,7 @@ To import data to database, ENRE-marker expects 2 files:
 
 * `ProjectName_refs.json`
 
-Files basically share the format which perl scripts output, only with some pre-processes that should be handled BEFORE import:
+<del>Files basically share the format which perl scripts output</del>, only with some pre-processes that should be handled BEFORE import:
 
 * All `FilePath` or relative file path filed should be relative path from project's root, **not** an absolute path in your computer;
 

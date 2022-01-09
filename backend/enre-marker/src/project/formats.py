@@ -175,11 +175,13 @@ class RelationStatus:
 
 
 class Relation:
-    def __init__(self, rid, e_from, e_to, to_fid, r_type, r_status):
+    def __init__(self, rid, e_from, e_to, to_fid, line, column, r_type, r_status):
         self.rid = rid
         self.e_from = e_from
         self.e_to = e_to
         self.toFid = to_fid
+        self.line = line
+        self.column = column
         self.type = r_type
         self.status = r_status
 
@@ -190,6 +192,8 @@ class Relation:
                 "eFrom": self.e_from.to_dict(),
                 'eTo': self.e_to.to_dict(),
                 'toFid': self.toFid,
+                'line': self.line,
+                'column': self.column,
                 'rType': self.type,
                 'status': self.status.to_dict()
             }
