@@ -112,7 +112,7 @@ class EntityStatus:
 
 
 class Entity:
-    def __init__(self, eid, name, s_l, s_c, e_l, e_c, e_type, status):
+    def __init__(self, eid, name, s_l, s_c, e_l, e_c, e_type, status=None):
         self.eid = eid
         self.name = name
         self.loc = {
@@ -129,11 +129,17 @@ class Entity:
     def to_dict(self):
         return \
             {
-                "eid": self.eid,
-                "name": self.name,
+                'eid': self.eid,
+                'name': self.name,
                 'loc': self.loc,
                 'eType': self.type,
                 'status': self.status.to_dict(),
+            } if self.status is not None else \
+            {
+                'eid': self.eid,
+                'name': self.name,
+                'loc': self.loc,
+                'eType': self.type,
             }
 
 
@@ -175,7 +181,7 @@ class RelationStatus:
 
 
 class Relation:
-    def __init__(self, rid, e_from, e_to, to_fid, line, column, r_type, r_status):
+    def __init__(self, rid, e_from, e_to, to_fid, line, column, r_type, r_status=None):
         self.rid = rid
         self.e_from = e_from
         self.e_to = e_to
@@ -196,4 +202,11 @@ class Relation:
                 'column': self.column,
                 'rType': self.type,
                 'status': self.status.to_dict()
+            } if self.status is not None else \
+            {
+                'eFrom': self.e_from,
+                'eTo': self.e_to,
+                'line': self.line,
+                'column': self.column,
+                'rType': self.type
             }
