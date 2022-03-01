@@ -8,7 +8,7 @@ To import data to database, ENRE-marker expects 2 files:
 
 * `ProjectName_refs.json`
 
-Files basically share the format which perl scripts output, only with some pre-processes that should be handled BEFORE import:
+<del>Files basically share the format which perl scripts output</del> (See scripts in `/input` to inspect the format), only with some pre-processes that should be handled BEFORE import:
 
 * All `FilePath` or relative file path filed should be relative path from project's root, **not** an absolute path in your computer;
 
@@ -400,6 +400,23 @@ declare enum fixOption {
 > Error code `4003` indicates that the manually added entity has already discovered by **comparison tools**, NOT by **other users**. This allows multiple users submit the same manually discovered entity.
 
 > If errors occurred, server should return the index of those error-causing `entityUserResult` (starts from 0) in extra.
+
+#### `GET /project/<pid: number>/entity/<eid: number>/cascade`
+
+Before `remove` an entity, fetch this API to gain the info 
+about how many related relation will be also removed cascadingly.
+
+##### Should return
+
+###### If succeeded
+
+```ts
+{
+  code: 200,
+  message: 'success',
+  count: number
+}
+```
 
 #### `POST /project/<pid: number>/file/<fid: number>/relation`
 
