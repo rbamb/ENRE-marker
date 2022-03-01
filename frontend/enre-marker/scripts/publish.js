@@ -8,17 +8,17 @@ const remoteRegistry = process.env['REMOTE_REGISTRY'];
 
 if (remoteRegistry === undefined) {
   console.error('No REMOTE_REGISTRY set, this must be set to indicate the registry server\'s address.');
-  return -1;
+  process.exit(-1);
 }
 
 const remoteAddress = process.env['REMOTE_ADDRESS'];
 
 if (remoteAddress === undefined) {
   console.error('No REMOTE_ADDRESS set, this must be set in production build.');
-  return -1;
+  process.exit(-1);
 }
 
-console.log(`Using REMOTE_REGISTRY=${remoteRegistry}`);
+console.log(`Using REMOTE_REGISTRY=http://${remoteRegistry}`);
 console.log(`USing REMOTE_ADDRESS=http://${remoteAddress}/api/v1`)
 
 const path = require('path');
@@ -32,7 +32,7 @@ try {
   fs.rmSync(publishPath, { recursive: true, force: true });
 } catch (e) {
   console.error(e);
-  return -1;
+  process.exit(-1);
 }
 
 fs.mkdirSync(publishPath);
@@ -42,7 +42,7 @@ fs.mkdirSync(publishPath);
 const pkg = require('../package.json');
 
 pkg.publishConfig = {
-  registry: remoteRegistry,
+  registry: `http://${remoteRegistry}`,
 }
 
 pkg.files = [
@@ -77,7 +77,7 @@ try {
     },
   )
 } catch (e) {
-  return -1;
+  process.exit(-1);
 }
 
 
@@ -92,7 +92,7 @@ try {
   )
 } catch (e) {
   console.error('Unable to publish.');
-  return -1;
+  process.exit(-1);
 }
 
 console.log('Done.');

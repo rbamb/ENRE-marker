@@ -3,7 +3,7 @@ import path from 'path';
 import open from 'open';
 import { statSync, mkdirSync } from 'fs';
 import { exec } from 'child_process';
-import { entityDecorations } from './decorations';
+import { entityDecorations, relationDecorations } from './decorations';
 import { isValidLoc } from '../utils/loc';
 
 export type localCommands =
@@ -350,7 +350,7 @@ export const msgHandler:
 
   'highlight-relation': (compound) => {
     if (compound) {
-      const { fpath, base, from, to } = compound;
+      const { fpath, base, from, to, happens } = compound;
 
       vscode.workspace.openTextDocument(path.join(base, fpath))
         .then(doc => {
@@ -364,10 +364,20 @@ export const msgHandler:
                     from.end.column !== -1 ? from.end.column - 1 : from.start.column,
                   )
                 );
-                currControledDoc?.setDecorations(entityDecorations.entityHighlighted, [range0]);
-                currControledDoc?.revealRange(range0, vscode.TextEditorRevealType.InCenter);
+                currControledDoc?.setDecorations(relationDecorations.fromEntity, [range0]);
               } else {
                 showWarningMessage('From entity\'s location has not been properly configured, you may want to review entities in this file before relations.');
+              }
+
+              if (happens.line !== -1 && happens.column !== -1) {
+                const happensRange = new vscode.Range(
+                  new vscode.Position(happens.line - 1, happens.column - 1),
+                  new vscode.Position(happens.line - 1, happens.column)
+                );
+                currControledDoc?.setDecorations(relationDecorations.happensLocation, [happensRange]);
+                currControledDoc?.revealRange(happensRange, vscode.TextEditorRevealType.InCenter);
+              } else {
+                showWarningMessage('Happens location is invalid.');
               }
 
               currControledDocTo = editor;
@@ -380,7 +390,7 @@ export const msgHandler:
                     to.end.column !== -1 ? to.end.column - 1 : to.start.column,
                   )
                 );
-                currControledDocTo.setDecorations(entityDecorations.entityHighlighted, [range1]);
+                currControledDocTo.setDecorations(relationDecorations.toEntity, [range1]);
                 currControledDocTo.revealRange(range1, vscode.TextEditorRevealType.InCenter);
               } else {
                 showWarningMessage('To entity\'s location has not been properly configured, you may want to review entities in that file before relations.');
@@ -388,8 +398,9 @@ export const msgHandler:
             });
         });
     } else {
-      currControledDoc?.setDecorations(entityDecorations.entityHighlighted, []);
-      currControledDocTo?.setDecorations(entityDecorations.entityHighlighted, []);
+      currControledDoc?.setDecorations(relationDecorations.fromEntity, []);
+      currControledDoc?.setDecorations(relationDecorations.happensLocation, []);
+      currControledDocTo?.setDecorations(relationDecorations.toEntity, []);
     }
   },
 };

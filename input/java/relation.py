@@ -30,7 +30,9 @@ if __name__ == '__main__':
                     rel_list.append({
                         'from': ref.scope().id(),
                         'to': ref.ent().id(),
-                        'type': ref.kindname(),
+                        # Using kind().longname() rather than kindname() to acquire longname
+                        # in case meeting `Pointer` instead of `Use Ptr`
+                        'type': ref.kind().longname(),
                         'line': ref.line(),
                         'column': ref.column()
                     })
@@ -76,7 +78,7 @@ if __name__ == '__main__':
         elif contain('Override', rel['type']):
             rel['type'] = 15
         else:
-            print(f'Meets unhandled relation type {rel["type"]}')
+            print(f'Meets unhandled relation type {rel["longtype"]}, with from entity\'s id {rel["from"]} and to entity\'s id {rel["to"]}')
             sys.exit(-1)
 
     print('Saving results to the file...')

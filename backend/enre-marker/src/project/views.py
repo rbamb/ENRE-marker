@@ -234,7 +234,6 @@ def valid_id(func):
 
 
 # TODO: Modify with lang_relative package to handle lang relative logic
-# TODO: Consume relation loc
 
 @login_required
 @valid_id
@@ -333,7 +332,7 @@ def entity_operation(request, uid, pid, fid):
         return JsonResponse(res, safe=False)
 
 
-def build_entity(entity):
+def build_entity(entity, out=False):
     if entity.reviewed > -1:
         operation = entity.reviewed
         if operation == 2:
@@ -356,6 +355,28 @@ def build_entity(entity):
     # That is entity.reviewed == -2 (inapplicable), which means inserted
     else:
         status = EntityStatus(True, 3)
+
+    if out:
+        if entity.reviewed == 2:
+            return formats.Entity(
+                entity.eid,
+                m_entity.name,
+                m_entity.loc['start']['line'],
+                m_entity.loc['start']['column'],
+                m_entity.loc['end']['line'],
+                m_entity.loc['end']['column'],
+                m_entity.type
+            )
+        else:
+            return formats.Entity(
+                entity.eid,
+                entity.code_name,
+                entity.loc_start_line,
+                entity.loc_start_column,
+                entity.loc_end_line,
+                entity.loc_end_column,
+                entity.entity_type,
+            )
 
     return formats.Entity(
         entity.eid,
@@ -447,34 +468,7 @@ def relation_operation(request, uid, pid, fid):
         r_list = []
         for relation in Relation.objects.filter(from_entity__fid=f, shallow=False)\
                 .order_by('from_entity__loc_start_line', 'from_entity__loc_start_column'):
-            if relation.reviewed > -1:
-                operation = relation.reviewed
-                if operation == 2:
-                    to_id = Log.objects.filter(
-                        op_to=1, element_id=relation.rid).latest('time').to_id
-                    to_relation = Relation.objects.get(rid=to_id)
-                    m_relation = ManuallyRelation(
-                        to_relation.relation_type
-                    )
-                    status = RelationStatus(True, operation, m_relation)
-                else:
-                    status = RelationStatus(True, operation)
-            elif relation.reviewed == -1:
-                status = RelationStatus(False)
-            else:
-                status = RelationStatus(True, 3)
-
-            to_fid = Entity.objects.get(
-                eid=relation.to_entity.eid).get_fid().fid
-            r = formats.Relation(
-                relation.rid,
-                build_entity(relation.from_entity),
-                build_entity(relation.to_entity),
-                to_fid,
-                relation.relation_type,
-                status
-            )
-            r_list.append(r.to_dict())
+            r_list.append(build_relation(relation).to_dict())
 
         res = {
             'code': 200,
@@ -483,3 +477,57 @@ def relation_operation(request, uid, pid, fid):
             'total': len(r_list),
         }
         return JsonResponse(res, safe=False)
+
+
+def build_relation(relation, out=False):
+    if relation.reviewed > -1:
+        operation = relation.reviewed
+        if operation == 2:
+            to_id = Log.objects.filter(
+                op_to=1, element_id=relation.rid).latest('time').to_id
+            to_relation = Relation.objects.get(rid=to_id)
+            m_relation = ManuallyRelation(
+                to_relation.relation_type
+            )
+            status = RelationStatus(True, operation, m_relation)
+        else:
+            status = RelationStatus(True, operation)
+    elif relation.reviewed == -1:
+        status = RelationStatus(False)
+    else:
+        status = RelationStatus(True, 3)
+
+    if out:
+        if relation.reviewed == 2:
+            return formats.Relation(
+                relation.rid,
+                relation.from_entity.eid,
+                relation.to_entity.eid,
+                None,
+                relation.loc_line,
+                relation.loc_column,
+                to_relation.relation_type
+            )
+        else:
+            return formats.Relation(
+                relation.rid,
+                relation.from_entity.eid,
+                relation.to_entity.eid,
+                None,
+                relation.loc_line,
+                relation.loc_column,
+                relation.relation_type
+            )
+
+    to_fid = Entity.objects.get(
+        eid=relation.to_entity.eid).get_fid().fid
+    return formats.Relation(
+        relation.rid,
+        build_entity(relation.from_entity),
+        build_entity(relation.to_entity),
+        to_fid,
+        relation.loc_line,
+        relation.loc_column,
+        relation.relation_type,
+        status
+    )

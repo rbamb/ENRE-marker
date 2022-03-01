@@ -33,3 +33,36 @@ export const entityDecorations = {
     fontStyle: 'italic',
   })
 };
+
+export const relationDecorations = {
+  fromEntity: vscode.window.createTextEditorDecorationType({
+    backgroundColor: 'rgba(24,144,255,.4)',
+    borderRadius: '2px',
+    fontStyle: 'italic',
+    before: {
+      backgroundColor: 'rgba(24,144,255,.4)',
+      contentText: '[FROM]',
+      margin: '0 4px 0 0',
+    }
+  }),
+  toEntity: vscode.window.createTextEditorDecorationType({
+    backgroundColor: 'rgba(82,196,26,.4)',
+    borderRadius: '2px',
+    fontStyle: 'italic',
+    before: {
+      backgroundColor: 'rgba(82,196,26,.4)',
+      contentText: '[TO]',
+      margin: '0 4px 0 0',
+    }
+  }),
+  happensLocation: vscode.window.createTextEditorDecorationType({
+    isWholeLine: true,
+    backgroundColor: 'rgba(255,255,255,.6)',
+    borderRadius: '2px',
+    fontStyle: 'italic',
+    before: {
+      contentText: '[HAPPENS]',
+      margin: '0 4px 0 0',
+    }
+  })
+};
