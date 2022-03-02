@@ -285,6 +285,24 @@ const handleOperationClicked = (
   }
 };
 
+const alertCascadingRemoval = (
+  eid: number,
+) => {
+  request(`GET project/${gpid}/entity/${eid}/cascade`)
+    .then(({ count }: remote.resCascade) => {
+      if (count > 0) {
+        Modal.confirm({
+          title: `${count} relation(s) relavent to this entity will also be removed.`,
+          onOk() {
+            handleOperationClicked('remove', eid);
+          },
+        });
+      } else {
+        handleOperationClicked('remove', eid);
+      }
+    });
+};
+
 const RenderExpandedRow = ({
   eid, name, loc, eType,
 }: remote.entity) => (
@@ -313,7 +331,7 @@ const RenderExpandedRow = ({
         style={{ height: '72px' }}
         block
         danger
-        onClick={() => handleOperationClicked('remove', eid)}
+        onClick={() => alertCascadingRemoval(eid)}
       >
         Remove
       </Button>

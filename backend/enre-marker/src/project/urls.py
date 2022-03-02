@@ -9,4 +9,5 @@ urlpatterns = [
     path('<int:pid>/claim', views.claim_a_project, name='claim a project'),
     path('<int:pid>/file/<int:fid>/entity', views.entity_operation, name='get or post entity operations'),
     path('<int:pid>/file/<int:fid>/relation', views.relation_operation, name='get or post relation operations'),
+    path('<int:pid>/entity/<int:eid>/cascade', views.entity_cascade_check, name='get cascading count for an entity')
 ]

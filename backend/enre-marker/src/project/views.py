@@ -4,6 +4,7 @@ from datetime import timedelta, datetime, timezone
 
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST, require_GET
+from django.db.models import Q
 from django.db import connection
 
 from user.models import User, Login, Log
@@ -219,6 +220,8 @@ def valid_id(func):
                 'code': 4001,
                 'message': 'no such pid'
             })
+        except KeyError:
+            pass
 
         try:
             File.objects.get(fid=kwargs['fid'])
@@ -227,10 +230,35 @@ def valid_id(func):
                 'code': 4002,
                 'message': 'no such fid'
             })
+        except KeyError:
+            pass
+
+        try:
+            Entity.objects.get(eid=kwargs['eid'])
+        except Entity.DoesNotExist:
+            return JsonResponse({
+                'code': 4003,
+                'message': 'no such eid'
+            })
+        except KeyError:
+            pass
 
         return func(request, *args, **kwargs)
 
     return inner
+
+
+@require_GET
+@login_required
+@valid_id
+def entity_cascade_check(request, uid, pid, eid):
+    e = Entity.objects.get(eid=eid)
+    r = Relation.objects.filter(Q(from_entity=e) | Q(to_entity=e))
+    return JsonResponse({
+        'code': 200,
+        'message': 'success',
+        'count': r.count(),
+    })
 
 
 # TODO: Modify with lang_relative package to handle lang relative logic
@@ -301,14 +329,31 @@ def entity_operation(request, uid, pid, fid):
                         Entity.objects.filter(eid=eid).update(reviewed=2)
                     else:
                         # remove
-                        Entity.objects.filter(eid=eid).update(reviewed=1)
+                        e = Entity.objects.get(eid=eid)
+                        e.update(reviewed=1)
+                        # cascade remove relations
+                        relevant_relations = Relation.objects.filter(Q(from_entity=e) | Q(to_entity=e))
+                        for rel in relevant_relations:
+                            rel.update(reviewed=1)
+                            # To log cascade removal of relation,
+                            # `uid` is the user who initially perform the action
+                            # `operation` is 1 (removal), whether or not a cascade removal is indicated by to_id
+                            # `element_id` is the relation id which is being removed
+                            # `to_id` (if have) refers to the original entity's id who results in this cascade
+                            Log.objects.create(
+                                uid=current_user,
+                                op_to=1,
+                                operation=operation,
+                                element_id=rel.rid,
+                                to_id=eid,
+                            )
 
             Log.objects.create(
                 uid=current_user,
                 op_to=0,
                 operation=operation,
                 element_id=eid,
-                to_id=to_id
+                to_id=to_id,
             )
 
         res = {

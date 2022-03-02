@@ -83,6 +83,10 @@ declare namespace remote {
     newRelation?: Pick<manuallyRelation, 'rType'>,
   }
 
+  interface resCascade extends resCommon {
+    count: number,
+  }
+
   interface resEntities extends resCommon {
     entity: Array<entity>,
     total: number,

@@ -11,24 +11,24 @@ const onlySingleCopy = typeof acquireVsCodeApi === 'undefined' ? undefined : acq
 const mockState = {
   login: {
     uid: 10000,
-    token: 'q46BBttUiZquWAWRTMCHTq8k09oTwPENylrfHcsEl6elVeWW1IVrKz4dzRQTJOwd',
+    token: '1KJXPnzCWrsdFixgRXe4V1ArTbtfnfQSzEMYfr3EOCSKtUOM2ToXQAtKTLm6UlMJ',
     name: 'ThisRabbit',
   },
   working: {
-    // project: {
-    //   pid: 1,
-    //   name: 'oozie',
-    //   fsPath: 'd://test/ENRE.js',
-    //   version: '8dfdb35',
-    //   lang: 'java',
-    //   githbUrl: 'apache/oozie',
-    // },
-    viewProject: {
+    project: {
       pid: 1,
-      name: 'EventBus',
-      version: 'abcde123',
+      name: 'oozie',
+      fsPath: 'd://test/ENRE.js',
+      version: '8dfdb35',
       lang: 'java',
+      githbUrl: 'apache/oozie',
     },
+    // viewProject: {
+    //   pid: 1,
+    //   name: 'EventBus',
+    //   version: 'abcde123',
+    //   lang: 'java',
+    // },
   },
 };
 

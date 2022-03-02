@@ -45,54 +45,70 @@ class Command(BaseCommand):
         ent_data = load_json(ent_path)
         rel_data = load_json(rel_path)
 
-        self.stdout.write('Importing entities...')
+        # Prefetch all file entities
         file_type_index = get_file_type_index(proj.lang)
+        ent_file_data = list(filter(lambda item: item['type'] == file_type_index, ent_data))
+        ent_other_data = list(filter(lambda item: item['type'] != file_type_index, ent_data))
+
+        # Assuming that all file entities are located BEFORE any other entities
+        self.stdout.write('Importing entities...')
         file_map = {}
         id_map = {}
         file_count = 0
         ent_count = 0
-        for ent in ent_data:
-            if ent['type'] == file_type_index:
-                file_path = PureWindowsPath(ent['name'])
-                if file_path.is_absolute():
-                    raise CommandError(f'File path must be relative to it\'s root, whereas {file_path} is not')
-                try:
-                    File.objects.get(file_path=file_path.as_posix(), pid=proj.pid)
-                    raise CommandError(f'Duplicated file {file_path} in project {proj.p_name}')
-                except File.DoesNotExist:
-                    f = File.objects.create(
-                        pid=proj,
-                        file_path=file_path.as_posix(),
-                    )
-                    file_map[ent['id']] = f.fid
-                    file_count += 1
-                    # Also create corresponding entity for each file
-                    e = Entity.objects.create(
-                        fid=File.objects.get(fid=f.fid),
-                        code_name=file_path.as_posix(),
-                        entity_type=ent['type'],
-                    )
-                    id_map[ent['id']] = e.eid
-                    ent_count += 1
-            else:
-                try:
-                    e = Entity.objects.create(
-                        fid=File.objects.get(fid=file_map[ent['belongs_to']]),
-                        code_name=ent['name'],
-                        entity_type=ent['type'],
-                        loc_start_line=ent['start_line'],
-                        loc_start_column=ent['start_column'],
-                        loc_end_line=ent['end_line'],
-                        loc_end_column=ent['end_column'],
-                    )
-                except KeyError:
-                    e = Entity.objects.create(
-                        fid=File.objects.get(fid=file_map[ent['belongs_to']]),
-                        code_name=ent['name'],
-                        entity_type=ent['type'],
-                    )
-                id_map[ent['id']] = e.eid
+
+        # Pending list for ALL entities that are being inserted, pending for bulk_create
+        pending_list = []
+        # Process file entities first (to save files info in file table)
+        for ent in ent_file_data:
+            file_path = PureWindowsPath(ent['name'])
+            if file_path.is_absolute():
+                raise CommandError(f'File path must be relative to it\'s root, whereas {file_path} is not')
+            try:
+                File.objects.get(file_path=file_path.as_posix(), pid=proj.pid)
+                # TODO: Continue insertion mode
+                raise CommandError(f'Duplicated file {file_path} in project {proj.p_name}')
+            except File.DoesNotExist:
+                f = File.objects.create(
+                    pid=proj,
+                    file_path=file_path.as_posix(),
+                )
+                file_map[ent['id']] = f.fid
+                file_count += 1
+                # Also create corresponding entity for each file
+                pending_list.append(Entity(
+                    fid=File.objects.get(fid=f.fid),
+                    code_name=file_path.as_posix(),
+                    entity_type=ent['type'],
+                ))
                 ent_count += 1
+        # Process other entities then
+        for ent in ent_other_data:
+            try:
+                pending_list.append(Entity(
+                    fid=File.objects.get(fid=file_map[ent['belongs_to']]),
+                    code_name=ent['name'],
+                    entity_type=ent['type'],
+                    loc_start_line=ent['start_line'],
+                    loc_start_column=ent['start_column'],
+                    loc_end_line=ent['end_line'],
+                    loc_end_column=ent['end_column'],
+                ))
+            except KeyError:
+                # KeyError indicates that an entity doesn't have loc info
+                pending_list.append(Entity(
+                    fid=File.objects.get(fid=file_map[ent['belongs_to']]),
+                    code_name=ent['name'],
+                    entity_type=ent['type'],
+                ))
+            ent_count += 1
+
+        # Bulk create all entities, and since the results are in the same order as they are while appending,
+        # so re-iterate over all entities to generate the id map for relation insertion to use
+        res = Entity.objects.bulk_create(pending_list)
+        for i, ent in enumerate(ent_file_data + ent_other_data):
+            # WARNING: This feature only works with django>=4.0
+            id_map[ent['id']] = res[i].eid
 
         self.stdout.write('Importing relations...')
         rel_list = []
