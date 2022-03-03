@@ -40,7 +40,7 @@ export const typeTable: Record<langTableIndex, typeTableElement> = {
   },
   java: {
     entity: ['Unknown', 'Variable', 'Method', 'Interface', 'Annotation', 'Enum', 'Class', 'File', 'Package', 'Module', 'TypeVariable'],
-    relation: ['Unknown', 'Import', 'Inherit', 'Implement', 'Call', 'Set', 'Use', 'Modify', 'Cast', 'Create', 'Typed', 'Throw', 'Couple', 'Contain', 'DotRef', 'Override'],
+    relation: ['Unknown', 'Import', 'Inherit', 'Implement', 'Call', 'Set', 'Use', 'Modify', 'Cast', 'Create', 'Typed', 'Throw', 'Couple', 'Contain', 'DotRef', 'Override', 'Export'],
   },
   cpp: {
     entity: ['Variable', 'Function'],
