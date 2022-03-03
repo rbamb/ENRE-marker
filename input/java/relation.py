@@ -77,8 +77,13 @@ if __name__ == '__main__':
             rel['type'] = 14
         elif contain('Override', rel['type']):
             rel['type'] = 15
+        elif contain('Export', rel['type']):
+            rel['type'] = 16
         else:
-            print(f'Meets unhandled relation type {rel["longtype"]}, with from entity\'s id {rel["from"]} and to entity\'s id {rel["to"]}')
+            from_entity_name = db.ent_from_id(rel['from']).longname()
+            to_entity_name = db.ent_from_id(rel['to']).longname()
+            print(
+                f'Meets unhandled relation type {rel["type"]}, with from entity\'s id {rel["from"]} {from_entity_name} and to entity\'s id {rel["to"]} {to_entity_name}')
             sys.exit(-1)
 
     print('Saving results to the file...')

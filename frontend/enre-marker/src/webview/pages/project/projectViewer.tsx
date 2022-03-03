@@ -1,14 +1,57 @@
-import React, { useContext } from 'react';
+import React, { useState, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useRequest } from 'ahooks';
 import {
-  Table, Progress, Button, Tag, Tooltip, Divider, Space, Typography, message,
+  Table, Progress, Button, Tag, Tooltip, Divider, Space, Typography, message, Drawer,
 } from 'antd';
 import { LockOutlined } from '@ant-design/icons';
 import { request } from '../../compatible/httpAdapter';
 import { NavContext, WorkingContext } from '../../context';
 import { langTable, langTableIndex } from '../../.static/config';
 import { getApi } from '../../compatible/apiAdapter';
+import { ProjectDashboard } from './ProjectDashboard';
+
+const RenderName = (
+  name: string,
+  project: remote.project,
+) => {
+  const [visible, setVisible] = useState(false);
+
+  const { state } = project;
+
+  return (
+    <>
+      <Tooltip title="View dashboard">
+        <Typography.Link
+          onClick={() => setVisible(true)}
+        >
+          {name}
+        </Typography.Link>
+      </Tooltip>
+      {state === 1
+        ? (
+          <Tooltip title="Locked, view only" placement="right">
+            <LockOutlined
+              style={{
+                color: 'rgba(0,0,0,0.75)',
+                paddingLeft: '0.6em',
+              }}
+            />
+          </Tooltip>
+        )
+        : undefined}
+      <Drawer
+        title="Project Dashboard"
+        placement="bottom"
+        height="100%"
+        visible={visible}
+        onClose={() => setVisible(false)}
+      >
+        <ProjectDashboard project={project} />
+      </Drawer>
+    </>
+  );
+};
 
 const RenderAction = (claimed: boolean, {
   pid, name, githubUrl, state, version, lang,
@@ -141,23 +184,7 @@ const columns = [
     title: 'Project Name',
     dataIndex: 'name',
     key: 'pname',
-    render: (name: string, data: remote.project) => (
-      <>
-        {name}
-        {data.state === 1
-          ? (
-            <Tooltip title="Locked, view only" placement="right">
-              <LockOutlined
-                style={{
-                  color: 'rgba(0,0,0,0.75)',
-                  paddingLeft: '0.6em',
-                }}
-              />
-            </Tooltip>
-          )
-          : undefined}
-      </>
-    ),
+    render: RenderName,
     sorter: (a: remote.project, b: remote.project) => (a.name > b.name ? 1 : -1),
     filters: [
       {
@@ -178,7 +205,6 @@ const columns = [
     render: (value: string, record: remote.project) => (
       <Tooltip
         title="View in GitHub"
-        placement="left"
       >
         <Typography.Link
           onClick={() => {

@@ -37,6 +37,7 @@ if __name__ == '__main__':
             ent_list.append({
                 'id': ent.id(),
                 'type': 'File',
+                # FIXME: using abs path and then minus prefix
                 'name': ent.relname(),
             })
             file_count += 1

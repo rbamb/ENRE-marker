@@ -149,6 +149,24 @@ where `0` means active (user can claim this project and do mark things); `1` mea
 | --- | --- | --- | --- |
 | any | 500 | error |
 
+#### `GET /project/<pid: number>/stats`
+
+Get a project's statistic data.
+
+##### Should return
+
+###### if succeeded
+
+TODO
+
+```ts
+{
+  code: 200,
+  message: 'success',
+  data: number,
+}
+```
+
 #### `POST /project/<pid: number>/claim`
 
 Claim a project to label. A user can only claim one project in a single time, and a project can be claimed by multiple users. If this API is called when the user already claimed a project before, then just override with the newest one.

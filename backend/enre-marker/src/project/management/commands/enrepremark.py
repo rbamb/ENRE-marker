@@ -14,12 +14,36 @@ def load_json(filepath):
     return data
 
 
+def entity_type_str2int_java(str):
+    array = ['Unknown', 'Variable', 'Method', 'Interface', 'Annotation', 'Enum', 'Class', 'File', 'Package', 'Module', 'TypeVariable']
+    return array.index(str)
+
+
 # Format input enre-styled json object to standard marker format
 def formatting(lang, raw):
     if lang == 'java':
         raw_entity = raw.get('variables')
         raw_relation = raw.get('cells')
-        
+
+        build_entity = []
+        build_relation = []
+
+        for ent in raw_entity:
+            if ent.get('external'):
+                continue
+
+            tmp = {
+                'id': ent.get('id'),
+                'type': entity_type_str2int_java(ent.get('category')),
+                'name': ent.get('qualifiedName'),
+            }
+
+            # Indicates that this entity has location info
+            if ent.get('startLine'):
+                pass
+
+            build_entity.append(tmp)
+
     else:
         print(f'Unknown lang {lang}')
         sys.exit(-1)

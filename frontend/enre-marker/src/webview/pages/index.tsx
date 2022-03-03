@@ -24,7 +24,7 @@ import {
   LoginContext, loginReducer, WorkingContext, workingReducer, NavContext, navReducer,
 } from '../context';
 import { getApi } from '../compatible/apiAdapter';
-import { ProjectDashboard } from './project/projectDashboard';
+import { ClaimedProjectManager } from './project/ClaimedProjectManager';
 import { EntityViewer } from './er/entityViewer';
 import { RelationViewer } from './er/relationViewer';
 import { getShortFileName } from '../utils/getShortFileName';
@@ -197,7 +197,7 @@ export const App: React.FC = () => {
                     path="/project/:pid"
                     element={(
                       <RequireAuth>
-                        <ProjectDashboard />
+                        <ClaimedProjectManager />
                       </RequireAuth>
                     )}
                   />
