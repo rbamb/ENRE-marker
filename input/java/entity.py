@@ -37,8 +37,7 @@ if __name__ == '__main__':
             ent_list.append({
                 'id': ent.id(),
                 'type': 'File',
-                # FIXME: using abs path and then minus prefix
-                'name': ent.relname(),
+                'name': ent.longname(),
             })
             file_count += 1
     print(f'Total {file_count} files are successfully exported')
@@ -169,3 +168,5 @@ if __name__ == '__main__':
         json.dump(ent_list, out, indent=4)
     print(f'Total {regular_count} entities are successfully exported')
     print('All possible entity types are', sorted(all_ent_kinds))
+
+    print('\nPlease remember to replace the abs file path with relative path!')

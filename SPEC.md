@@ -118,7 +118,7 @@ declare type project {
   githubUrl: string
   version: 7-chars-git-commit-code,
   lang: language-code,
-  progress: number(0...100),
+  progress: number(0...),
   claimed: bool,
   state: projectState
 }
@@ -134,7 +134,7 @@ declare enum projectState {
 
 * `lang` is strictly limited to 5 option lowercase strings listed above, which means only accept `js` rather than `JS`/`javascript`/`JavaScript`;
 
-* `progress` is the label progress where `100` means that all entities and relations are labeled;
+* `progress` is the label progress where `100` means that all entities and relations are labeled, it can exceed `100` which means not only all are labeled, but also discovered some new e/rs (the extra part will only be counted after all existing are labedled);
 
 * `claimed` indicates that whether the current user has claimed this project;
 
@@ -157,13 +157,40 @@ Get a project's statistic data.
 
 ###### if succeeded
 
-TODO
-
 ```ts
 {
   code: 200,
   message: 'success',
-  data: number,
+  data: {
+    entities: {
+      countByCategory: {
+        premarked: number,
+        passed: number,
+        removed: number,
+        modified: number,
+        unreviewed: number,
+        inserted: number,
+      }
+    },
+    relations: {
+      countByCategory: (...),
+    },
+    contributions: {
+      total: [
+        {
+          uid: number,
+          name: string,
+          operations: {
+            passed: number,
+            removed: number,
+            modified: number,
+            inserted: number,
+          }
+        }
+      ]
+      thisWeek: (...)
+    }
+  },
 }
 ```
 

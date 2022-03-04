@@ -576,3 +576,15 @@ def build_relation(relation, out=False):
         relation.relation_type,
         status
     )
+
+
+@require_GET
+@login_required
+@valid_id
+def statistic(uid, pid):
+    project = Project.objects.get(pid=pid)
+    files = File.objects.filter(pid=project)
+    entities = Entity.objects.filter(fid__in=files)
+    relations = Relation.objects.filter(from_entity__in=entities)
+
+

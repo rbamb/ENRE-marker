@@ -50,7 +50,6 @@ class Command(BaseCommand):
         ent_file_data = list(filter(lambda item: item['type'] == file_type_index, ent_data))
         ent_other_data = list(filter(lambda item: item['type'] != file_type_index, ent_data))
 
-        # Assuming that all file entities are located BEFORE any other entities
         self.stdout.write('Importing entities...')
         file_map = {}
         id_map = {}
