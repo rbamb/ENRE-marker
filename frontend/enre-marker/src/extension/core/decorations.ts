@@ -57,7 +57,7 @@ export const relationDecorations = {
   }),
   happensLocation: vscode.window.createTextEditorDecorationType({
     isWholeLine: true,
-    backgroundColor: 'rgba(255,255,255,.6)',
+    backgroundColor: 'rgba(255,255,255,.2)',
     borderRadius: '2px',
     fontStyle: 'italic',
     before: {
