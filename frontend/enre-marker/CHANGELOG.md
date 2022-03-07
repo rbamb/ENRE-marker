@@ -1,5 +1,11 @@
 # Change Log
 
+## 1.2.0
+
+- Add project dashboard to view statistics.
+
+- Add cascading removal alert while removing entity.
+
 ## 1.1.1
 
 - Fix: Cache clear button `Clear` should also clear cached API data
