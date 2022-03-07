@@ -1,5 +1,9 @@
 # Change Log
 
+## 1.2.1
+
+- Usability: decrease the alpha value for background color in relation's happens location.
+
 ## 1.2.0
 
 - Add project dashboard to view statistics.
