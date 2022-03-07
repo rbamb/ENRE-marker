@@ -161,7 +161,7 @@ Get a project's statistic data.
 {
   code: 200,
   message: 'success',
-  data: {
+  stats: {
     entities: {
       countByCategory: {
         premarked: number,

@@ -8,6 +8,7 @@ class User(models.Model):
         LOCKED = 1, 'locked'
         REMOVED = 2, 'removed'
 
+    # uid=1 is superuser ENRE used to indicate pre-mark
     uid = models.AutoField(primary_key=True)
     name = models.CharField(max_length=32)
     pswd = models.CharField(max_length=64)

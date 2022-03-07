@@ -155,9 +155,9 @@ def view_a_project(request, uid, pid):
                         relation_progress_done += item[1]
 
             entity_progress = 100 if entity_progress_total == 0 else entity_progress_done / \
-                entity_progress_total * 100
+                                                                     entity_progress_total * 100
             relation_progress = 100 if relation_progress_total == 0 else relation_progress_done / \
-                relation_progress_total * 100
+                                                                         relation_progress_total * 100
 
             file = formats.File(
                 f.fid,
@@ -511,7 +511,7 @@ def relation_operation(request, uid, pid, fid):
     # get all relations in fid in pid
     elif request.method == 'GET':
         r_list = []
-        for relation in Relation.objects.filter(from_entity__fid=f, shallow=False)\
+        for relation in Relation.objects.filter(from_entity__fid=f, shallow=False) \
                 .order_by('from_entity__loc_start_line', 'from_entity__loc_start_column'):
             r_list.append(build_relation(relation).to_dict())
 
@@ -581,10 +581,169 @@ def build_relation(relation, out=False):
 @require_GET
 @login_required
 @valid_id
-def statistic(uid, pid):
+def statistic(request, uid, pid):
     project = Project.objects.get(pid=pid)
     files = File.objects.filter(pid=project)
-    entities = Entity.objects.filter(fid__in=files)
-    relations = Relation.objects.filter(from_entity__in=entities)
+    entities = Entity.objects.filter(fid__in=files, shallow=False)
+    relations = Relation.objects.filter(from_entity__in=entities, shallow=False)
 
+    # ent_pre-mark, ent_passed, ent_removed, ent_modified, ent_unreviewed, ent_inserted
+    ent_stat = [0, 0, 0, 0, 0, 0]
+    for ent in entities:
+        if ent.reviewed == Entity.ReviewedOption.reviewPassed:
+            try:
+                that_log = Log.objects.filter(op_to=Log.OpTo.ENTITY, element_id=ent.eid).latest('time')
+                if that_log.uid_id == 1:
+                    ent_stat[0] += 1
+                else:
+                    ent_stat[1] += 1
+            except Log.DoesNotExist:
+                print('Encounter an entity which is reviewed (passed) with no corresponding log.')
+                ent_stat[1] += 1
 
+        elif ent.reviewed == Entity.ReviewedOption.remove:
+            ent_stat[2] += 1
+        elif ent.reviewed == Entity.ReviewedOption.modify:
+            ent_stat[3] += 1
+        elif ent.reviewed == Entity.ReviewedOption.notYet:
+            ent_stat[4] += 1
+        elif ent.reviewed == Entity.ReviewedOption.inapplicable and ent.inserted is True:
+            ent_stat[5] += 1
+
+    rel_stat = [0, 0, 0, 0, 0, 0]
+    for rel in relations:
+        if rel.reviewed == Relation.ReviewedOption.reviewPassed:
+            try:
+                that_log = Log.objects.filter(op_to=Log.OpTo.RELATION, element_id=rel.rid).latest('time')
+                if that_log.uid_id == 1:
+                    rel_stat[0] += 1
+                else:
+                    rel_stat[1] += 1
+            except Log.DoesNotExist:
+                print('Encounter an relation is reviewed (passed) with no corresponding log.')
+                rel_stat[1] += 1
+
+        elif rel.reviewed == Relation.ReviewedOption.remove:
+            rel_stat[2] += 1
+        elif rel.reviewed == Relation.ReviewedOption.modify:
+            rel_stat[3] += 1
+        elif rel.reviewed == Relation.ReviewedOption.notYet:
+            rel_stat[4] += 1
+        elif rel.reviewed == Relation.ReviewedOption.inapplicable and rel.inserted is True:
+            rel_stat[5] += 1
+
+    log_by_user = {}
+    log_by_user_this_week = {}
+
+    last_sunday = datetime.now(tz=timezone.utc) - timedelta(days=((datetime.now(tz=timezone.utc).isoweekday() + 1) % 7))
+
+    log_ent = Log.objects.filter(op_to=Log.OpTo.ENTITY, element_id__in=entities).select_related('uid')
+    for log in log_ent:
+        if log.uid.uid not in log_by_user:
+            log_by_user[log.uid.uid] = [0, 0, 0, 0, log.uid.name]
+
+        if log.operation == Log.Operation.REVIEWPASSED:
+            log_by_user[log.uid.uid][0] += 1
+        elif log.operation == Log.Operation.REMOVE:
+            log_by_user[log.uid.uid][1] += 1
+        elif log.operation == Log.Operation.MODIFY:
+            log_by_user[log.uid.uid][2] += 1
+        elif log.operation == Log.Operation.INSERT:
+            log_by_user[log.uid.uid][3] += 1
+
+        if log.time > last_sunday:
+            if log.uid not in log_by_user_this_week:
+                log_by_user_this_week[log.uid.uid] = [0, 0, 0, 0, log.uid.name]
+
+            if log.operation == Log.Operation.REVIEWPASSED:
+                log_by_user_this_week[log.uid.uid][0] += 1
+            elif log.operation == Log.Operation.REMOVE:
+                log_by_user_this_week[log.uid.uid][1] += 1
+            elif log.operation == Log.Operation.MODIFY:
+                log_by_user_this_week[log.uid.uid][2] += 1
+            elif log.operation == Log.Operation.INSERT:
+                log_by_user_this_week[log.uid.uid][3] += 1
+
+    log_rel = Log.objects.filter(op_to=Log.OpTo.RELATION, element_id__in=relations).select_related('uid')
+    for log in log_rel:
+        if log.uid.uid not in log_by_user:
+            log_by_user[log.uid.uid] = [0, 0, 0, 0, log.uid.name]
+
+        if log.operation == Log.Operation.REVIEWPASSED:
+            log_by_user[log.uid.uid][0] += 1
+        elif log.operation == Log.Operation.REMOVE:
+            log_by_user[log.uid.uid][1] += 1
+        elif log.operation == Log.Operation.MODIFY:
+            log_by_user[log.uid.uid][2] += 1
+        elif log.operation == Log.Operation.INSERT:
+            log_by_user[log.uid.uid][3] += 1
+
+        if log.time > last_sunday:
+            if log.uid.uid not in log_by_user_this_week:
+                log_by_user_this_week[log.uid.uid] = [0, 0, 0, 0, log.uid.name]
+
+            if log.operation == Log.Operation.REVIEWPASSED:
+                log_by_user_this_week[log.uid.uid][0] += 1
+            elif log.operation == Log.Operation.REMOVE:
+                log_by_user_this_week[log.uid.uid][1] += 1
+            elif log.operation == Log.Operation.MODIFY:
+                log_by_user_this_week[log.uid.uid][2] += 1
+            elif log.operation == Log.Operation.INSERT:
+                log_by_user_this_week[log.uid.uid][3] += 1
+
+    res = {
+        'code': 200,
+        'message': 'success',
+        'stats': {
+            'entities': {
+                'countByCategory': {
+                    'premarked': ent_stat[0],
+                    'passed': ent_stat[1],
+                    'removed': ent_stat[2],
+                    'modified': ent_stat[3],
+                    'unreviewed': ent_stat[4],
+                    'inserted': ent_stat[5],
+                }
+            },
+            'relations': {
+                'countByCategory': {
+                    'premarked': rel_stat[0],
+                    'passed': rel_stat[1],
+                    'removed': rel_stat[2],
+                    'modified': rel_stat[3],
+                    'unreviewed': rel_stat[4],
+                    'inserted': rel_stat[5],
+                }
+            },
+            'contributions': {
+                'total': [
+                    {
+                        'uid': k,
+                        'name': v[4],
+                        'operations': {
+                            'passed': v[0],
+                            'removed': v[1],
+                            'modified': v[2],
+                            'inserted': v[3],
+                        }
+                    }
+                    for k, v in log_by_user.items()
+                ],
+                'thisWeek': [
+                    {
+                        'uid': k,
+                        'name': v[4],
+                        'operations': {
+                            'passed': v[0],
+                            'removed': v[1],
+                            'modified': v[2],
+                            'inserted': v[3],
+                        }
+                    }
+                    for k, v in log_by_user_this_week.items()
+                ],
+            }
+        }
+    }
+
+    return JsonResponse(res, safe=False)

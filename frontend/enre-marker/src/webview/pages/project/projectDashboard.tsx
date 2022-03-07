@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
-  Typography, Row, Col, Statistic, Collapse, Radio, Table,
+  Typography, Row, Col, Statistic, Collapse, Radio, Table, Spin, Skeleton,
 } from 'antd';
 import { Bar } from '@ant-design/plots';
+import { useRequest } from 'ahooks';
+import { request } from '../../compatible/httpAdapter';
 
 const { Title } = Typography;
 const { Panel } = Collapse;
@@ -26,29 +28,118 @@ const state2ColorHex = ({ action }: { action: 'ENRE Premarked' | 'Passed' | 'Rem
   }
 };
 
+const DataView: React.FC<{ category: 'Entity' | 'Relation', data: remote.erCount }> = ({ category, data }) => {
+  const total = data.premarked
+    + data.passed
+    + data.modified
+    + data.unreviewed
+    + data.inserted;
+
+  const progressDone = data.premarked
+    + data.passed
+    + data.removed
+    + data.modified;
+
+  const progressTotal = data.premarked
+    + data.passed
+    + data.removed
+    + data.modified
+    + data.unreviewed;
+
+  return (
+    <>
+      <Row style={{ marginBottom: '1em' }}>
+        <Col flex={1}>
+          <Statistic
+            title="Current Total Count"
+            value={total}
+            suffix={`= ${progressTotal} - ${data.removed} + ${data.inserted}`}
+          />
+        </Col>
+        <Col flex={1}>
+          <Statistic
+            title="Progress in Count"
+            value={progressDone}
+            suffix={`/ ${progressTotal}`}
+          />
+        </Col>
+        <Col flex={1}>
+          <Statistic
+            title="Progress in Percentage"
+            value={Math.round((progressDone / progressTotal) * 100)}
+            suffix="%"
+          />
+        </Col>
+      </Row>
+      <Bar
+        data={[
+          { count: data.premarked, type: category, action: 'ENRE Premarked' },
+          { count: data.passed, type: category, action: 'Passed' },
+          { count: data.removed, type: category, action: 'Removed' },
+          { count: data.modified, type: category, action: 'Modified' },
+          { count: data.unreviewed, type: category, action: 'Unreviewed' },
+          { count: data.inserted, type: category, action: 'Inserted' },
+        ]}
+        isStack
+        xField="count"
+        yField="type"
+        seriesField="action"
+        // @ts-ignore
+        color={state2ColorHex}
+        xAxis={false}
+        yAxis={false}
+        height={60}
+      />
+    </>
+  );
+};
+
+const sum = (data: remote.contriByUser) => data.operations.passed
+  + data.operations.removed
+  + data.operations.modified
+  + data.operations.inserted;
+
 const tableColumns = [
   {
     title: 'User Name',
+    dataIndex: 'name',
+    key: 'uname',
   },
   {
     title: 'Operations',
     children: [
       {
         title: 'Passed',
+        dataIndex: ['operations', 'passed'],
+        key: 'passed',
+        align: 'center',
       },
       {
         title: 'Removed',
+        dataIndex: ['operations', 'removed'],
+        key: 'removed',
+        align: 'center',
       },
       {
         title: 'Modified',
+        dataIndex: ['operations', 'modified'],
+        key: 'modified',
+        align: 'center',
       },
       {
         title: 'Inserted',
+        dataIndex: ['operations', 'inserted'],
+        key: 'inserted',
+        align: 'center',
       },
     ],
   },
   {
     title: 'Total',
+    align: 'center',
+    render: (contri: remote.contriByUser) => sum(contri),
+    defaultSortOrder: 'descend',
+    sorter: (v1: remote.contriByUser, v2: remote.contriByUser) => sum(v1) > sum(v2),
   },
 ];
 
@@ -57,7 +148,20 @@ export const ProjectDashboard: React.FC<{ project: remote.project }> = ({
     pid, githubUrl, version, progress,
   },
 }) => {
-  console.log('aaa');
+  const { data, loading } = useRequest(
+    () => request(`GET project/${pid}/stats`)
+      // eslint-disable-next-line no-sequences
+      .then(({ stats }: remote.resStatistic) => stats),
+    IS_PRODUCTION ? {
+      // for cold data, enabling cache mechanism
+      cacheKey: `statistic${pid}`,
+      staleTime: 10000,
+    } : undefined,
+  );
+
+  const { entities, relations, contributions } = data || {};
+
+  const [radioSelection, setRadioSelection] = useState('total');
 
   return (
     <>
@@ -78,66 +182,32 @@ export const ProjectDashboard: React.FC<{ project: remote.project }> = ({
           />
         </Col>
       </Row>
-      <Collapse ghost defaultActiveKey={[0, 1, 2]}>
-        <Panel header="Entities" key={0}>
-          <Row style={{ marginBottom: '1em' }}>
-            <Col flex={1}>
-              <Statistic
-                title="Current Total Count"
-                value={400 + 10 - 10 + 20 + 880 + 10}
-                suffix={`+${100}`}
-              />
-            </Col>
-            <Col flex={1}>
-              <Statistic
-                title="Progress in Count"
-                value={1024}
-                suffix={`/ ${2048}`}
-              />
-            </Col>
-            <Col flex={1}>
-              <Statistic
-                title="Progress in Percentage"
-                value={40}
-                suffix="%"
-              />
-            </Col>
-          </Row>
-          <Bar
-            data={[
-              { count: 400, type: 'Entity', action: 'ENRE Premarked' },
-              { count: 10, type: 'Entity', action: 'Passed' },
-              { count: 10, type: 'Entity', action: 'Removed' },
-              { count: 20, type: 'Entity', action: 'Modified' },
-              { count: 880, type: 'Entity', action: 'Unreviewed' },
-              { count: 100, type: 'Entity', action: 'Inserted' },
-            ]}
-            isStack
-            xField="count"
-            yField="type"
-            seriesField="action"
-            // @ts-ignore
-            color={state2ColorHex}
-            xAxis={false}
-            yAxis={false}
-            height={50}
-          />
-        </Panel>
-        <Panel header="Relations" key={1}>
-          aaa
-        </Panel>
-        <Panel header="Contributions" key={2}>
-          <Row style={{ marginBottom: '1em' }}>
-            <Radio.Group defaultValue="total" style={{ width: '100%' }}>
-              <Radio.Button value="total" style={{ width: '50%', textAlign: 'center' }}>Total</Radio.Button>
-              <Radio.Button value="thisWeek" style={{ width: '50%', textAlign: 'center' }}>This Week</Radio.Button>
-            </Radio.Group>
-          </Row>
-          <Table
-            columns={tableColumns}
-          />
-        </Panel>
-      </Collapse>
+      {loading || !data ? <Skeleton active={loading} /> : (
+        <Collapse ghost defaultActiveKey={[0, 1, 2]}>
+          <Panel header="Entities" key={0}>
+            <DataView category="Entity" data={entities!.countByCategory} />
+          </Panel>
+          <Panel header="Relations" key={1}>
+            <DataView category="Relation" data={relations!.countByCategory} />
+          </Panel>
+          <Panel header="Contributions" key={2}>
+            <Row style={{ marginBottom: '1em' }}>
+              <Radio.Group style={{ width: '100%' }} value={radioSelection} onChange={(e) => setRadioSelection(e.target.value)}>
+                <Radio.Button value="total" style={{ width: '50%', textAlign: 'center' }}>Total</Radio.Button>
+                <Radio.Button value="thisWeek" style={{ width: '50%', textAlign: 'center' }}>This Week</Radio.Button>
+              </Radio.Group>
+            </Row>
+            <Table
+              // @ts-ignore
+              columns={tableColumns}
+              // @ts-ignore
+              dataSource={contributions?.[radioSelection]}
+              pagination={false}
+              sortDirections={['descend']}
+            />
+          </Panel>
+        </Collapse>
+      )}
     </>
   );
 };

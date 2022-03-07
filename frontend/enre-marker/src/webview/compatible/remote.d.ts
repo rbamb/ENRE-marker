@@ -131,4 +131,41 @@ declare namespace remote {
     }
     rType: number,
   }
+
+  interface resStatistic extends resCommon {
+    stats: statistic,
+  }
+
+  interface statistic {
+    entities: {
+      countByCategory: erCount
+    },
+    relations: {
+      countByCategory: erCount,
+    },
+    contributions: {
+      total: Array<contriByUser>,
+      thisWeek: Array<contriByUser>,
+    }
+  }
+
+  interface erCount {
+    premarked: number,
+    passed: number,
+    removed: number,
+    modified: number,
+    unreviewed: number,
+    inserted: number,
+  }
+
+  interface contriByUser {
+    uid: number,
+    name: string,
+    operations: {
+      passed: number,
+      removed: number,
+      modified: number,
+      inserted: number,
+    }
+  }
 }

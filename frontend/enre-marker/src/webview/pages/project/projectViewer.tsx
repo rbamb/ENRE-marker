@@ -291,7 +291,7 @@ export const ProjectViewer: React.FC = () => {
     IS_PRODUCTION ? {
       // for cold data, enabling cache mechanism
       cacheKey: 'projects',
-      staleTime: 60000,
+      staleTime: 10000,
     } : undefined,
   );
 
