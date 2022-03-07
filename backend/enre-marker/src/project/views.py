@@ -639,6 +639,9 @@ def statistic(request, uid, pid):
 
     log_ent = Log.objects.filter(op_to=Log.OpTo.ENTITY, element_id__in=entities).select_related('uid')
     for log in log_ent:
+        if log.uid.uid == 1:
+            continue
+
         if log.uid.uid not in log_by_user:
             log_by_user[log.uid.uid] = [0, 0, 0, 0, log.uid.name]
 
@@ -666,6 +669,9 @@ def statistic(request, uid, pid):
 
     log_rel = Log.objects.filter(op_to=Log.OpTo.RELATION, element_id__in=relations).select_related('uid')
     for log in log_rel:
+        if log.uid.uid == 1:
+            continue
+
         if log.uid.uid not in log_by_user:
             log_by_user[log.uid.uid] = [0, 0, 0, 0, log.uid.name]
 

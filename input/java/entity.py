@@ -169,4 +169,4 @@ if __name__ == '__main__':
     print(f'Total {regular_count} entities are successfully exported')
     print('All possible entity types are', sorted(all_ent_kinds))
 
-    print('\nPlease remember to replace the abs file path with relative path!')
+    print('\nPlease remember to replace the abs file path with relative path!\n')
