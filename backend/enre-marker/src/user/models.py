@@ -1,5 +1,5 @@
 from django.db import models
-from datetime import datetime
+from django.utils import timezone
 
 
 class User(models.Model):
@@ -26,7 +26,7 @@ class User(models.Model):
 class Login(models.Model):
     uid = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True)
     token = models.CharField(max_length=64)
-    gen_time = models.DateTimeField(default=datetime.now)
+    gen_time = models.DateTimeField(default=timezone.now)
 
     def __str__(self):
         return self.token
@@ -45,7 +45,7 @@ class Log(models.Model):
 
     lid = models.AutoField(primary_key=True)
     uid = models.ForeignKey(User, on_delete=models.DO_NOTHING)
-    time = models.DateTimeField(default=datetime.now)
+    time = models.DateTimeField(default=timezone.now)
     op_to = models.SmallIntegerField(choices=OpTo.choices)
     operation = models.SmallIntegerField(choices=Operation.choices)
     element_id = models.IntegerField()
