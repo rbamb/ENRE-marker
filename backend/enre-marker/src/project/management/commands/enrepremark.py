@@ -30,7 +30,7 @@ def relation_type_str2int_java(string):
 
 def perform_java(project, raw):
     print('''Java pre-mark perform limited functionalities due to ENRE-java's export format:
-    * No code location check\n''')
+    * Only check location's start line if multiple entities with same name are found\n''')
 
     # Pre-fetch e/r related to this project
     db_file = File.objects.filter(pid=project)
@@ -46,30 +46,48 @@ def perform_java(project, raw):
     for ent in raw_entity:
         try:
             ent_name = ent.get('qualifiedName')
-            ent_in_db = db_entity.get(code_name=ent_name, shallow=False)
-            if ent_in_db.entity_type == entity_type_str2int_java(ent.get('category')):
-                if ent_in_db.reviewed != Entity.ReviewedOption.notYet:
-                    if ent_in_db.reviewed == Entity.ReviewedOption.reviewPassed:
-                        print(f'Overriding existed PASSED entity with name {ent_name} to author as ENRE')
-                    else:
-                        print(
-                            f'Conflict encountered with entity with name {ent_name} and db_state {ent_in_db.reviewed}')
-                        continue
+            ents_in_db = db_entity.filter(code_name=ent_name, shallow=False)
+            ents_in_db_count = ents_in_db.count()
+            for ent_in_db in ents_in_db:
+                if ent_in_db.entity_type == entity_type_str2int_java(ent.get('category'))\
+                        and (ent_in_db.loc_start_line == ent.get('startLine') if ents_in_db_count > 1 else True):
+                    if ent_in_db.reviewed != Entity.ReviewedOption.notYet:
+                        if ent_in_db.reviewed == Entity.ReviewedOption.reviewPassed:
+                            # Still record map dict for relation pre-mark to use
+                            ent_match_dict[ent.get('id')] = {
+                                'eid_in_db': ent_in_db.eid,
+                                'name': ent_in_db.code_name,
+                            }
+                            try:
+                                Log.objects.get(
+                                    uid=1,
+                                    op_to=Log.OpTo.ENTITY,
+                                    operation=Log.Operation.REVIEWPASSED,
+                                    element_id=ent_in_db.eid,
+                                )
+                                continue
+                            except:
+                                pass
+                            print(f'Overriding existed PASSED entity with name {ent_name} to author as ENRE')
+                        else:
+                            print(
+                                f'Conflict encountered with entity with name {ent_name} and db_state {ent_in_db.reviewed}')
+                            continue
 
-                ent_in_db.reviewed = Entity.ReviewedOption.reviewPassed
-                ent_in_db.save()
-                Log.objects.create(
-                    uid_id=1,
-                    op_to=Log.OpTo.ENTITY,
-                    operation=Log.Operation.REVIEWPASSED,
-                    element_id=ent_in_db.eid,
-                )
-                ent_match_dict[ent.get('id')] = {
-                    'eid_in_db': ent_in_db.eid,
-                    'name': ent_in_db.code_name,
-                }
+                    ent_in_db.reviewed = Entity.ReviewedOption.reviewPassed
+                    ent_in_db.save()
+                    Log.objects.create(
+                        uid_id=1,
+                        op_to=Log.OpTo.ENTITY,
+                        operation=Log.Operation.REVIEWPASSED,
+                        element_id=ent_in_db.eid,
+                    )
+                    ent_match_dict[ent.get('id')] = {
+                        'eid_in_db': ent_in_db.eid,
+                        'name': ent_in_db.code_name,
+                    }
         except Entity.DoesNotExist:
-            pass
+            print(f'Encounter DoesNotExist with entity name {ent.get("qualifiedName")}')
         except Entity.MultipleObjectsReturned:
             print(f'Encounter MultipleObjectsReturned with entity name {ent.get("qualifiedName")}')
 
