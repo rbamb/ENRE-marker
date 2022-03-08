@@ -42,6 +42,8 @@ def perform_java(project, raw):
 
     ent_match_dict = {}
 
+    db_management_duplicated_log = False
+
     print('Perform entity matching...')
     for ent in raw_entity:
         try:
@@ -66,9 +68,10 @@ def perform_java(project, raw):
                                     element_id=ent_in_db.eid,
                                 )
                                 continue
-                            except:
-                                pass
-                            print(f'Overriding existed PASSED entity with name {ent_name} to author as ENRE')
+                            except Log.DoesNotExist:
+                                print(f'Overriding existed PASSED entity with name {ent_name} to author as ENRE')
+                            except Log.MultipleObjectsReturned:
+                                db_management_duplicated_log = True
                         else:
                             print(
                                 f'Conflict encountered with entity with name {ent_name} and db_state {ent_in_db.reviewed}')
@@ -106,34 +109,47 @@ def perform_java(project, raw):
             rel_in_db = db_relation.get(
                 from_entity__eid=src.get('eid_in_db'),
                 to_entity__eid=dest.get('eid_in_db'),
+                relation_type=relation_type_str2int_java(rel_type),
                 shallow=False,
             )
 
-            if rel_in_db.relation_type == relation_type_str2int_java(rel_type):
-                if rel_in_db.reviewed != Relation.ReviewedOption.notYet:
-                    if rel_in_db.reviewed == Relation.ReviewedOption.reviewPassed:
-                        print(f'Overriding existed PASSED relation to author as ENRE.')
-                    else:
-                        print(
-                            f'Conflict encountered with relation with name {rel.get("src")} -{rel_type}-> {rel.get("dest")}')
+            if rel_in_db.reviewed != Relation.ReviewedOption.notYet:
+                if rel_in_db.reviewed == Relation.ReviewedOption.reviewPassed:
+                    try:
+                        Log.objects.get(
+                            uid=1,
+                            op_to=Log.OpTo.RELATION,
+                            operation=Log.Operation.REVIEWPASSED,
+                            element_id=rel_in_db.rid,
+                        )
                         continue
+                    except Log.DoesNotExist:
+                        print(f'Overriding existed PASSED relation to author as ENRE.')
+                    except Log.MultipleObjectsReturned:
+                        db_management_duplicated_log = True
+                else:
+                    print(
+                        f'Conflict encountered with relation with name {rel.get("src")} -{rel_type}-> {rel.get("dest")}')
+                    continue
 
-                rel_in_db.reviewed = Relation.ReviewedOption.reviewPassed
-                rel_in_db.save()
-                Log.objects.create(
-                    uid_id=1,
-                    op_to=Log.OpTo.RELATION,
-                    operation=Log.Operation.REVIEWPASSED,
-                    element_id=rel_in_db.rid,
-                )
-                count_matched_relation += 1
+            rel_in_db.reviewed = Relation.ReviewedOption.reviewPassed
+            rel_in_db.save()
+            Log.objects.create(
+                uid_id=1,
+                op_to=Log.OpTo.RELATION,
+                operation=Log.Operation.REVIEWPASSED,
+                element_id=rel_in_db.rid,
+            )
+            count_matched_relation += 1
         except Relation.DoesNotExist:
             pass
         except Relation.MultipleObjectsReturned:
             print(f'Encounter MultipleObjectsReturned with relation {rel.get("src")} -{rel_type}-> {rel.get("dest")}')
 
     print(f'Successfully pre-mark {len(ent_match_dict.keys())} entities and {count_matched_relation} relations')
-
+    if db_management_duplicated_log:
+        print('\nWarning: Duplicated ENRE pre-mark log encountered, you are suggested to do a cleanup')
+    
 
 class Command(BaseCommand):
     help = 'Pre mark a project\'s data using ENRE\' output'
