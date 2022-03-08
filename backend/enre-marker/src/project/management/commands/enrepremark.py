@@ -94,7 +94,7 @@ def perform_java(project, raw):
         except Entity.MultipleObjectsReturned:
             print(f'Encounter MultipleObjectsReturned with entity name {ent.get("qualifiedName")}')
 
-    print('Perform relation match...')
+    print('Perform relation matching...')
     count_matched_relation = 0
     for rel in raw_relation:
         src = ent_match_dict.get(rel.get('src'))
@@ -106,45 +106,44 @@ def perform_java(project, raw):
             continue
 
         try:
-            rel_in_db = db_relation.get(
+            rels_in_db = db_relation.filter(
                 from_entity__eid=src.get('eid_in_db'),
                 to_entity__eid=dest.get('eid_in_db'),
                 relation_type=relation_type_str2int_java(rel_type),
                 shallow=False,
             )
 
-            if rel_in_db.reviewed != Relation.ReviewedOption.notYet:
-                if rel_in_db.reviewed == Relation.ReviewedOption.reviewPassed:
-                    try:
-                        Log.objects.get(
-                            uid=1,
-                            op_to=Log.OpTo.RELATION,
-                            operation=Log.Operation.REVIEWPASSED,
-                            element_id=rel_in_db.rid,
-                        )
+            for rel_in_db in rels_in_db:
+                if rel_in_db.reviewed != Relation.ReviewedOption.notYet:
+                    if rel_in_db.reviewed == Relation.ReviewedOption.reviewPassed:
+                        try:
+                            Log.objects.get(
+                                uid=1,
+                                op_to=Log.OpTo.RELATION,
+                                operation=Log.Operation.REVIEWPASSED,
+                                element_id=rel_in_db.rid,
+                            )
+                            continue
+                        except Log.DoesNotExist:
+                            print(f'Overriding existed PASSED relation to author as ENRE.')
+                        except Log.MultipleObjectsReturned:
+                            db_management_duplicated_log = True
+                    else:
+                        print(
+                            f'Conflict encountered with relation with ENRE: {rel.get("src")} -{rel_type}-> {rel.get("dest")} DB: {rel_in_db.from_entity_id} -{rel_in_db.relation_type}-> {rel_in_db.to_entity_id}')
                         continue
-                    except Log.DoesNotExist:
-                        print(f'Overriding existed PASSED relation to author as ENRE.')
-                    except Log.MultipleObjectsReturned:
-                        db_management_duplicated_log = True
-                else:
-                    print(
-                        f'Conflict encountered with relation with name {rel.get("src")} -{rel_type}-> {rel.get("dest")}')
-                    continue
 
-            rel_in_db.reviewed = Relation.ReviewedOption.reviewPassed
-            rel_in_db.save()
-            Log.objects.create(
-                uid_id=1,
-                op_to=Log.OpTo.RELATION,
-                operation=Log.Operation.REVIEWPASSED,
-                element_id=rel_in_db.rid,
-            )
-            count_matched_relation += 1
+                rel_in_db.reviewed = Relation.ReviewedOption.reviewPassed
+                rel_in_db.save()
+                Log.objects.create(
+                    uid_id=1,
+                    op_to=Log.OpTo.RELATION,
+                    operation=Log.Operation.REVIEWPASSED,
+                    element_id=rel_in_db.rid,
+                )
+                count_matched_relation += 1
         except Relation.DoesNotExist:
             pass
-        except Relation.MultipleObjectsReturned:
-            print(f'Encounter MultipleObjectsReturned with relation {rel.get("src")} -{rel_type}-> {rel.get("dest")}')
 
     print(f'Successfully pre-mark {len(ent_match_dict.keys())} entities and {count_matched_relation} relations')
     if db_management_duplicated_log:
