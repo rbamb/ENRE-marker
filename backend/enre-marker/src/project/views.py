@@ -1,6 +1,7 @@
 import copy
 import json
-from datetime import timedelta, datetime, timezone
+from datetime import timedelta
+from django.utils import timezone
 
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST, require_GET
@@ -31,7 +32,7 @@ def login_required(func):
                 'message': 'login required',
             })
 
-        if datetime.now(tz=timezone.utc) > (record.gen_time + timedelta(days=1)):
+        if timezone.now() > (record.gen_time + timedelta(days=1)):
             return JsonResponse({
                 'code': 401,
                 'message': 'login expired',
@@ -635,7 +636,9 @@ def statistic(request, uid, pid):
     log_by_user = {}
     log_by_user_this_week = {}
 
-    last_sunday = datetime.now(tz=timezone.utc) - timedelta(days=((datetime.now(tz=timezone.utc).isoweekday() + 1) % 7))
+    curr_time = timezone.now()
+    last_sunday_12_pm = (curr_time - timedelta(days=(curr_time.isoweekday() - 1)))\
+        .replace(hour=0, minute=0, second=0, microsecond=0)
 
     log_ent = Log.objects.filter(op_to=Log.OpTo.ENTITY, element_id__in=entities).select_related('uid')
     for log in log_ent:
@@ -654,7 +657,7 @@ def statistic(request, uid, pid):
         elif log.operation == Log.Operation.INSERT:
             log_by_user[log.uid.uid][3] += 1
 
-        if log.time > last_sunday:
+        if log.time > last_sunday_12_pm:
             if log.uid not in log_by_user_this_week:
                 log_by_user_this_week[log.uid.uid] = [0, 0, 0, 0, log.uid.name]
 
@@ -684,7 +687,7 @@ def statistic(request, uid, pid):
         elif log.operation == Log.Operation.INSERT:
             log_by_user[log.uid.uid][3] += 1
 
-        if log.time > last_sunday:
+        if log.time > last_sunday_12_pm:
             if log.uid.uid not in log_by_user_this_week:
                 log_by_user_this_week[log.uid.uid] = [0, 0, 0, 0, log.uid.name]
 
